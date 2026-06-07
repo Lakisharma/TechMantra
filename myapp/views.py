@@ -814,6 +814,31 @@ def admin_delete_admin_view(request, admin_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@login_required(login_url='login')
+def admin_change_admin_password_view(request, admin_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied. Admin permissions required."})
+
+    if request.method == "POST":
+        password = request.POST.get("password")
+        if not password:
+            return JsonResponse({"status": "error", "message": "Password cannot be empty."})
+
+        try:
+            # Ensure we are changing password of an admin/staff user
+            target_admin = User.objects.get(id=admin_id, is_staff=True)
+            target_admin.set_password(password)
+            target_admin.save()
+            return JsonResponse({"status": "success", "message": f"Password for '{target_admin.username}' updated successfully!"})
+        except User.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Admin user not found."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+
 
 
 

@@ -491,6 +491,22 @@ class StudentPortalTests(TestCase):
         self.assertContains(response, "You cannot delete your own account.")
         self.assertTrue(User.objects.filter(id=admin_user.id).exists())
 
+    def test_admin_change_admin_password_success(self):
+        admin_user = User.objects.create_superuser(username='adminuser', password='password123')
+        other_staff = User.objects.create_user(username='otherstaff', password='password123', is_staff=True)
+        self.client.login(username='adminuser', password='password123')
+
+        change_url = reverse('admin_change_admin_password', kwargs={'admin_id': other_staff.id})
+        response = self.client.post(change_url, {
+            'password': 'NewSecurePassword123!',
+            'ajax': 'true'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "updated successfully!")
+
+        other_staff.refresh_from_db()
+        self.assertTrue(other_staff.check_password('NewSecurePassword123!'))
+
 
 
 

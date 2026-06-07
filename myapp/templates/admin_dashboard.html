@@ -1563,12 +1563,18 @@
                       </td>
                       <td style="text-align: center;">
                         <div class="action-group" style="justify-content: center;">
+                          <button class="btn-action btn-action-edit" title="Change Password"
+                                  data-id="{{ a.id }}"
+                                  data-username="{{ a.username }}"
+                                  onclick="openAdminPasswordModal(this)">
+                            <i class="fa-solid fa-key"></i>
+                          </button>
                           {% if a.id != user.id %}
                             <button onclick="deleteAdmin('{{ a.id }}')" class="btn-action btn-action-delete" title="Delete Admin Account">
                               <i class="fa-solid fa-trash-can"></i>
                             </button>
                           {% else %}
-                            <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Active Session</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; align-self: center; margin-left: 0.25rem;">Active</span>
                           {% endif %}
                         </div>
                       </td>
@@ -1848,6 +1854,34 @@
 
         <button type="submit" class="btn-submit" style="background: var(--primary); box-shadow: 0 4px 15px var(--primary-glow);">
           <i class="fa-solid fa-user-plus"></i> Create Admin Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: CHANGE ADMIN PASSWORD
+       ========================================== -->
+  <div class="modal-overlay" id="changeAdminPasswordModal">
+    <div class="modal-container" style="max-width: 450px;">
+      <button class="modal-close" onclick="closeModal('changeAdminPasswordModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-key"></i> Change Admin Password</h3>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Setting a new password for administrator: <strong id="modal-admin-username" style="color: var(--text-main);"></strong>
+      </p>
+      <form id="changeAdminPasswordForm" onsubmit="submitChangeAdminPassword(event)">
+        {% csrf_token %}
+        <input type="hidden" id="change-admin-id" name="admin_id">
+        
+        <div class="form-group">
+          <label class="form-label" for="change-admin-password">New Password *</label>
+          <input type="password" id="change-admin-password" name="password" class="form-control" required placeholder="Enter new password">
+        </div>
+
+        <button type="submit" class="btn-submit" style="background: var(--primary); box-shadow: 0 4px 15px var(--primary-glow);">
+          <i class="fa-solid fa-save"></i> Update Admin Password
         </button>
       </form>
     </div>
@@ -2430,6 +2464,49 @@
         }
       } catch (e) {
         showToast('Server connection failed', 'error');
+      }
+    }
+
+    // Open Change Password Modal for Admin
+    function openAdminPasswordModal(btn) {
+      const id = btn.getAttribute('data-id');
+      const username = btn.getAttribute('data-username');
+      
+      document.getElementById('change-admin-id').value = id;
+      document.getElementById('modal-admin-username').textContent = username;
+      document.getElementById('change-admin-password').value = '';
+      openModal('changeAdminPasswordModal');
+    }
+
+    // Form Submission: Update Admin Password
+    async function submitChangeAdminPassword(event) {
+      event.preventDefault();
+      const form = event.target;
+      const adminId = document.getElementById('change-admin-id').value;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(`/admin-dashboard/admins/change-password/${adminId}/`, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('changeAdminPasswordModal');
+          form.reset();
+        } else {
+          showToast(data.message || 'Error updating password', 'error');
+        }
+      } catch (e) {
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
       }
     }
   </script>

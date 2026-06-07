@@ -51,6 +51,7 @@ urlpatterns = [
     path('admin-dashboard/gallery/delete/<int:image_id>/', views.admin_delete_gallery_view, name='admin_delete_gallery'),
     path('admin-dashboard/admins/add/', views.admin_add_admin_view, name='admin_add_admin'),
     path('admin-dashboard/admins/delete/<int:admin_id>/', views.admin_delete_admin_view, name='admin_delete_admin'),
+    path('admin-dashboard/admins/change-password/<int:admin_id>/', views.admin_change_admin_password_view, name='admin_change_admin_password'),
 ]
 
 if settings.DEBUG:
