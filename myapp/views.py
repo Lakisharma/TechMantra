@@ -88,6 +88,17 @@ def contact(request):
     return render(request, 'contact.html', {"success_msg": success_msg})
 
 def verify_certificate(request):
+    if request.GET.get('debug_storage') == '1':
+        import os
+        from django.core.files.storage import default_storage
+        keys = [k for k in os.environ.keys() if 'CLOUDINARY' in k.upper() or 'POSTGRES' in k.upper()]
+        return JsonResponse({
+            "storage_backend": default_storage.__class__.__name__,
+            "found_env_keys": keys,
+            "has_cloudinary_url": bool(os.environ.get('CLOUDINARY_URL')),
+            "has_cloudinary_cloud_name": bool(os.environ.get('CLOUDINARY_CLOUD_NAME')),
+        })
+
     cert_db = {
         "TM-2026-101": {
             "id": "TM-2026-101",
