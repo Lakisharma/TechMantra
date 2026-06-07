@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us | TechMantra{% endblock %}
+
+{% block content %}
+  <!-- ==========================================
+       Breadcrumb Banner
+       ========================================== -->
+  <section class="breadcrumb-banner">
+    <div class="container">
+      <h1>About Us</h1>
+      <div class="breadcrumb-path">
+        <a href="{% url 'home' %}">Home</a> <span>/ About Us</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       About Us Details & Pillars
+       ========================================== -->
+  <section class="section-padding">
+    <div class="container text-center">
+      <h2 class="section-title">Welcome to TechMantra</h2>
+      <p class="section-subtitle">We are dedicated to providing the best education and guidance to our students. Our mission is to build a strong foundation for a successful future.</p>
+      
+      <div class="about-pillars">
+        <div class="glass-card pillar-card">
+          <div class="pillar-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <h3>Our Mission</h3>
+          <p>To provide quality education and develop overall personality of students to face challenges with confidence.</p>
+        </div>
+        
+        <div class="glass-card pillar-card">
+          <div class="pillar-icon"><i class="fa-solid fa-eye"></i></div>
+          <h3>Our Vision</h3>
+          <p>To be a leading academy in education and training, recognized for excellence, innovation and success.</p>
+        </div>
+        
+        <div class="glass-card pillar-card">
+          <div class="pillar-icon"><i class="fa-solid fa-trophy"></i></div>
+          <h3>Our Goal</h3>
+          <p>To help students achieve their dreams and goals through structured methodologies and continuous evaluation.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Banner -->
+    <div class="stats-banner">
+      <div class="container stats-grid">
+        <div class="stat-item">
+          <h2>15+</h2>
+          <p>Years of Excellence</p>
+        </div>
+        <div class="stat-item">
+          <h2>5000+</h2>
+          <p>Students Trained</p>
+        </div>
+        <div class="stat-item">
+          <h2>50+</h2>
+          <p>Expert Faculty</p>
+        </div>
+        <div class="stat-item">
+          <h2>100%</h2>
+          <p>Success Rate</p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

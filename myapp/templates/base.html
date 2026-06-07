@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMantra | {% block title %}Student Academy{% endblock %}</title>
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=1.2">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- ==========================================
+       Premium Preloader Screen
+       ========================================== -->
+  <div id="premium-loader-overlay" class="premium-loader-overlay active">
+    <div class="premium-loader-container">
+      <div class="premium-loader-spinner">
+        <div class="premium-loader-ring ring-blue"></div>
+        <div class="premium-loader-ring ring-orange"></div>
+        <div class="premium-loader-ring ring-green"></div>
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Header / Navigation (Including Top Bar)
+       ========================================== -->
+  <header class="navbar-wrapper">
+    <!-- Top Bar -->
+    <div class="prem-topbar">
+      <div class="container prem-topbar-inner">
+        <div class="prem-topbar-left">
+          <a href="tel:{{ site_settings.contact_phone }}"><i class="fa-solid fa-phone"></i> {{ site_settings.contact_phone }}</a>
+          <span class="prem-sep">|</span>
+          <a href="mailto:{{ site_settings.contact_email }}"><i class="fa-solid fa-envelope"></i> {{ site_settings.contact_email }}</a>
+        </div>
+        <div class="prem-topbar-right">
+          <div class="prem-topbar-downloads">
+            <a href="#" class="brochure-download"><i class="fa-solid fa-file-pdf"></i> Syllabus PDF</a>
+            <span class="prem-sep">|</span>
+            <a href="#" class="brochure-download"><i class="fa-solid fa-file-pdf"></i> Training Brochure</a>
+          </div>
+          <span class="prem-sep-bold">|</span>
+          {% if user.is_authenticated %}
+            {% if user.is_staff %}
+              <a href="{% url 'admin_dashboard' %}" class="prem-pill-verify" style="background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.25); color: var(--primary) !important;">
+                <i class="fa-solid fa-shield-halved"></i> Admin Console
+              </a>
+            {% endif %}
+            <a href="{% url 'verify_certificate' %}" class="prem-pill-verify">
+              <i class="fa-solid fa-certificate"></i> Verify Certificate
+            </a>
+
+            <a href="{% url 'logout' %}" class="prem-pill-register">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+          {% else %}
+            <a href="{% url 'verify_certificate' %}" class="prem-pill-verify">
+              <i class="fa-solid fa-certificate"></i> Verify Certificate
+            </a>
+            <a href="{% url 'register' %}" class="prem-pill-register">
+              <i class="fa-solid fa-user-plus"></i> Register
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <div class="container navbar-container">
+      <a href="{% url 'home' %}" class="logo-link" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+        {% if site_settings.site_logo %}
+          <img src="{{ site_settings.site_logo.url }}" alt="Logo" style="height: 36px; max-width: 150px; object-fit: contain; vertical-align: middle;" />
+        {% else %}
+          <i class="fa-solid fa-graduation-cap" style="vertical-align: middle;"></i>
+        {% endif %}
+        <span style="vertical-align: middle;">{{ site_settings.site_name }}</span>
+      </a>
+      
+      <button class="menu-toggle" aria-label="Toggle Navigation Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav-links">
+        <li><a href="{% url 'home' %}" class="nav-link">Home</a></li>
+        <li><a href="{% url 'about' %}" class="nav-link">About Us</a></li>
+        <li><a href="{% url 'courses' %}" class="nav-link">Courses</a></li>
+        <li><a href="{% url 'faculty' %}" class="nav-link">Faculty</a></li>
+        <li><a href="{% url 'admissions' %}" class="nav-link">Admissions</a></li>
+        <li><a href="{% url 'gallery' %}" class="nav-link">Gallery</a></li>
+        <li><a href="{% url 'results' %}" class="nav-link">Results</a></li>
+        <li><a href="{% url 'contact' %}" class="nav-link">Contact Us</a></li>
+        {% if user.is_authenticated %}
+          {% if user.is_staff %}
+            <li><a href="{% url 'admin_dashboard' %}" class="nav-link" style="color: var(--primary); font-weight: 600;"><i class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
+          {% endif %}
+          <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link">Dashboard</a></li>
+          <li class="mobile-only"><a href="{% url 'verify_certificate' %}" class="nav-link"><i class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
+          <li class="mobile-only"><a href="{% url 'logout' %}" style="display: inline-block; margin-top: 1rem; color: #f87171;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        {% else %}
+          <li class="mobile-only"><a href="{% url 'verify_certificate' %}" class="nav-link"><i class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
+          <li class="mobile-only"><a href="{% url 'login' %}" style="display: inline-block; margin-top: 1rem;"><i class="fa-solid fa-lock"></i> Login</a></li>
+        {% endif %}
+      </ul>
+      
+      {% if user.is_authenticated %}
+        <a href="{% url 'profile' %}" class="btn-login btn-login-dashboard">
+          {% if user.profile.photo %}
+            <img src="{{ user.profile.photo.url }}" class="btn-login-avatar" alt="Avatar" />
+          {% else %}
+            <i class="fa-solid fa-user-gear"></i>
+          {% endif %}
+          Dashboard
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn-login">
+          <i class="fa-solid fa-lock"></i> Login
+        </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ==========================================
+       Main Content Area
+       ========================================== -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ==========================================
+       Footer Section
+       ========================================== -->
+  <footer class="footer">
+    <div class="container">
+      <a href="{% url 'home' %}" class="footer-logo" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        {% if site_settings.site_logo %}
+          <img src="{{ site_settings.site_logo.url }}" alt="Logo" style="height: 36px; max-width: 150px; object-fit: contain; filter: brightness(0) invert(1);" />
+        {% else %}
+          <i class="fa-solid fa-graduation-cap"></i>
+        {% endif %}
+        <span>{{ site_settings.site_name }}</span>
+      </a>
+      <p class="tagline">Providing quality classroom education and specialized mock test series for competitive exams.</p>
+      
+      <ul class="footer-nav">
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'about' %}">About Us</a></li>
+        <li><a href="{% url 'courses' %}">Courses</a></li>
+        <li><a href="{% url 'faculty' %}">Faculty</a></li>
+        <li><a href="{% url 'admissions' %}">Admissions</a></li>
+        <li><a href="{% url 'gallery' %}">Gallery</a></li>
+        <li><a href="{% url 'results' %}">Results</a></li>
+        <li><a href="{% url 'contact' %}">Contact Us</a></li>
+      </ul>
+      
+      <div class="footer-copyright">
+        &copy; 2026 {{ site_settings.site_name }} Academy. All Rights Reserved. Developed By LakshmanSharma ❤️
+      </div>
+    </div>
+  </footer>
+
+  <!-- Login modal removed, authenticating through separate page -->
+
+  <!-- Toast Container -->
+  <div class="toast-container"></div>
+
+  <!-- Custom script file -->
+  <script src="{% static 'js/main.js' %}?v=1.2"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

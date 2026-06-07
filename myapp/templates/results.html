@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Results & Testimonials | TechMantra{% endblock %}
+
+{% block content %}
+  <!-- ==========================================
+       Breadcrumb Banner
+       ========================================== -->
+  <section class="breadcrumb-banner">
+    <div class="container">
+      <h1>Results & Testimonials</h1>
+      <div class="breadcrumb-path">
+        <a href="{% url 'home' %}">Home</a> <span>/ Results & Testimonials</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Toppers & Testimonials Section
+       ========================================== -->
+  <section class="section-padding">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="section-title">Academic Milestones</h2>
+        <p class="section-subtitle">We celebrate the stellar accomplishments of our brilliant minds.</p>
+      </div>
+
+      <!-- Toppers Grid -->
+      <h3 class="testimonials-heading text-center">Our Toppers</h3>
+      <div class="toppers-grid">
+        <!-- Topper 1 -->
+        <div class="glass-card topper-card">
+          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
+          <div class="topper-avatar-wrapper">
+            <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80" alt="Ankit Kumar" class="topper-avatar">
+          </div>
+          <h3>Ankit Kumar</h3>
+          <p class="topper-exam">SSC CGL 2024</p>
+          <p class="topper-rank">AIR 45</p>
+        </div>
+
+        <!-- Topper 2 -->
+        <div class="glass-card topper-card">
+          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
+          <div class="topper-avatar-wrapper">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Priya Sharma" class="topper-avatar">
+          </div>
+          <h3>Priya Sharma</h3>
+          <p class="topper-exam">Bank PO 2024</p>
+          <p class="topper-rank">AIR 78</p>
+        </div>
+
+        <!-- Topper 3 -->
+        <div class="glass-card topper-card">
+          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
+          <div class="topper-avatar-wrapper">
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80" alt="Rahul Verma" class="topper-avatar">
+          </div>
+          <h3>Rahul Verma</h3>
+          <p class="topper-exam">RRB NTPC 2024</p>
+          <p class="topper-rank">AIR 29</p>
+        </div>
+
+        <!-- Topper 4 -->
+        <div class="glass-card topper-card">
+          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
+          <div class="topper-avatar-wrapper">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" alt="Neha Singh" class="topper-avatar">
+          </div>
+          <h3>Neha Singh</h3>
+          <p class="topper-exam">NDA 2024</p>
+          <p class="topper-rank">AIR 15</p>
+        </div>
+      </div>
+
+      <!-- Testimonials -->
+      <h3 class="testimonials-heading text-center">Student Testimonials</h3>
+      <div class="testimonials-grid">
+        <!-- Testimonial 1 -->
+        <div class="glass-card testimonial-card">
+          <i class="fa-solid fa-quote-right quote-icon"></i>
+          <p class="testimonial-text">
+            "TechMantra is the best institute for competitive exam coaching. The teachers are extremely cooperative and provide customized doubt solving sessions."
+          </p>
+          <div class="testimonial-user">
+            <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=100&q=80" alt="Rohan Kumar" class="testimonial-avatar">
+            <div class="testimonial-user-info">
+              <h4>Rohan Kumar</h4>
+              <p>SSC Aspirant</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="glass-card testimonial-card">
+          <i class="fa-solid fa-quote-right quote-icon"></i>
+          <p class="testimonial-text">
+            "The regular mock tests and feedback metrics helped me a lot in identifying my weaknesses and mastering quantitative aptitude modules."
+          </p>
+          <div class="testimonial-user">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80" alt="Simran Kaur" class="testimonial-avatar">
+            <div class="testimonial-user-info">
+              <h4>Simran Kaur</h4>
+              <p>Bank PO Aspirant</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="glass-card testimonial-card">
+          <i class="fa-solid fa-quote-right quote-icon"></i>
+          <p class="testimonial-text">
+            "TechMantra helped me build a great conceptual flow in General Studies. The faculty members are highly professional and supportive."
+          </p>
+          <div class="testimonial-user">
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80" alt="Vivek Singh" class="testimonial-avatar">
+            <div class="testimonial-user-info">
+              <h4>Vivek Singh</h4>
+              <p>NDA Aspirant</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

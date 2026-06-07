@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Registration | TechMantra{% endblock %}
+
+{% block content %}
+  <!-- ==========================================
+       Breadcrumb Banner
+       ========================================== -->
+  <section class="breadcrumb-banner">
+    <div class="container">
+      <h1>Student Registration</h1>
+      <div class="breadcrumb-path">
+        <a href="{% url 'home' %}">Home</a> <span>/ Register</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Registration Form Section
+       ========================================== -->
+  <section class="section-padding" style="display: flex; justify-content: center; align-items: center; min-height: 70vh;">
+    <div class="container" style="display: flex; justify-content: center; width: 100%;">
+      <div class="glass-card form-card" style="width: 100%; max-width: 550px; padding: 3rem 2.5rem; margin: 0 auto;">
+        <h3 class="form-title text-center" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; font-size: 1.8rem; background: linear-gradient(135deg, var(--text-main) 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+          <i class="fa-solid fa-user-plus" style="color: var(--accent); -webkit-text-fill-color: var(--accent);"></i> Student Registration
+        </h3>
+
+        {% if error_msg %}
+          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>{{ error_msg }}</span>
+          </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'register' %}" class="ajax-form">
+          {% csrf_token %}
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="reg-fullname" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Full Name *</label>
+            <input type="text" id="reg-fullname" name="full_name" class="form-control" placeholder="Enter full name" required 
+                   style="width: 100%; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal);">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="reg-username" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Choose Username *</label>
+            <input type="text" id="reg-username" name="username" class="form-control" placeholder="Choose a unique username" required 
+                   style="width: 100%; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal);">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="reg-email" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Email Address *</label>
+            <input type="email" id="reg-email" name="email" class="form-control" placeholder="Enter email address" required 
+                   style="width: 100%; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal);">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="reg-phone" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Mobile Number *</label>
+            <input type="tel" id="reg-phone" name="phone" class="form-control" placeholder="Enter 10-digit mobile number" required 
+                   style="width: 100%; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal);">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="reg-course" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Select Course *</label>
+            <select id="reg-course" name="course" class="form-control" required
+                    style="width: 100%; padding: 0.8rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal); outline: none; appearance: none; -webkit-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226 9 12 15 18 9%22%3E%3C/polyline%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2rem;">
+              <option value="" disabled selected>Select registered course</option>
+              {% for course in courses %}
+                <option value="{{ course }}">{{ course }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="reg-password" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Password *</label>
+            <input type="password" id="reg-password" name="password" class="form-control" placeholder="Create password" required 
+                   style="width: 100%; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal);">
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem; padding: 0.9rem 2rem; border-radius: 0.5rem; font-weight: 600; font-size: 1rem; cursor: pointer; transition: var(--transition-normal);">
+            Create Account
+          </button>
+        </form>
+
+        <div style="margin-top: 2rem; text-align: center; font-size: 0.9rem; color: var(--text-muted); border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1.5rem;">
+          Already registered? 
+          <a href="{% url 'login' %}" style="color: var(--accent); font-weight: 600; margin-left: 0.25rem; transition: var(--transition-fast);">Sign In Here</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .form-control:focus {
+      border-color: var(--accent) !important;
+      background: rgba(255, 255, 255, 0.06) !important;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+  </style>
+{% endblock %}

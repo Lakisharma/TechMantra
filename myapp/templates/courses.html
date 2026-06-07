@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Our Courses | TechMantra{% endblock %}
+
+{% block content %}
+  <!-- ==========================================
+       Breadcrumb Banner
+       ========================================== -->
+  <section class="breadcrumb-banner">
+    <div class="container">
+      <h1>Our Courses</h1>
+      <div class="breadcrumb-path">
+        <a href="{% url 'home' %}">Home</a> <span>/ Our Courses</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Courses Content
+       ========================================== -->
+  <section class="section-padding">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="section-title">Preparation Programs</h2>
+        <p class="section-subtitle">Choose from our top-rated preparation programs meticulously drafted by industry experts.</p>
+      </div>
+
+      <div class="courses-grid">
+        {% for course in courses %}
+        <div class="glass-card course-card">
+          <div class="course-header" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
+            {% if "ssc" in course.title.lower %}
+              <span class="course-badge">SSC</span>
+            {% elif "bank" in course.title.lower %}
+              <span class="course-badge">Banking</span>
+            {% elif "railway" in course.title.lower %}
+              <span class="course-badge">Railway</span>
+            {% elif "nda" in course.title.lower or "cds" in course.title.lower or "defence" in course.title.lower or "prep" in course.title.lower %}
+              <span class="course-badge">Defence</span>
+            {% elif "computer" in course.title.lower or "tech" in course.title.lower or "programming" in course.title.lower %}
+              <span class="course-badge">Tech</span>
+            {% elif "english" in course.title.lower or "spoken" in course.title.lower or "language" in course.title.lower %}
+              <span class="course-badge">Language</span>
+            {% else %}
+              <span class="course-badge">Academy</span>
+            {% endif %}
+          </div>
+          <div class="course-card-content">
+            <h3>{{ course.title }}</h3>
+            <p>{{ course.description }}</p>
+            <div class="course-footer">
+              <span class="course-price">₹ {{ course.fee }}</span>
+              <a href="{% url 'admissions' %}?course={{ course.title|urlencode }}" class="course-btn-enroll">Enroll Now</a>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="glass-card text-center" style="grid-column: 1 / -1; padding: 3rem;">
+          <i class="fa-solid fa-graduation-cap" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+          <h3>No Courses Available</h3>
+          <p>We are currently updating our prospectus. Please check back later or contact us for enquiries.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

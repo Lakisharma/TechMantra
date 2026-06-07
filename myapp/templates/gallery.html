@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gallery | TechMantra{% endblock %}
+
+{% block content %}
+  <!-- ==========================================
+       Breadcrumb Banner
+       ========================================== -->
+  <section class="breadcrumb-banner">
+    <div class="container">
+      <h1>Gallery</h1>
+      <div class="breadcrumb-path">
+        <a href="{% url 'home' %}">Home</a> <span>/ Gallery</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Gallery Section
+       ========================================== -->
+  <section class="section-padding">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="section-title">Life at TechMantra</h2>
+        <p class="section-subtitle">Take a look inside our high-tech classrooms, events, and student highlights.</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="gallery-filters">
+        <button class="gallery-filter-btn active" data-filter="all">All Photos</button>
+        <button class="gallery-filter-btn" data-filter="classrooms">Classrooms</button>
+        <button class="gallery-filter-btn" data-filter="events">Events</button>
+        <button class="gallery-filter-btn" data-filter="results">Results</button>
+        <button class="gallery-filter-btn" data-filter="other">Activities</button>
+      </div>
+
+      <!-- Grid -->
+      <div class="gallery-grid">
+        {% for img in images %}
+        <div class="gallery-item" data-category="{{ img.category }}">
+          <img src="{% if img.image %}{{ img.image.url }}{% else %}https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=400&q=80{% endif %}" alt="{{ img.title }}" class="gallery-img">
+          <div class="gallery-overlay">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <h4>{{ img.title }}</h4>
+          </div>
+        </div>
+        {% empty %}
+        <div class="glass-card text-center" style="grid-column: 1 / -1; padding: 3rem; width: 100%;">
+          <i class="fa-solid fa-images" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+          <h3>No Images Uploaded</h3>
+          <p>Please check back later or view our social media channels.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

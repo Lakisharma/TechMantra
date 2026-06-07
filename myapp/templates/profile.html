@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Profile Dashboard | TechMantra{% endblock %}
+
+{% block content %}
+  <!-- ==========================================
+       Breadcrumb Banner
+       ========================================== -->
+  <section class="breadcrumb-banner">
+    <div class="container">
+      <h1>Student Dashboard</h1>
+      <div class="breadcrumb-path">
+        <a href="{% url 'home' %}">Home</a> <span>/ Dashboard</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Student Profile Content
+       ========================================== -->
+  <section class="section-padding">
+    <div class="container">
+      
+      <!-- Welcome Header -->
+      <div class="glass-card" style="padding: 2rem; margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; border-left: 4px solid var(--primary);">
+        <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+          <!-- Avatar Frame with quick update -->
+          <div style="position: relative; width: 5.5rem; height: 5.5rem; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); background: var(--bg-secondary); flex-shrink: 0;" class="profile-avatar-container">
+            {% if profile.photo %}
+              <img src="{{ profile.photo.url }}" alt="Student Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--text-muted);">
+                <i class="fa-solid fa-user"></i>
+              </div>
+            {% endif %}
+            
+            <!-- Quick Upload Form Overlay -->
+            <form method="post" action="{% url 'profile' %}" enctype="multipart/form-data" id="photo-upload-form" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 12, 20, 0.75); display: flex; align-items: center; justify-content: center; opacity: 0; cursor: pointer; transition: var(--transition-normal);">
+              {% csrf_token %}
+              <label for="id_photo_input" style="cursor: pointer; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; font-size: 0.75rem; font-weight: 600; color: var(--text-main); gap: 0.2rem;">
+                <i class="fa-solid fa-camera" style="font-size: 1.25rem;"></i> Update
+              </label>
+              <input type="file" id="id_photo_input" name="photo" style="display: none;" onchange="this.form.submit();">
+            </form>
+          </div>
+
+          <div>
+            <h2 style="font-size: 2rem; margin-bottom: 0.25rem;">Welcome back, {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}!</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">Access your academy records, mock test stats, and official certificates.</p>
+            <label for="id_photo_input" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--primary); cursor: pointer; margin-top: 0.4rem; font-weight: 600; text-decoration: underline;">
+              <i class="fa-solid fa-image"></i> Change Profile Photo
+            </label>
+          </div>
+        </div>
+        <div>
+          <a href="{% url 'logout' %}" class="btn-outline" style="border-color: #ef4444; color: #f87171; padding: 0.6rem 1.5rem; font-size: 0.9rem;">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </a>
+        </div>
+      </div>
+
+
+      <!-- Dashboard Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin-bottom: 2.5rem; align-items: start;" class="profile-grid">
+        
+        <!-- Column 1: Academic & Contact Profile -->
+        <div class="glass-card" style="padding: 2.5rem 2rem;">
+          <h3 style="font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--primary);">
+            <i class="fa-solid fa-id-card"></i> Student Credentials
+          </h3>
+          
+          <div class="profile-details-list">
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Username</span>
+              <span class="profile-detail-value">{{ user.username }}</span>
+            </div>
+            
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Email Address</span>
+              <span class="profile-detail-value">{{ user.email }}</span>
+            </div>
+
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Phone Number</span>
+              <span class="profile-detail-value">{{ profile.phone }}</span>
+            </div>
+
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Registered Course</span>
+              <span class="profile-detail-value highlight-course">{{ profile.course }}</span>
+            </div>
+
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">All India Rank (AIR)</span>
+              <span class="profile-detail-value highlight-rank">{{ profile.rank }}</span>
+            </div>
+
+            <div class="profile-detail-row last">
+              <span class="profile-detail-label">Overall Grade</span>
+              <span class="profile-detail-value highlight-grade">{{ profile.grade }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Mock Test Progress Tracker -->
+        <div class="glass-card" style="padding: 2.5rem 2rem;">
+          <h3 style="font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--secondary);">
+            <i class="fa-solid fa-chart-line"></i> Mock Test Series Analytics
+          </h3>
+
+          <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
+              <span style="color: var(--text-muted);">Syllabus Covered</span>
+              <span style="font-weight: bold; color: var(--primary);">82%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden;">
+              <div style="width: 82%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px;"></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
+              <span style="color: var(--text-muted);">Mock Test Average Accuracy</span>
+              <span style="font-weight: bold; color: var(--secondary);">76%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden;">
+              <div style="width: 76%; height: 100%; background: linear-gradient(90deg, var(--secondary), #10b981); border-radius: 10px;"></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
+              <span style="color: var(--text-muted);">Weekly Practice Hours Goal</span>
+              <span style="font-weight: bold; color: var(--accent);">90%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden;">
+              <div style="width: 90%; height: 100%; background: linear-gradient(90deg, var(--accent), #fbbf24); border-radius: 10px;"></div>
+            </div>
+          </div>
+
+          <!-- Academic Recommendations -->
+          <div style="background: rgba(6, 182, 212, 0.05); border: 1px dashed rgba(6, 182, 212, 0.2); border-radius: 0.5rem; padding: 1.25rem; font-size: 0.9rem;">
+            <h4 style="color: var(--secondary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+              <i class="fa-solid fa-lightbulb"></i> Study recommendation:
+            </h4>
+            <p style="margin: 0; color: var(--text-muted); line-height: 1.5;">Focus on quantitative aptitude mock series #8. Accuracy in geometry and algebra modules fell below threshold last week.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Row 3: Certificate Showcase -->
+      <div class="glass-card" style="padding: 2.5rem 2rem;">
+        <h3 style="font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--accent);">
+          <i class="fa-solid fa-certificate"></i> Verified Academy Certificates
+        </h3>
+
+        {% if matching_cert %}
+          <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;" class="cert-flex">
+            <div style="font-size: 4rem; color: var(--accent);">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div style="flex-grow: 1;">
+              <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">Congratulations! You have an active certificate.</h4>
+              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">Your certificate (ID: <strong>{{ matching_cert.id }}</strong>) has been verified and registered in the TechMantra repository database.</p>
+              
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="{% url 'verify_certificate' %}?cert_id={{ matching_cert.id }}" class="btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px;">
+                  <i class="fa-solid fa-eye"></i> View Certificate Details
+                </a>
+                <a href="{% url 'verify_certificate' %}?cert_id={{ matching_cert.id }}" class="btn-outline" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px;" target="_blank">
+                  <i class="fa-solid fa-print"></i> Open Print Version
+                </a>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+            <i class="fa-solid fa-hourglass-half" style="font-size: 3rem; color: rgba(255, 255, 255, 0.1); margin-bottom: 1rem; display: block;"></i>
+            <p style="margin: 0; font-size: 0.95rem;">No certificate is currently registered under your name.</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Certificates are automatically generated and linked upon course completion and verification by admin panel managers.</p>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </section>
+
+  <style>
+    .profile-avatar-container:hover #photo-upload-form {
+      opacity: 1 !important;
+    }
+    @media (max-width: 768px) {
+      .profile-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .cert-flex {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+{% endblock %}

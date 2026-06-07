@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Our Faculty | TechMantra{% endblock %}
+
+{% block content %}
+  <!-- ==========================================
+       Breadcrumb Banner
+       ========================================== -->
+  <section class="breadcrumb-banner">
+    <div class="container">
+      <h1>Our Faculty</h1>
+      <div class="breadcrumb-path">
+        <a href="{% url 'home' %}">Home</a> <span>/ Our Faculty</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       Faculty Grid Section
+       ========================================== -->
+  <section class="section-padding">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="section-title">Meet Our Experts</h2>
+        <p class="section-subtitle">Learn from our experienced, passionate, and qualified subject matter experts.</p>
+      </div>
+
+      <div class="faculty-grid">
+        <!-- Faculty 1 -->
+        <div class="glass-card faculty-card">
+          <div class="faculty-photo-wrapper">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="Mr. Rajesh Kumar" class="faculty-photo">
+            <div class="faculty-social">
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+          </div>
+          <div class="faculty-info">
+            <h3>Mr. Rajesh Kumar</h3>
+            <div class="faculty-subject">Maths Faculty</div>
+            <div class="faculty-experience">10+ Years Experience | M.Sc., B.Ed.</div>
+          </div>
+        </div>
+
+        <!-- Faculty 2 -->
+        <div class="glass-card faculty-card">
+          <div class="faculty-photo-wrapper">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&q=80" alt="Mr. Amit Verma" class="faculty-photo">
+            <div class="faculty-social">
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+          </div>
+          <div class="faculty-info">
+            <h3>Mr. Amit Verma</h3>
+            <div class="faculty-subject">Reasoning Faculty</div>
+            <div class="faculty-experience">8+ Years Experience | MCA</div>
+          </div>
+        </div>
+
+        <!-- Faculty 3 -->
+        <div class="glass-card faculty-card">
+          <div class="faculty-photo-wrapper">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80" alt="Ms. Pooja Sharma" class="faculty-photo">
+            <div class="faculty-social">
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+          </div>
+          <div class="faculty-info">
+            <h3>Ms. Pooja Sharma</h3>
+            <div class="faculty-subject">English Faculty</div>
+            <div class="faculty-experience">7+ Years Experience | M.A., B.Ed.</div>
+          </div>
+        </div>
+
+        <!-- Faculty 4 -->
+        <div class="glass-card faculty-card">
+          <div class="faculty-photo-wrapper">
+            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=80" alt="Mr. Sandeep Singh" class="faculty-photo">
+            <div class="faculty-social">
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+              <a href="#" class="faculty-social-btn"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+          </div>
+          <div class="faculty-info">
+            <h3>Mr. Sandeep Singh</h3>
+            <div class="faculty-subject">G.S. Faculty</div>
+            <div class="faculty-experience">12+ Years Experience | M.A., B.Ed.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Row at bottom -->
+      <div class="features-badge-row">
+        <div class="glass-card feature-badge-card">
+          <i class="fa-solid fa-users-gear"></i>
+          <div>
+            <h4>Experienced Faculty</h4>
+          </div>
+        </div>
+        <div class="glass-card feature-badge-card">
+          <i class="fa-solid fa-chalkboard-user"></i>
+          <div>
+            <h4>Smart Classrooms</h4>
+          </div>
+        </div>
+        <div class="glass-card feature-badge-card">
+          <i class="fa-solid fa-file-signature"></i>
+          <div>
+            <h4>Regular Mock Tests</h4>
+          </div>
+        </div>
+        <div class="glass-card feature-badge-card">
+          <i class="fa-solid fa-user-graduate"></i>
+          <div>
+            <h4>Personalized Guidance</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
