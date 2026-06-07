@@ -77,13 +77,25 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 import os
 
+POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
 DB_NAME = os.environ.get('DB_NAME')
 DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 DB_HOST = os.environ.get('DB_HOST', 'localhost')
 DB_PORT = os.environ.get('DB_PORT', '3306')
 
-if DB_NAME and DB_USER and DB_PASSWORD:
+if POSTGRES_HOST:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DATABASE'),
+            'USER': os.environ.get('POSTGRES_USER'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+            'HOST': POSTGRES_HOST,
+            'PORT': '5432',
+        }
+    }
+elif DB_NAME and DB_USER and DB_PASSWORD:
     try:
         import pymysql
         pymysql.install_as_MySQLdb()
