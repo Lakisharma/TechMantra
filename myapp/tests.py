@@ -444,6 +444,53 @@ class StudentPortalTests(TestCase):
         self.assertContains(response, "Gallery image deleted successfully!")
         self.assertFalse(GalleryImage.objects.filter(id=img.id).exists())
 
+    def test_admin_add_admin_success(self):
+        from .models import AdminProfile
+        admin_user = User.objects.create_superuser(username='adminuser', password='password123')
+        self.client.login(username='adminuser', password='password123')
+
+        add_url = reverse('admin_add_admin')
+        response = self.client.post(add_url, {
+            'username': 'newstaff',
+            'full_name': 'New Staff Member',
+            'email': 'newstaff@techmantra.com',
+            'password': 'StaffPassword123!',
+            'ajax': 'true'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Admin account created successfully!")
+
+        new_user = User.objects.get(username='newstaff')
+        self.assertTrue(new_user.is_staff)
+        
+        profile = AdminProfile.objects.get(user=new_user)
+        self.assertEqual(profile.created_by, admin_user)
+
+    def test_admin_delete_admin_success(self):
+        admin_user = User.objects.create_superuser(username='adminuser', password='password123')
+        other_staff = User.objects.create_user(username='otherstaff', password='password123', is_staff=True)
+        self.client.login(username='adminuser', password='password123')
+
+        delete_url = reverse('admin_delete_admin', kwargs={'admin_id': other_staff.id})
+        response = self.client.post(delete_url, {
+            'ajax': 'true'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Admin account deleted successfully!")
+        self.assertFalse(User.objects.filter(id=other_staff.id).exists())
+
+    def test_admin_delete_admin_self_fail(self):
+        admin_user = User.objects.create_superuser(username='adminuser', password='password123')
+        self.client.login(username='adminuser', password='password123')
+
+        delete_url = reverse('admin_delete_admin', kwargs={'admin_id': admin_user.id})
+        response = self.client.post(delete_url, {
+            'ajax': 'true'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You cannot delete your own account.")
+        self.assertTrue(User.objects.filter(id=admin_user.id).exists())
+
 
 
 

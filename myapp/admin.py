@@ -67,4 +67,26 @@ class WebsiteSettingsAdmin(admin.ModelAdmin):
     list_display = ('site_name', 'contact_email', 'contact_phone')
 
 
+from .models import AdminProfile
+
+@admin.register(AdminProfile)
+class AdminProfileAdmin(admin.ModelAdmin):
+    list_display = ('get_username', 'get_email', 'get_created_by', 'created_at')
+    search_fields = ('user__username', 'created_by__username')
+    list_filter = ('created_at',)
+
+    def get_username(self, obj):
+        return obj.user.username
+    get_username.short_description = 'Username'
+
+    def get_email(self, obj):
+        return obj.user.email
+    get_email.short_description = 'Email'
+
+    def get_created_by(self, obj):
+        return obj.created_by.username if obj.created_by else 'System / Initial Setup'
+    get_created_by.short_description = 'Created By'
+
+
+
 

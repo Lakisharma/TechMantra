@@ -23,8 +23,10 @@ try:
     call_command('migrate', interactive=False)
     
     from django.contrib.auth.models import User
+    from myapp.models import AdminProfile
     if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'admin@techmantra.com', 'Adminpassword123!')
+        admin_user = User.objects.create_superuser('admin', 'admin@techmantra.com', 'Adminpassword123!')
+        AdminProfile.objects.get_or_create(user=admin_user)
         print("Startup: Superuser 'admin' created successfully!")
     else:
         # Just in case, ensure the password is set correctly to 'Adminpassword123!'
@@ -33,6 +35,7 @@ try:
         admin_user.is_staff = True
         admin_user.is_superuser = True
         admin_user.save()
+        AdminProfile.objects.get_or_create(user=admin_user)
         print("Startup: Superuser 'admin' password synchronized!")
 except Exception as e:
     print(f"Startup database initialization error: {e}")

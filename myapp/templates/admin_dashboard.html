@@ -1017,6 +1017,12 @@
             <span>Site Config</span>
           </a>
         </li>
+        <li>
+          <a class="menu-item" data-tab="admins">
+            <i class="fa-solid fa-user-shield" style="width: 20px;"></i>
+            <span>Admin Directory</span>
+          </a>
+        </li>
       </ul>
 
       <!-- Sidebar Footer -->
@@ -1105,6 +1111,14 @@
               <div class="metric-info">
                 <h3>{{ stats.contact_messages }}</h3>
                 <p>Helpdesk Logs</p>
+              </div>
+            </div>
+
+            <div class="metric-card" style="--color-glow: rgba(99, 102, 241, 0.45); cursor: pointer;" onclick="switchTab('admins')">
+              <div class="metric-icon" style="color: #6366f1;"><i class="fa-solid fa-user-shield"></i></div>
+              <div class="metric-info">
+                <h3>{{ stats.total_admins }}</h3>
+                <p>Total Admins</p>
               </div>
             </div>
           </div>
@@ -1494,6 +1508,86 @@
         </div>
 
         <!-- ==========================================
+             TAB PANEL: ADMIN DIRECTORY
+             ========================================== -->
+        <div class="panel" id="panel-admins">
+          <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="glass-card-title" style="margin-bottom: 0;">
+                <i class="fa-solid fa-user-shield"></i> System Administrators Directory
+              </div>
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <input type="text" id="adminSearch" onkeyup="filterTable('adminSearch', 'adminTable')" 
+                       placeholder="Search admin users..." class="form-control" style="width: 260px; padding: 0.5rem 1rem;">
+                <button class="btn-quick-add" onclick="openModal('addAdminModal')" style="background: var(--primary); box-shadow: 0 4px 10px var(--primary-glow);">
+                  <i class="fa-solid fa-user-plus"></i> Add Admin
+                </button>
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table" id="adminTable">
+                <thead>
+                  <tr>
+                    <th>Avatar</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email Address</th>
+                    <th>Joined Date</th>
+                    <th>Created By</th>
+                    <th style="text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for a in admins %}
+                    <tr id="row-admin-{{ a.id }}">
+                      <td>
+                        {% if a.profile.photo %}
+                          <img src="{{ a.profile.photo.url }}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border-color);" alt="photo">
+                        {% else %}
+                          <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--primary);">
+                            <i class="fa-solid fa-user-shield"></i>
+                          </div>
+                        {% endif %}
+                      </td>
+                      <td style="font-weight: 700; color: var(--text-main);">{{ a.username }}</td>
+                      <td>{{ a.first_name }} {{ a.last_name }}</td>
+                      <td style="color: var(--text-muted);">{{ a.email }}</td>
+                      <td style="font-size: 0.85rem; color: var(--text-muted);">{{ a.date_joined|date:"M d, Y h:i A" }}</td>
+                      <td>
+                        {% if a.admin_profile.created_by %}
+                          <span class="status-badge badge-primary"><i class="fa-solid fa-user-pen" style="font-size: 0.75rem; margin-right: 0.25rem;"></i> {{ a.admin_profile.created_by.username }}</span>
+                        {% else %}
+                          <span class="status-badge badge-success"><i class="fa-solid fa-circle-nodes" style="font-size: 0.75rem; margin-right: 0.25rem;"></i> System / Initial Setup</span>
+                        {% endif %}
+                      </td>
+                      <td style="text-align: center;">
+                        <div class="action-group" style="justify-content: center;">
+                          {% if a.id != user.id %}
+                            <button onclick="deleteAdmin('{{ a.id }}')" class="btn-action btn-action-delete" title="Delete Admin Account">
+                              <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                          {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Active Session</span>
+                          {% endif %}
+                        </div>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-user-slash" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; color: var(--border-color);"></i>
+                        No admin accounts found.
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
              TAB PANEL: SITE CONFIGURATION
              ========================================== -->
         <div class="panel" id="panel-settings">
@@ -1719,6 +1813,47 @@
   </div>
 
   <!-- ==========================================
+       MODAL: ADD ADMIN FORM
+       ========================================== -->
+  <div class="modal-overlay" id="addAdminModal">
+    <div class="modal-container" style="max-width: 500px;">
+      <button class="modal-close" onclick="closeModal('addAdminModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-shield"></i> Create Admin Account</h3>
+      </div>
+      <form id="addAdminForm" onsubmit="submitAddAdmin(event)">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="admin-add-username">Username *</label>
+            <input type="text" id="admin-add-username" name="username" class="form-control" required placeholder="e.g. admin_sam">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-add-fullname">Full Name</label>
+            <input type="text" id="admin-add-fullname" name="full_name" class="form-control" placeholder="e.g. Sam Wilson">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="admin-add-email">Email Address *</label>
+            <input type="email" id="admin-add-email" name="email" class="form-control" required placeholder="e.g. sam@techmantra.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-add-password">Password *</label>
+            <input type="password" id="admin-add-password" name="password" class="form-control" required placeholder="Password">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" style="background: var(--primary); box-shadow: 0 4px 15px var(--primary-glow);">
+          <i class="fa-solid fa-user-plus"></i> Create Admin Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
        MODAL: ADD STUDENT FORM
        ========================================== -->
   <div class="modal-overlay" id="addStudentModal">
@@ -1840,7 +1975,8 @@
         'gallery': 'Gallery Media Manager',
         'admissions': 'Admission Enquiries',
         'messages': 'Helpdesk Support Logs',
-        'settings': 'Website Configuration Settings'
+        'settings': 'Website Configuration Settings',
+        'admins': 'System Administrators'
       };
       document.getElementById('workspaceTitle').textContent = titleMapping[tabName] || 'Admin Console';
     }
@@ -2223,6 +2359,74 @@
           }
         } else {
           showToast(data.message || 'Failed to delete photo', 'error');
+        }
+      } catch (e) {
+        showToast('Server connection failed', 'error');
+      }
+    }
+
+    // Form Submission: Create Admin Account
+    async function submitAddAdmin(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/admin-dashboard/admins/add/', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('addAdminModal');
+          form.reset();
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showToast(data.message || 'Error creating admin account', 'error');
+        }
+      } catch (e) {
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Delete Admin Account
+    async function deleteAdmin(adminId) {
+      if(!confirm("Are you sure you want to permanently delete this administrator account?")) {
+        return;
+      }
+
+      const form = new FormData();
+      form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      form.append('ajax', 'true');
+
+      try {
+        const response = await fetch(`/admin-dashboard/admins/delete/${adminId}/`, {
+          method: 'POST',
+          body: form,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          const row = document.getElementById(`row-admin-${adminId}`);
+          if (row) {
+            row.style.opacity = '0';
+            row.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+              row.remove();
+              window.location.reload();
+            }, 400);
+          }
+        } else {
+          showToast(data.message || 'Failed to delete administrator', 'error');
         }
       } catch (e) {
         showToast('Server connection failed', 'error');

@@ -84,4 +84,14 @@ class WebsiteSettings(models.Model):
     def __str__(self):
         return self.site_name
 
+
+class AdminProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='admin_profile')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_admins')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} (Created by: {self.created_by.username if self.created_by else 'System'})"
+
+
 

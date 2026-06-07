@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import Services, Admission, ContactMessage, StudentProfile, Course, GalleryImage, WebsiteSettings
+from .models import Services, Admission, ContactMessage, StudentProfile, Course, GalleryImage, WebsiteSettings, AdminProfile
 
 # Create your views here.
 def index(request):
@@ -386,12 +386,18 @@ def admin_dashboard_view(request):
     courses_list = Course.objects.all().order_by('-created_at')
     images_list = GalleryImage.objects.all().order_by('-uploaded_at')
 
+    # Fetch and ensure profiles for admins
+    admins = User.objects.filter(is_staff=True).order_by('date_joined')
+    for admin in admins:
+        AdminProfile.objects.get_or_create(user=admin)
+
     # Count stats
     total_students = students.exclude(user__is_staff=True).count()
     pending_admissions = admissions.count()
     contact_messages = contacts.count()
     total_courses = courses_list.count()
     total_images = images_list.count()
+    total_admins = admins.count()
 
     return render(request, 'admin_dashboard.html', {
         "students": students,
@@ -399,12 +405,14 @@ def admin_dashboard_view(request):
         "contacts": contacts,
         "courses": courses_list,
         "gallery_images": images_list,
+        "admins": admins,
         "stats": {
             "total_students": total_students,
             "pending_admissions": pending_admissions,
             "contact_messages": contact_messages,
             "total_courses": total_courses,
-            "total_images": total_images
+            "total_images": total_images,
+            "total_admins": total_admins
         }
     })
 
@@ -735,6 +743,76 @@ def admin_delete_gallery_view(request, image_id):
             return JsonResponse({"status": "error", "message": "Gallery image not found."})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_add_admin_view(request):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        full_name = request.POST.get("full_name", "")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+
+        if not username or not email or not password:
+            return JsonResponse({"status": "error", "message": "Please fill all required fields."})
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"status": "error", "message": "Username already exists."})
+
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"status": "error", "message": "Email already registered."})
+
+        try:
+            first_name = full_name
+            last_name = ""
+            if " " in full_name:
+                parts = full_name.split(" ", 1)
+                first_name = parts[0]
+                last_name = parts[1]
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_staff=True
+            )
+
+            # Create AdminProfile tracking creator
+            AdminProfile.objects.create(
+                user=user,
+                created_by=request.user
+            )
+
+            return JsonResponse({"status": "success", "message": "Admin account created successfully!"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_delete_admin_view(request, admin_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        if request.user.id == admin_id:
+            return JsonResponse({"status": "error", "message": "You cannot delete your own account."})
+
+        try:
+            user = User.objects.get(id=admin_id, is_staff=True)
+            user.delete()
+            return JsonResponse({"status": "success", "message": "Admin account deleted successfully!"})
+        except User.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Admin user not found."})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
 
 
 
