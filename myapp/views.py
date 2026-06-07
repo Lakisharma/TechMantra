@@ -259,9 +259,16 @@ from django.http import HttpResponse
 
 def temp_create_admin(request):
     try:
+        from django.db import connection
+        engine = connection.settings_dict.get('ENGINE')
+        db_name = connection.settings_dict.get('NAME')
         username = 'admin'
         password = 'Adminpassword123!'
         email = 'admin@techmantra.com'
+        
+        # Explicitly run migrate to ensure database tables are created
+        from django.core.management import call_command
+        call_command('migrate', interactive=False)
         
         if User.objects.filter(username=username).exists():
             user = User.objects.get(username=username)
@@ -269,12 +276,15 @@ def temp_create_admin(request):
             user.is_staff = True
             user.is_superuser = True
             user.save()
-            return HttpResponse(f"Admin user '{username}' password updated successfully to: '{password}'")
+            return HttpResponse(f"SUCCESS: Admin user '{username}' password updated successfully to '{password}' on database engine: {engine} ({db_name})")
         else:
             User.objects.create_superuser(username=username, email=email, password=password)
-            return HttpResponse(f"Admin user '{username}' created successfully with password: '{password}'")
+            return HttpResponse(f"SUCCESS: Admin user '{username}' created successfully with password: '{password}' on database engine: {engine} ({db_name})")
     except Exception as e:
-        return HttpResponse(f"Error: {e}")
+        from django.db import connection
+        engine = connection.settings_dict.get('ENGINE')
+        return HttpResponse(f"Error on engine {engine}: {e}")
+
 
 
 
