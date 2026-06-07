@@ -172,7 +172,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Cloudinary Storage for Media Files (User Uploaded Images) - Trigger Build 17:28
+# Cloudinary Storage for Media Files (User Uploaded Images) - Trigger Build after Env Variables
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
