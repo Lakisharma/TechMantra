@@ -1206,6 +1206,9 @@
 
               <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1.5rem; text-align: center;">
                 <p style="font-size: 0.75rem; color: var(--text-muted);">TechMantra Security Panel v1.2.0-LTS</p>
+                <p style="font-size: 0.7rem; color: #a855f7; margin-top: 0.25rem;">
+                  Storage: {{ debug_info.storage_class }} | Cloudinary Env Keys: {{ debug_info.cloudinary_keys|join:", " }}
+                </p>
               </div>
             </div>
           </div>

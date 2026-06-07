@@ -391,6 +391,16 @@ def admin_dashboard_view(request):
     for admin in admins:
         AdminProfile.objects.get_or_create(user=admin)
 
+    # Debug environment variables & storage backend
+    import os
+    from django.core.files.storage import default_storage
+    cloudinary_keys = [k for k in os.environ.keys() if 'CLOUDINARY' in k.upper()]
+    storage_class = default_storage.__class__.__name__
+    debug_info = {
+        "cloudinary_keys": cloudinary_keys,
+        "storage_class": storage_class,
+    }
+
     # Count stats
     total_students = students.exclude(user__is_staff=True).count()
     pending_admissions = admissions.count()
@@ -406,6 +416,7 @@ def admin_dashboard_view(request):
         "courses": courses_list,
         "gallery_images": images_list,
         "admins": admins,
+        "debug_info": debug_info,
         "stats": {
             "total_students": total_students,
             "pending_admissions": pending_admissions,
