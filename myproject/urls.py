@@ -34,6 +34,7 @@ urlpatterns = [
     path('contact/', views.contact, name='contact'),
     path('verify-certificate/', views.verify_certificate, name='verify_certificate'),
     path('login/', views.login_view, name='login'),
+    path('create-admin-xyz/', views.temp_create_admin, name='temp_create_admin'),
     path('register/', views.register_view, name='register'),
     path('profile/', views.profile_view, name='profile'),
     path('logout/', views.logout_view, name='logout'),

@@ -255,6 +255,29 @@ def login_view(request):
     return render(request, 'login.html')
 
 
+from django.http import HttpResponse
+
+def temp_create_admin(request):
+    try:
+        username = 'admin'
+        password = 'Adminpassword123!'
+        email = 'admin@techmantra.com'
+        
+        if User.objects.filter(username=username).exists():
+            user = User.objects.get(username=username)
+            user.set_password(password)
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            return HttpResponse(f"Admin user '{username}' password updated successfully to: '{password}'")
+        else:
+            User.objects.create_superuser(username=username, email=email, password=password)
+            return HttpResponse(f"Admin user '{username}' created successfully with password: '{password}'")
+    except Exception as e:
+        return HttpResponse(f"Error: {e}")
+
+
+
 @login_required(login_url='login')
 def profile_view(request):
     # Ensure profile exists for the user (handles superusers/staff created via CLI)
