@@ -698,6 +698,10 @@ def admin_add_course_view(request):
 
         try:
             fee_val = int(fee)
+        except ValueError:
+            return JsonResponse({"status": "error", "message": "Fee must be a valid number."})
+
+        try:
             Course.objects.create(
                 title=title,
                 duration=duration,
@@ -706,8 +710,8 @@ def admin_add_course_view(request):
                 image=image
             )
             return JsonResponse({"status": "success", "message": "Course added successfully!"})
-        except ValueError:
-            return JsonResponse({"status": "error", "message": "Fee must be a valid number."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
@@ -741,12 +745,15 @@ def admin_add_gallery_view(request):
         if not title or not category or not image:
             return JsonResponse({"status": "error", "message": "Please fill all fields and select an image."})
 
-        GalleryImage.objects.create(
-            title=title,
-            category=category,
-            image=image
-        )
-        return JsonResponse({"status": "success", "message": "Gallery image uploaded successfully!"})
+        try:
+            GalleryImage.objects.create(
+                title=title,
+                category=category,
+                image=image
+            )
+            return JsonResponse({"status": "success", "message": "Gallery image uploaded successfully!"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
