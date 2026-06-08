@@ -1018,6 +1018,12 @@
           </a>
         </li>
         <li>
+          <a class="menu-item" data-tab="certificates">
+            <i class="fa-solid fa-certificate" style="width: 20px;"></i>
+            <span>Certificates</span>
+          </a>
+        </li>
+        <li>
           <a class="menu-item" data-tab="admins">
             <i class="fa-solid fa-user-shield" style="width: 20px;"></i>
             <span>Admin Directory</span>
@@ -1114,6 +1120,14 @@
               </div>
             </div>
 
+            <div class="metric-card" style="--color-glow: rgba(99, 102, 241, 0.4); cursor: pointer;" onclick="switchTab('certificates')">
+              <div class="metric-icon" style="color: var(--primary);"><i class="fa-solid fa-certificate"></i></div>
+              <div class="metric-info">
+                <h3>{{ stats.total_certificates }}</h3>
+                <p>Total Certificates</p>
+              </div>
+            </div>
+
             <div class="metric-card" style="--color-glow: rgba(99, 102, 241, 0.45); cursor: pointer;" onclick="switchTab('admins')">
               <div class="metric-icon" style="color: #6366f1;"><i class="fa-solid fa-user-shield"></i></div>
               <div class="metric-info">
@@ -1200,6 +1214,10 @@
                   <button onclick="switchTab('admissions')" class="menu-item" style="background: rgba(255,255,255,0.02); text-align: left;">
                     <i class="fa-solid fa-circle-check" style="color: var(--success);"></i>
                     <span>Approve Pending Enquiries</span>
+                  </button>
+                  <button onclick="switchTab('certificates')" class="menu-item" style="background: rgba(255,255,255,0.02); text-align: left;">
+                    <i class="fa-solid fa-certificate" style="color: var(--primary);"></i>
+                    <span>Manage Student Certificates</span>
                   </button>
                 </div>
               </div>
@@ -1501,6 +1519,70 @@
                       <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                         <i class="fa-solid fa-message-slash" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; color: var(--border-color);"></i>
                         No support messages in database.
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             TAB PANEL: CERTIFICATES MANAGEMENT
+             ========================================== -->
+        <div class="panel" id="panel-certificates">
+          <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="glass-card-title" style="margin-bottom: 0;">
+                <i class="fa-solid fa-certificate"></i> Student Certificates Directory
+              </div>
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <input type="text" id="certificateSearch" onkeyup="filterTable('certificateSearch', 'certificateTable')" 
+                       placeholder="Search certificate ID, student, course..." class="form-control" style="width: 260px; padding: 0.5rem 1rem;">
+                <button class="btn-quick-add" onclick="openModal('addCertificateModal')">
+                  <i class="fa-solid fa-plus"></i> Add Certificate
+                </button>
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table" id="certificateTable">
+                <thead>
+                  <tr>
+                    <th>Certificate ID</th>
+                    <th>Student Name</th>
+                    <th>Course Name</th>
+                    <th>Rank / Achievement</th>
+                    <th>Duration</th>
+                    <th>Issue Date</th>
+                    <th>Grade</th>
+                    <th style="text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for c in certificates %}
+                    <tr id="row-certificate-{{ c.id }}">
+                      <td style="font-weight: 700; color: var(--text-main);">{{ c.certificate_id }}</td>
+                      <td style="font-weight: 600;">{{ c.student_name }}</td>
+                      <td style="color: var(--primary); font-weight: 600;">{{ c.course_name }}</td>
+                      <td style="color: var(--accent); font-weight: 700;">{{ c.rank }}</td>
+                      <td>{{ c.duration }}</td>
+                      <td>{{ c.issue_date }}</td>
+                      <td>
+                        <span class="status-badge badge-primary">{{ c.grade }}</span>
+                      </td>
+                      <td style="text-align: center;">
+                        <button onclick="deleteCertificate('{{ c.id }}')" class="btn-action btn-action-delete" title="Delete Certificate">
+                          <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; color: var(--border-color);"></i>
+                        No student certificates found.
                       </td>
                     </tr>
                   {% endfor %}
@@ -1963,6 +2045,63 @@
     </div>
   </div>
 
+  <!-- ==========================================
+       MODAL: ADD CERTIFICATE FORM
+       ========================================== -->
+  <div class="modal-overlay" id="addCertificateModal">
+    <div class="modal-container" style="max-width: 500px;">
+      <button class="modal-close" onclick="closeModal('addCertificateModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-certificate"></i> Add Student Certificate</h3>
+      </div>
+      <form id="addCertificateForm" onsubmit="submitAddCertificate(event)">
+        {% csrf_token %}
+        
+        <div class="form-group">
+          <label class="form-label" for="cert-add-id">Certificate ID *</label>
+          <input type="text" id="cert-add-id" name="certificate_id" class="form-control" required placeholder="e.g. TM-2026-101">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="cert-add-student">Student Name *</label>
+            <input type="text" id="cert-add-student" name="student_name" class="form-control" required placeholder="e.g. Ankit Kumar">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cert-add-course">Course Name *</label>
+            <input type="text" id="cert-add-course" name="course_name" class="form-control" required placeholder="e.g. SSC CGL Coaching Program">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="cert-add-rank">Rank / Achievement</label>
+            <input type="text" id="cert-add-rank" name="rank" class="form-control" placeholder="e.g. AIR 45 (or leave blank)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cert-add-duration">Duration *</label>
+            <input type="text" id="cert-add-duration" name="duration" class="form-control" required placeholder="e.g. 6 Months">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="cert-add-issue-date">Issue Date *</label>
+            <input type="text" id="cert-add-issue-date" name="issue_date" class="form-control" required placeholder="e.g. May 15, 2026">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cert-add-grade">Grade</label>
+            <input type="text" id="cert-add-grade" name="grade" class="form-control" placeholder="e.g. A+ (or leave blank)">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" style="background: var(--primary); box-shadow: 0 4px 15px var(--primary-glow);">
+          <i class="fa-solid fa-plus"></i> Add Certificate
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container"></div>
 
@@ -2013,6 +2152,7 @@
         'admissions': 'Admission Enquiries',
         'messages': 'Helpdesk Support Logs',
         'settings': 'Website Configuration Settings',
+        'certificates': 'Certificate Registry',
         'admins': 'System Administrators'
       };
       document.getElementById('workspaceTitle').textContent = titleMapping[tabName] || 'Admin Console';
@@ -2510,6 +2650,74 @@
         showToast('Server connection failed', 'error');
       } finally {
         submitBtn.disabled = false;
+      }
+    }
+
+    // Form Submission: Create Certificate
+    async function submitAddCertificate(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/admin-dashboard/certificates/add/', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('addCertificateModal');
+          form.reset();
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showToast(data.message || 'Error adding certificate', 'error');
+        }
+      } catch (e) {
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Delete Certificate
+    async function deleteCertificate(certId) {
+      if(!confirm("Are you sure you want to delete this certificate? This action is permanent.")) {
+        return;
+      }
+
+      const form = new FormData();
+      form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      form.append('ajax', 'true');
+
+      try {
+        const response = await fetch(`/admin-dashboard/certificates/delete/${certId}/`, {
+          method: 'POST',
+          body: form,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          const row = document.getElementById(`row-certificate-${certId}`);
+          if (row) {
+            row.style.opacity = '0';
+            row.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+              row.remove();
+              window.location.reload();
+            }, 400);
+          }
+        } else {
+          showToast(data.message || 'Failed to delete certificate', 'error');
+        }
+      } catch (e) {
+        showToast('Server connection failed', 'error');
       }
     }
   </script>

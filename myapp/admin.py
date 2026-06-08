@@ -67,7 +67,7 @@ class WebsiteSettingsAdmin(admin.ModelAdmin):
     list_display = ('site_name', 'contact_email', 'contact_phone')
 
 
-from .models import AdminProfile
+from .models import AdminProfile, Certificate
 
 @admin.register(AdminProfile)
 class AdminProfileAdmin(admin.ModelAdmin):
@@ -86,6 +86,13 @@ class AdminProfileAdmin(admin.ModelAdmin):
     def get_created_by(self, obj):
         return obj.created_by.username if obj.created_by else 'System / Initial Setup'
     get_created_by.short_description = 'Created By'
+
+
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display = ('certificate_id', 'student_name', 'course_name', 'issue_date', 'grade')
+    search_fields = ('certificate_id', 'student_name', 'course_name')
+    list_filter = ('course_name', 'grade')
 
 
 

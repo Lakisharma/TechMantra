@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import Services, Admission, ContactMessage, StudentProfile, Course, GalleryImage, WebsiteSettings, AdminProfile
+from .models import Services, Admission, ContactMessage, StudentProfile, Course, GalleryImage, WebsiteSettings, AdminProfile, Certificate
 
 # Create your views here.
 def index(request):
@@ -87,6 +87,51 @@ def contact(request):
             
     return render(request, 'contact.html', {"success_msg": success_msg})
 
+def populate_default_certificates():
+    defaults = [
+        {
+            "certificate_id": "TM-2026-101",
+            "student_name": "Ankit Kumar",
+            "course_name": "SSC CGL Coaching Program",
+            "rank": "AIR 45",
+            "duration": "6 Months",
+            "issue_date": "May 15, 2026",
+            "grade": "A+"
+        },
+        {
+            "certificate_id": "TM-2026-102",
+            "student_name": "Priya Sharma",
+            "course_name": "Bank PO Prep Course",
+            "rank": "AIR 78",
+            "duration": "6 Months",
+            "issue_date": "May 18, 2026",
+            "grade": "A+"
+        },
+        {
+            "certificate_id": "TM-2026-103",
+            "student_name": "Rahul Verma",
+            "course_name": "RRB NTPC Coaching",
+            "rank": "AIR 29",
+            "duration": "6 Months",
+            "issue_date": "May 20, 2026",
+            "grade": "A+"
+        },
+        {
+            "certificate_id": "TM-2026-104",
+            "student_name": "Neha Singh",
+            "course_name": "NDA / CDS Exam Prep",
+            "rank": "AIR 15",
+            "duration": "1 Year",
+            "issue_date": "May 22, 2026",
+            "grade": "A++"
+        }
+    ]
+    for d in defaults:
+        Certificate.objects.get_or_create(
+            certificate_id=d["certificate_id"],
+            defaults=d
+        )
+
 def verify_certificate(request):
     if request.GET.get('debug_storage') == '1':
         import os
@@ -99,44 +144,7 @@ def verify_certificate(request):
             "has_cloudinary_cloud_name": bool(os.environ.get('CLOUDINARY_CLOUD_NAME')),
         })
 
-    cert_db = {
-        "TM-2026-101": {
-            "id": "TM-2026-101",
-            "name": "Ankit Kumar",
-            "course": "SSC CGL Coaching Program",
-            "rank": "AIR 45",
-            "duration": "6 Months",
-            "issue_date": "May 15, 2026",
-            "grade": "A+"
-        },
-        "TM-2026-102": {
-            "id": "TM-2026-102",
-            "name": "Priya Sharma",
-            "course": "Bank PO Prep Course",
-            "rank": "AIR 78",
-            "duration": "6 Months",
-            "issue_date": "May 18, 2026",
-            "grade": "A+"
-        },
-        "TM-2026-103": {
-            "id": "TM-2026-103",
-            "name": "Rahul Verma",
-            "course": "RRB NTPC Coaching",
-            "rank": "AIR 29",
-            "duration": "6 Months",
-            "issue_date": "May 20, 2026",
-            "grade": "A+"
-        },
-        "TM-2026-104": {
-            "id": "TM-2026-104",
-            "name": "Neha Singh",
-            "course": "NDA / CDS Exam Prep",
-            "rank": "AIR 15",
-            "duration": "1 Year",
-            "issue_date": "May 22, 2026",
-            "grade": "A++"
-        }
-    }
+    populate_default_certificates()
     
     cert_id = request.GET.get("cert_id") or request.POST.get("cert_id")
     searched = False
@@ -146,9 +154,20 @@ def verify_certificate(request):
     if cert_id:
         searched = True
         cert_id = cert_id.strip().upper()
-        if cert_id in cert_db:
+        try:
+            cert = Certificate.objects.get(certificate_id=cert_id)
             found = True
-            details = cert_db[cert_id]
+            details = {
+                "id": cert.certificate_id,
+                "name": cert.student_name,
+                "course": cert.course_name,
+                "rank": cert.rank,
+                "duration": cert.duration,
+                "issue_date": cert.issue_date,
+                "grade": cert.grade
+            }
+        except Certificate.DoesNotExist:
+            found = False
             
     return render(request, 'verify_certificate.html', {
         "searched": searched,
@@ -391,11 +410,14 @@ def admin_dashboard_view(request):
             return JsonResponse({"status": "error", "message": "Access denied. Admin permissions required."})
         return redirect('home')
 
+    populate_default_certificates()
+
     students = StudentProfile.objects.select_related('user').all()
     admissions = Admission.objects.all().order_by('-created_at')
     contacts = ContactMessage.objects.all().order_by('-created_at')
     courses_list = Course.objects.all().order_by('-created_at')
     images_list = GalleryImage.objects.all().order_by('-uploaded_at')
+    certificates_list = Certificate.objects.all().order_by('-created_at')
 
     # Fetch and ensure profiles for admins
     admins = User.objects.filter(is_staff=True).order_by('date_joined')
@@ -419,6 +441,7 @@ def admin_dashboard_view(request):
     total_courses = courses_list.count()
     total_images = images_list.count()
     total_admins = admins.count()
+    total_certificates = certificates_list.count()
 
     return render(request, 'admin_dashboard.html', {
         "students": students,
@@ -427,6 +450,7 @@ def admin_dashboard_view(request):
         "courses": courses_list,
         "gallery_images": images_list,
         "admins": admins,
+        "certificates": certificates_list,
         "debug_info": debug_info,
         "stats": {
             "total_students": total_students,
@@ -434,7 +458,8 @@ def admin_dashboard_view(request):
             "contact_messages": contact_messages,
             "total_courses": total_courses,
             "total_images": total_images,
-            "total_admins": total_admins
+            "total_admins": total_admins,
+            "total_certificates": total_certificates
         }
     })
 
@@ -863,6 +888,60 @@ def admin_change_admin_password_view(request, admin_id):
             return JsonResponse({"status": "error", "message": "Admin user not found."})
         except Exception as e:
             return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_add_certificate_view(request):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        certificate_id = request.POST.get("certificate_id")
+        student_name = request.POST.get("student_name")
+        course_name = request.POST.get("course_name")
+        rank = request.POST.get("rank", "N/A") or "N/A"
+        duration = request.POST.get("duration")
+        issue_date = request.POST.get("issue_date")
+        grade = request.POST.get("grade", "N/A") or "N/A"
+
+        if not certificate_id or not student_name or not course_name or not duration or not issue_date:
+            return JsonResponse({"status": "error", "message": "Please fill all required fields."})
+
+        # Check uniqueness of certificate_id
+        if Certificate.objects.filter(certificate_id=certificate_id).exists():
+            return JsonResponse({"status": "error", "message": f"Certificate ID '{certificate_id}' already exists."})
+
+        try:
+            Certificate.objects.create(
+                certificate_id=certificate_id,
+                student_name=student_name,
+                course_name=course_name,
+                rank=rank,
+                duration=duration,
+                issue_date=issue_date,
+                grade=grade
+            )
+            return JsonResponse({"status": "success", "message": "Certificate added successfully!"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_delete_certificate_view(request, cert_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        try:
+            cert = Certificate.objects.get(id=cert_id)
+            cert.delete()
+            return JsonResponse({"status": "success", "message": "Certificate deleted successfully!"})
+        except Certificate.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Certificate not found."})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
