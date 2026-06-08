@@ -181,24 +181,15 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...';
             btn.disabled = true;
             
-            const originalWidth = element.style.width;
-            const originalHeight = element.style.height;
-            const originalMaxWidth = element.style.maxWidth;
-            element.style.width = '296mm';
-            element.style.height = '209mm';
-            element.style.maxWidth = 'none';
+            element.classList.add('pdf-rendering');
             
             html2pdf().set(opt).from(element).save().then(() => {
-              element.style.width = originalWidth;
-              element.style.height = originalHeight;
-              element.style.maxWidth = originalMaxWidth;
+              element.classList.remove('pdf-rendering');
               btn.innerHTML = originalText;
               btn.disabled = false;
             }).catch(err => {
               console.error(err);
-              element.style.width = originalWidth;
-              element.style.height = originalHeight;
-              element.style.maxWidth = originalMaxWidth;
+              element.classList.remove('pdf-rendering');
               btn.innerHTML = originalText;
               btn.disabled = false;
               alert("Could not generate PDF. Please use the Print Certificate button.");

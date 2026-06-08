@@ -2190,6 +2190,51 @@ textarea.form-control {
   }
 }
 
+/* PDF Download Mode Styles (to match landscape printable constraints) */
+.certificate-container.pdf-rendering {
+  position: relative !important;
+  margin: 0 auto !important;
+  width: 296mm !important;
+  height: 209mm !important;
+  max-width: none !important;
+  box-shadow: none !important;
+  padding: 1.5rem !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.certificate-container.pdf-rendering .certificate-border-outer {
+  padding: 0.8rem !important;
+  border-width: 10px !important;
+}
+
+.certificate-container.pdf-rendering .certificate-border-inner {
+  padding: 1.2rem 1.5rem !important;
+}
+
+.certificate-container.pdf-rendering .main-title {
+  margin-bottom: 0.8rem !important;
+}
+
+.certificate-container.pdf-rendering .student-name {
+  margin-bottom: 0.8rem !important;
+}
+
+.certificate-container.pdf-rendering .cert-body-text {
+  margin-bottom: 1rem !important;
+}
+
+.certificate-container.pdf-rendering .cert-rank-badge {
+  margin-bottom: 1rem !important;
+}
+
+.certificate-container.pdf-rendering .certificate-footer {
+  margin-bottom: 0.8rem !important;
+  padding-top: 1rem !important;
+}
+
 /* Print Mode Styles */
 @media print {
   @page {
@@ -2250,7 +2295,7 @@ textarea.form-control {
     height: 210mm !important; /* A4 landscape height */
     max-width: none !important;
     box-shadow: none !important;
-    padding: 2.5rem !important;
+    padding: 1.5rem !important;
     box-sizing: border-box !important;
     page-break-inside: avoid !important;
     page-break-before: avoid !important;
@@ -2258,6 +2303,36 @@ textarea.form-control {
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
+  }
+
+  #printable-certificate .certificate-border-outer {
+    padding: 0.8rem !important;
+    border-width: 10px !important;
+  }
+
+  #printable-certificate .certificate-border-inner {
+    padding: 1.2rem 1.5rem !important;
+  }
+
+  #printable-certificate .main-title {
+    margin-bottom: 0.8rem !important;
+  }
+
+  #printable-certificate .student-name {
+    margin-bottom: 0.8rem !important;
+  }
+
+  #printable-certificate .cert-body-text {
+    margin-bottom: 1rem !important;
+  }
+
+  #printable-certificate .cert-rank-badge {
+    margin-bottom: 1rem !important;
+  }
+
+  #printable-certificate .certificate-footer {
+    margin-bottom: 0.8rem !important;
+    padding-top: 1rem !important;
   }
 }
 
