@@ -169,6 +169,11 @@
                 <a href="{% url 'verify_certificate' %}?cert_id={{ matching_cert.id }}" class="btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px;">
                   <i class="fa-solid fa-eye"></i> View Certificate Details
                 </a>
+                {% if matching_cert.file_url %}
+                  <a href="{{ matching_cert.file_url }}" target="_blank" class="btn-outline" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.4rem; border-color: var(--success); color: #34d399; text-decoration: none;">
+                    <i class="fa-solid fa-file-arrow-down"></i> Download Certificate Copy
+                  </a>
+                {% endif %}
                 <a href="{% url 'verify_certificate' %}?cert_id={{ matching_cert.id }}" class="btn-outline" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px;" target="_blank">
                   <i class="fa-solid fa-print"></i> Open Print Version
                 </a>

@@ -102,6 +102,7 @@ class Certificate(models.Model):
     duration = models.CharField(max_length=50)
     issue_date = models.CharField(max_length=100)
     grade = models.CharField(max_length=20, default="N/A")
+    certificate_file = models.FileField(upload_to='certificates/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

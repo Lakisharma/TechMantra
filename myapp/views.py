@@ -164,7 +164,8 @@ def verify_certificate(request):
                 "rank": cert.rank,
                 "duration": cert.duration,
                 "issue_date": cert.issue_date,
-                "grade": cert.grade
+                "grade": cert.grade,
+                "file_url": cert.certificate_file.url if cert.certificate_file else None
             }
         except Certificate.DoesNotExist:
             found = False
@@ -340,27 +341,24 @@ def profile_view(request):
                 return JsonResponse({"status": "success", "message": msg, "redirect_url": "/profile/"})
             return redirect('profile')
             
-    # Try to find a matching certificate in the static certificate database (for demo purposes)
-    cert_db = {
-        "TM-2026-101": "Ankit Kumar",
-        "TM-2026-102": "Priya Sharma",
-        "TM-2026-103": "Rahul Verma",
-        "TM-2026-104": "Neha Singh"
-    }
-    
     user_fullname = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
     matching_cert = None
     
-    for cert_id, name in cert_db.items():
-        if name.lower() == user_fullname.lower() or request.user.username.lower() in name.lower():
-            matching_cert = {
-                "id": cert_id,
-                "name": name,
-                "course": profile.course,
-                "rank": profile.rank,
-                "grade": profile.grade
-            }
-            break
+    # Query database dynamically
+    db_certs = Certificate.objects.filter(student_name__iexact=user_fullname)
+    if not db_certs.exists():
+        db_certs = Certificate.objects.filter(student_name__icontains=request.user.username)
+        
+    db_cert = db_certs.first()
+    if db_cert:
+        matching_cert = {
+            "id": db_cert.certificate_id,
+            "name": db_cert.student_name,
+            "course": db_cert.course_name,
+            "rank": db_cert.rank,
+            "grade": db_cert.grade,
+            "file_url": db_cert.certificate_file.url if db_cert.certificate_file else None
+        }
             
     return render(request, 'profile.html', {
         "profile": profile,
@@ -913,6 +911,8 @@ def admin_add_certificate_view(request):
         if Certificate.objects.filter(certificate_id=certificate_id).exists():
             return JsonResponse({"status": "error", "message": f"Certificate ID '{certificate_id}' already exists."})
 
+        certificate_file = request.FILES.get("certificate_file")
+
         try:
             Certificate.objects.create(
                 certificate_id=certificate_id,
@@ -921,7 +921,8 @@ def admin_add_certificate_view(request):
                 rank=rank,
                 duration=duration,
                 issue_date=issue_date,
-                grade=grade
+                grade=grade,
+                certificate_file=certificate_file
             )
             return JsonResponse({"status": "success", "message": "Certificate added successfully!"})
         except Exception as e:

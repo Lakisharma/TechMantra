@@ -1557,6 +1557,7 @@
                     <th>Duration</th>
                     <th>Issue Date</th>
                     <th>Grade</th>
+                    <th>File Copy</th>
                     <th style="text-align: center;">Actions</th>
                   </tr>
                 </thead>
@@ -1571,6 +1572,15 @@
                       <td>{{ c.issue_date }}</td>
                       <td>
                         <span class="status-badge badge-primary">{{ c.grade }}</span>
+                      </td>
+                      <td>
+                        {% if c.certificate_file %}
+                          <a href="{{ c.certificate_file.url }}" target="_blank" class="status-badge badge-success" style="text-decoration: none;">
+                            <i class="fa-solid fa-file-pdf"></i> View File
+                          </a>
+                        {% else %}
+                          <span class="status-badge badge-secondary" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">None</span>
+                        {% endif %}
                       </td>
                       <td style="text-align: center;">
                         <button onclick="deleteCertificate('{{ c.id }}')" class="btn-action btn-action-delete" title="Delete Certificate">
@@ -2054,7 +2064,7 @@
       <div class="modal-header">
         <h3><i class="fa-solid fa-certificate"></i> Add Student Certificate</h3>
       </div>
-      <form id="addCertificateForm" onsubmit="submitAddCertificate(event)">
+      <form id="addCertificateForm" onsubmit="submitAddCertificate(event)" enctype="multipart/form-data">
         {% csrf_token %}
         
         <div class="form-group">
@@ -2093,6 +2103,11 @@
             <label class="form-label" for="cert-add-grade">Grade</label>
             <input type="text" id="cert-add-grade" name="grade" class="form-control" placeholder="e.g. A+ (or leave blank)">
           </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cert-add-file">Certificate File Copy (Image/PDF)</label>
+          <input type="file" id="cert-add-file" name="certificate_file" class="form-control" accept="image/*,application/pdf">
         </div>
 
         <button type="submit" class="btn-submit" style="background: var(--primary); box-shadow: 0 4px 15px var(--primary-glow);">
