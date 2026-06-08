@@ -2244,13 +2244,11 @@ textarea.form-control {
   }
 
   #printable-certificate {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: relative !important;
+    margin: 0 auto !important;
     width: 297mm !important; /* A4 landscape width */
     height: 210mm !important; /* A4 landscape height */
     box-shadow: none !important;
-    margin: 0 !important;
     padding: 2.5rem !important;
     box-sizing: border-box !important;
     page-break-inside: avoid !important;
