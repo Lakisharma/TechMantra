@@ -947,6 +947,52 @@ def admin_delete_certificate_view(request, cert_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@login_required(login_url='login')
+def admin_edit_certificate_view(request, cert_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        try:
+            cert = Certificate.objects.get(id=cert_id)
+        except Certificate.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Certificate not found."})
+
+        certificate_id = request.POST.get("certificate_id")
+        student_name = request.POST.get("student_name")
+        course_name = request.POST.get("course_name")
+        rank = request.POST.get("rank", "N/A") or "N/A"
+        duration = request.POST.get("duration")
+        issue_date = request.POST.get("issue_date")
+        grade = request.POST.get("grade", "N/A") or "N/A"
+
+        if not certificate_id or not student_name or not course_name or not duration or not issue_date:
+            return JsonResponse({"status": "error", "message": "Please fill all required fields."})
+
+        # Check uniqueness of certificate_id (excluding self)
+        if Certificate.objects.filter(certificate_id=certificate_id).exclude(id=cert_id).exists():
+            return JsonResponse({"status": "error", "message": f"Certificate ID '{certificate_id}' already exists."})
+
+        certificate_file = request.FILES.get("certificate_file")
+
+        try:
+            cert.certificate_id = certificate_id
+            cert.student_name = student_name
+            cert.course_name = course_name
+            cert.rank = rank
+            cert.duration = duration
+            cert.issue_date = issue_date
+            cert.grade = grade
+            if certificate_file:
+                cert.certificate_file = certificate_file
+            cert.save()
+            return JsonResponse({"status": "success", "message": "Certificate updated successfully!"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
 
 
 
