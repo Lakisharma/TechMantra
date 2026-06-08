@@ -271,8 +271,8 @@ class StudentPortalTests(TestCase):
 
         update_settings_url = reverse('admin_update_settings')
         response = self.client.post(update_settings_url, {
-            'site_name': 'TechMantra Academy Pro',
-            'contact_email': 'pro@techmantra.com',
+            'site_name': 'TeachMANTRA Academy Pro',
+            'contact_email': 'pro@teachmantra.com',
             'contact_phone': '+91 99999 88888',
             'contact_address': 'New Delhi, India',
             'site_logo': uploaded_logo,
@@ -282,8 +282,8 @@ class StudentPortalTests(TestCase):
         self.assertContains(response, "Website settings updated successfully!")
 
         settings = WebsiteSettings.objects.get(id=1)
-        self.assertEqual(settings.site_name, 'TechMantra Academy Pro')
-        self.assertEqual(settings.contact_email, 'pro@techmantra.com')
+        self.assertEqual(settings.site_name, 'TeachMANTRA Academy Pro')
+        self.assertEqual(settings.contact_email, 'pro@teachmantra.com')
         self.assertEqual(settings.contact_phone, '+91 99999 88888')
         self.assertEqual(settings.contact_address, 'New Delhi, India')
         self.assertTrue(bool(settings.site_logo))
@@ -453,7 +453,7 @@ class StudentPortalTests(TestCase):
         response = self.client.post(add_url, {
             'username': 'newstaff',
             'full_name': 'New Staff Member',
-            'email': 'newstaff@techmantra.com',
+            'email': 'newstaff@teachmantra.com',
             'password': 'StaffPassword123!',
             'ajax': 'true'
         })

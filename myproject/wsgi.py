@@ -25,7 +25,7 @@ try:
     from django.contrib.auth.models import User
     from myapp.models import AdminProfile
     if not User.objects.filter(username='admin').exists():
-        admin_user = User.objects.create_superuser('admin', 'admin@techmantra.com', 'Adminpassword123!')
+        admin_user = User.objects.create_superuser('admin', 'admin@teachmantra.com', 'Adminpassword123!')
         AdminProfile.objects.get_or_create(user=admin_user)
         print("Startup: Superuser 'admin' created successfully!")
     else:

@@ -19,7 +19,7 @@ from django.contrib.auth.models import User
 
 # Details for the admin account you want to create
 admin_username = 'admin'
-admin_email = 'admin@techmantra.com'
+admin_email = 'admin@teachmantra.com'
 admin_password = 'Password123!'  # Enter the password you want here
 
 try:

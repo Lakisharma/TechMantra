@@ -75,9 +75,9 @@ class GalleryImage(models.Model):
 
 
 class WebsiteSettings(models.Model):
-    site_name = models.CharField(max_length=100, default="TechMantra")
+    site_name = models.CharField(max_length=100, default="TeachMANTRA")
     site_logo = models.ImageField(upload_to='site_logos/', blank=True, null=True)
-    contact_email = models.CharField(max_length=100, default="info@techmantra.com")
+    contact_email = models.CharField(max_length=100, default="info@teachmantra.com")
     contact_phone = models.CharField(max_length=50, default="+91 98765 43210")
     contact_address = models.TextField(default="Academy Address, Delhi, India")
 
@@ -94,4 +94,4 @@ class AdminProfile(models.Model):
         return f"{self.user.username} (Created by: {self.created_by.username if self.created_by else 'System'})"
 
 
-
+

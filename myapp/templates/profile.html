@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Student Profile Dashboard | TechMantra{% endblock %}
+{% block title %}Student Profile Dashboard | TeachMANTRA{% endblock %}
 
 {% block content %}
   <!-- ==========================================
@@ -163,7 +163,7 @@
             </div>
             <div style="flex-grow: 1;">
               <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">Congratulations! You have an active certificate.</h4>
-              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">Your certificate (ID: <strong>{{ matching_cert.id }}</strong>) has been verified and registered in the TechMantra repository database.</p>
+              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">Your certificate (ID: <strong>{{ matching_cert.id }}</strong>) has been verified and registered in the TeachMANTRA repository database.</p>
               
               <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 <a href="{% url 'verify_certificate' %}?cert_id={{ matching_cert.id }}" class="btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px;">
