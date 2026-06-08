@@ -224,8 +224,8 @@
         btn.disabled = true;
 
         const container = document.createElement('div');
-        container.style.width = '297mm';
-        container.style.height = '210mm';
+        container.style.width = '296mm';
+        container.style.height = '209mm';
         container.style.display = 'flex';
         container.style.alignItems = 'center';
         container.style.justify = 'center';
@@ -244,7 +244,7 @@
           document.body.appendChild(container);
           
           const opt = {
-            margin:       10,
+            margin:       0,
             filename:     filename,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
