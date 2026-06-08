@@ -2248,6 +2248,7 @@ textarea.form-control {
     margin: 0 auto !important;
     width: 297mm !important; /* A4 landscape width */
     height: 210mm !important; /* A4 landscape height */
+    max-width: none !important;
     box-shadow: none !important;
     padding: 2.5rem !important;
     box-sizing: border-box !important;

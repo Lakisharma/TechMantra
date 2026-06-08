@@ -70,8 +70,8 @@
                 <!-- Description -->
                 <p class="cert-body-text">
                   for outstanding performance and successful completion of the<br>
-                  <strong style="color: var(--text-main); font-weight: 700;">{{ details.course }}</strong><br>
-                  program of <strong style="color: var(--text-main);">{{ details.duration }}</strong>, evaluated with grade <strong style="color: var(--accent);">{{ details.grade }}</strong>.
+                  <strong style="color: #0f172a; font-weight: 700;">{{ details.course }}</strong><br>
+                  program of <strong style="color: #0f172a;">{{ details.duration }}</strong>, evaluated with grade <strong style="color: var(--accent);">{{ details.grade }}</strong>.
                 </p>
 
                 <!-- Academic Rank Badge -->
@@ -183,18 +183,22 @@
             
             const originalWidth = element.style.width;
             const originalHeight = element.style.height;
+            const originalMaxWidth = element.style.maxWidth;
             element.style.width = '296mm';
             element.style.height = '209mm';
+            element.style.maxWidth = 'none';
             
             html2pdf().set(opt).from(element).save().then(() => {
               element.style.width = originalWidth;
               element.style.height = originalHeight;
+              element.style.maxWidth = originalMaxWidth;
               btn.innerHTML = originalText;
               btn.disabled = false;
             }).catch(err => {
               console.error(err);
               element.style.width = originalWidth;
               element.style.height = originalHeight;
+              element.style.maxWidth = originalMaxWidth;
               btn.innerHTML = originalText;
               btn.disabled = false;
               alert("Could not generate PDF. Please use the Print Certificate button.");
