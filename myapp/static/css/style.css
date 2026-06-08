@@ -2192,20 +2192,73 @@ textarea.form-control {
 
 /* Print Mode Styles */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #printable-certificate, #printable-certificate * {
-    visibility: visible;
-  }
-  #printable-certificate {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    box-shadow: none;
+  @page {
+    size: A4 landscape;
     margin: 0;
-    padding: 1rem;
+  }
+  
+  /* Hide unrelated containers completely to avoid page breaks */
+  header, footer, nav,
+  .navbar-wrapper, .prem-topbar, .footer,
+  .breadcrumb-banner,
+  .form-card,
+  button, .btn-accent, .btn-primary, .btn-outline,
+  .toast-container,
+  #premium-loader-overlay,
+  .glass-card:not(.cert-page-card) {
+    display: none !important;
+  }
+
+  html, body {
+    height: 100% !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Isolate section margins */
+  .section-padding {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .cert-page-card {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  #printable-certificate {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 297mm !important; /* A4 landscape width */
+    height: 210mm !important; /* A4 landscape height */
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 2.5rem !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
   }
 }
 

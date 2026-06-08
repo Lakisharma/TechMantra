@@ -116,10 +116,15 @@
             </div>
           </div>
 
-          <!-- Print / Action button -->
-          <button onclick="window.print()" class="btn-accent" style="margin-top: 2rem; padding: 0.8rem 2.5rem;">
-            <i class="fa-solid fa-print"></i> Print Digital Certificate
-          </button>
+          <!-- Print & PDF Download Actions -->
+          <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+            <button onclick="downloadCertificatePDF(event)" class="btn-primary" style="padding: 0.8rem 2.5rem; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <i class="fa-solid fa-file-pdf"></i> Download PDF Certificate
+            </button>
+            <button onclick="window.print()" class="btn-accent" style="padding: 0.8rem 2.5rem; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <i class="fa-solid fa-print"></i> Print Certificate
+            </button>
+          </div>
 
           <!-- Uploaded Certificate Copy -->
           {% if details.file_url %}
@@ -134,16 +139,121 @@
                 </div>
               {% else %}
                 <div style="margin-bottom: 1.5rem;">
-                  <img src="{{ details.file_url }}" alt="Verified Certificate Copy" style="max-width: 100%; max-height: 500px; border-radius: 8px; border: 2px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                  <img src="{{ details.file_url }}" id="uploaded-cert-image" alt="Verified Certificate Copy" style="max-width: 100%; max-height: 500px; border-radius: 8px; border: 2px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                 </div>
               {% endif %}
               
-              <a href="{{ details.file_url }}" target="_blank" class="btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 2rem; text-decoration: none; justify-content: center;">
-                <i class="fa-solid fa-download"></i> Download Original Document
-              </a>
+              {% if ".pdf" in details.file_url.lower %}
+                <a href="{{ details.file_url }}" target="_blank" class="btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 2rem; text-decoration: none; justify-content: center;">
+                  <i class="fa-solid fa-file-pdf"></i> Download PDF Document
+                </a>
+              {% else %}
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                  <a href="{{ details.file_url }}" target="_blank" class="btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 2rem; text-decoration: none; justify-content: center;">
+                    <i class="fa-solid fa-image"></i> Download Image File
+                  </a>
+                  <button onclick="downloadUploadedImageAsPDF(event, '{{ details.file_url }}', 'Certificate_{{ details.id }}.pdf')" class="btn-outline" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 2rem; cursor: pointer; text-decoration: none; justify-content: center; border-color: var(--success); color: #34d399;">
+                    <i class="fa-solid fa-file-pdf"></i> Download as PDF Document
+                  </button>
+                </div>
+              {% endif %}
             </div>
           {% endif %}
         </div>
+      {% endif %}
+
+      {% if found and details %}
+        <!-- html2pdf.js library -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        <script>
+          function downloadCertificatePDF(event) {
+            const element = document.getElementById('printable-certificate');
+            const opt = {
+              margin:       0,
+              filename:     'Certificate_{{ details.id }}.pdf',
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...';
+            btn.disabled = true;
+            
+            const originalWidth = element.style.width;
+            const originalHeight = element.style.height;
+            element.style.width = '297mm';
+            element.style.height = '210mm';
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+              element.style.width = originalWidth;
+              element.style.height = originalHeight;
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+            }).catch(err => {
+              console.error(err);
+              element.style.width = originalWidth;
+              element.style.height = originalHeight;
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+              alert("Could not generate PDF. Please use the Print Certificate button.");
+            });
+          }
+
+          function downloadUploadedImageAsPDF(event, imgUrl, filename) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Converting to PDF...';
+            btn.disabled = true;
+
+            const container = document.createElement('div');
+            container.style.width = '297mm';
+            container.style.height = '210mm';
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.style.justify = 'center';
+            container.style.background = '#ffffff';
+            container.style.padding = '10mm';
+            container.style.boxSizing = 'border-box';
+            
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = imgUrl;
+            img.onload = function() {
+              img.style.maxWidth = '100%';
+              img.style.maxHeight = '100%';
+              img.style.objectFit = 'contain';
+              container.appendChild(img);
+              document.body.appendChild(container);
+              
+              const opt = {
+                margin:       0,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+              };
+              
+              html2pdf().set(opt).from(container).save().then(() => {
+                document.body.removeChild(container);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+              }).catch(err => {
+                console.error(err);
+                document.body.removeChild(container);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert("Could not generate PDF.");
+              });
+            };
+            img.onerror = function() {
+              btn.innerHTML = originalText;
+              btn.disabled = false;
+              alert("Could not load image for PDF conversion.");
+            };
+          }
+        </script>
       {% endif %}
 
     </div>

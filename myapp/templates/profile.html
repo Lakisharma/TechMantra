@@ -170,9 +170,15 @@
                   <i class="fa-solid fa-eye"></i> View Certificate Details
                 </a>
                 {% if matching_cert.file_url %}
-                  <a href="{{ matching_cert.file_url }}" target="_blank" class="btn-outline" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.4rem; border-color: var(--success); color: #34d399; text-decoration: none;">
-                    <i class="fa-solid fa-file-arrow-down"></i> Download Certificate Copy
-                  </a>
+                  {% if ".pdf" in matching_cert.file_url.lower %}
+                    <a href="{{ matching_cert.file_url }}" download target="_blank" class="btn-outline" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.4rem; border-color: var(--success); color: #34d399; text-decoration: none;">
+                      <i class="fa-solid fa-file-pdf"></i> Download PDF Copy
+                    </a>
+                  {% else %}
+                    <button onclick="downloadUploadedImageAsPDF(event, '{{ matching_cert.file_url }}', 'Certificate_{{ matching_cert.id }}.pdf')" class="btn-outline" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.4rem; border-color: var(--success); color: #34d399; cursor: pointer; background: transparent;">
+                      <i class="fa-solid fa-file-pdf"></i> Download PDF Copy
+                    </button>
+                  {% endif %}
                 {% endif %}
                 <a href="{% url 'verify_certificate' %}?cert_id={{ matching_cert.id }}" class="btn-outline" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px;" target="_blank">
                   <i class="fa-solid fa-print"></i> Open Print Version
@@ -206,4 +212,63 @@
       }
     }
   </style>
+
+  {% if matching_cert and ".pdf" not in matching_cert.file_url.lower %}
+    <!-- html2pdf.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+      function downloadUploadedImageAsPDF(event, imgUrl, filename) {
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Converting...';
+        btn.disabled = true;
+
+        const container = document.createElement('div');
+        container.style.width = '297mm';
+        container.style.height = '210mm';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justify = 'center';
+        container.style.background = '#ffffff';
+        container.style.padding = '10mm';
+        container.style.boxSizing = 'border-box';
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = imgUrl;
+        img.onload = function() {
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100%';
+          img.style.objectFit = 'contain';
+          container.appendChild(img);
+          document.body.appendChild(container);
+          
+          const opt = {
+            margin:       0,
+            filename:     filename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+          };
+          
+          html2pdf().set(opt).from(container).save().then(() => {
+            document.body.removeChild(container);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }).catch(err => {
+            console.error(err);
+            document.body.removeChild(container);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert("Could not generate PDF.");
+          });
+        };
+        img.onerror = function() {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          alert("Could not load image for PDF conversion.");
+        };
+      }
+    </script>
+  {% endif %}
 {% endblock %}
