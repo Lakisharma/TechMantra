@@ -67,7 +67,7 @@ class WebsiteSettingsAdmin(admin.ModelAdmin):
     list_display = ('site_name', 'contact_email', 'contact_phone')
 
 
-from .models import AdminProfile, Certificate
+from .models import AdminProfile, Certificate, BroadcastEmail
 
 @admin.register(AdminProfile)
 class AdminProfileAdmin(admin.ModelAdmin):
@@ -95,5 +95,13 @@ class CertificateAdmin(admin.ModelAdmin):
     list_filter = ('course_name', 'grade')
 
 
+@admin.register(BroadcastEmail)
+class BroadcastEmailAdmin(admin.ModelAdmin):
+    list_display = ('subject', 'audience_filter', 'recipient_count', 'get_sender', 'status', 'created_at')
+    search_fields = ('subject', 'message', 'recipients_list')
+    list_filter = ('audience_filter', 'status', 'created_at')
+    readonly_fields = ('created_at',)
 
-
+    def get_sender(self, obj):
+        return obj.sent_by.username if obj.sent_by else 'System Admin'
+    get_sender.short_description = 'Sent By'

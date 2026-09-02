@@ -173,8 +173,399 @@
   <!-- Toast Container -->
   <div class="toast-container"></div>
 
+  <!-- ==========================================
+       Auto Entrance Promotional Announcement Popup (DigiCoders Style)
+       ========================================== -->
+  {% if site_settings.show_popup %}
+    <style>
+      #siteEntrancePopup {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.75) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        z-index: 999999 !important;
+        display: none;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 1rem !important;
+        box-sizing: border-box !important;
+      }
+
+      #siteEntrancePopup.active {
+        display: flex !important;
+        animation: popupBackdropFade 0.3s ease forwards;
+      }
+
+      @keyframes popupBackdropFade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      .entrance-popup-card {
+        max-width: 490px !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        border-radius: 18px !important;
+        overflow: hidden !important;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
+        position: relative !important;
+        box-sizing: border-box !important;
+        animation: popupScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes popupScaleIn {
+        from { transform: scale(0.85) translateY(20px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+      }
+
+      .entrance-popup-close {
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        width: 34px !important;
+        height: 34px !important;
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1rem !important;
+        color: #475569 !important;
+        cursor: pointer !important;
+        z-index: 50 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        transition: all 0.2s ease !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+      }
+
+      .entrance-popup-close:hover {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        border-color: #ef4444 !important;
+        transform: rotate(90deg) scale(1.1) !important;
+      }
+
+      .entrance-popup-body {
+        padding: 1.25rem 1.25rem 1.5rem !important;
+        color: #1e293b !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+      }
+
+      .dynamic-poster-box {
+        background: linear-gradient(145deg, #090a16 0%, #151a30 50%, #0d1222 100%) !important;
+        padding: 1.5rem 1.25rem 1.25rem !important;
+        color: #ffffff !important;
+        text-align: center !important;
+        position: relative !important;
+        border-radius: 12px !important;
+        border-bottom: 3.5px solid #ea580c !important;
+        box-sizing: border-box !important;
+      }
+
+      .dynamic-poster-top {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        margin-bottom: 0.85rem !important;
+      }
+
+      .dynamic-poster-brand {
+        font-size: 1.1rem !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+      }
+
+      .dynamic-poster-badge {
+        background: #ea580c !important;
+        color: #ffffff !important;
+        padding: 3px 9px !important;
+        border-radius: 4px !important;
+        font-size: 0.7rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+      }
+
+      .dynamic-poster-title {
+        font-size: 1.65rem !important;
+        font-weight: 900 !important;
+        color: #84cc16 !important;
+        text-transform: uppercase !important;
+        letter-spacing: -0.5px !important;
+        line-height: 1.15 !important;
+        margin-bottom: 0.65rem !important;
+        text-shadow: 0 2px 10px rgba(132, 204, 22, 0.3) !important;
+      }
+
+      .dynamic-poster-duration {
+        display: inline-block !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 8px !important;
+        padding: 0.35rem 1.1rem !important;
+        margin-bottom: 0.85rem !important;
+      }
+
+      .dynamic-poster-duration span {
+        display: block !important;
+        font-size: 0.65rem !important;
+        color: #94a3b8 !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+      }
+
+      .dynamic-poster-duration strong {
+        font-size: 1.25rem !important;
+        font-weight: 900 !important;
+        color: #f1f5f9 !important;
+      }
+
+      .dynamic-poster-courses {
+        background: rgba(0, 0, 0, 0.45) !important;
+        border-radius: 6px !important;
+        padding: 0.45rem !important;
+        margin-bottom: 0.75rem !important;
+        border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+      }
+
+      .dynamic-poster-courses-label {
+        font-size: 0.68rem !important;
+        color: #fbbf24 !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        margin-bottom: 0.2rem !important;
+      }
+
+      .dynamic-poster-courses-list {
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        color: #e2e8f0 !important;
+      }
+
+      .dynamic-poster-chips {
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        gap: 0.35rem !important;
+        font-size: 0.68rem !important;
+        color: #94a3b8 !important;
+      }
+
+      .dynamic-poster-chips span {
+        background: rgba(255, 255, 255, 0.06) !important;
+        padding: 2px 8px !important;
+        border-radius: 4px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+
+      .entrance-popup-phone {
+        margin: 0.85rem 0 0.4rem !important;
+        font-size: 0.75rem !important;
+        color: #64748b !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+      }
+
+      .entrance-popup-phone strong {
+        display: block !important;
+        font-size: 1.25rem !important;
+        font-weight: 900 !important;
+        color: #0f172a !important;
+        letter-spacing: 0.5px !important;
+        margin-top: 0.2rem !important;
+      }
+
+      .entrance-popup-phone strong i {
+        color: #ea580c !important;
+        margin-right: 0.25rem !important;
+      }
+
+      .entrance-popup-desc {
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+        line-height: 1.5 !important;
+        margin: 0.5rem 0 1.15rem !important;
+      }
+
+      .entrance-popup-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1.25fr !important;
+        gap: 0.75rem !important;
+      }
+
+      .popup-btn-dark {
+        background: #1e293b !important;
+        color: #ffffff !important;
+        text-decoration: none !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+        transition: all 0.2s ease !important;
+      }
+
+      .popup-btn-dark:hover {
+        background: #0f172a !important;
+        transform: translateY(-2px) !important;
+      }
+
+      .popup-btn-cta {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+        color: #ffffff !important;
+        text-decoration: none !important;
+        font-weight: 800 !important;
+        font-size: 0.92rem !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+        box-shadow: 0 4px 15px rgba(234, 88, 12, 0.35) !important;
+        transition: all 0.2s ease !important;
+      }
+
+      .popup-btn-cta:hover {
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+        transform: translateY(-2px) !important;
+      }
+    </style>
+
+    <div id="siteEntrancePopup">
+      <div class="entrance-popup-card">
+        <button class="entrance-popup-close" onclick="closeEntrancePopup()" aria-label="Close Notice">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="entrance-popup-body">
+          
+          <!-- Poster Section -->
+          <div style="border-radius: 12px; overflow: hidden; margin-bottom: 0.5rem;">
+            {% if site_settings.popup_image %}
+              <img src="{{ site_settings.popup_image.url }}" alt="{{ site_settings.popup_title }}" style="width: 100%; max-height: 320px; object-fit: cover; display: block;" />
+            {% else %}
+              <!-- Built-in High Impact Dynamic Poster matching DigiCoders -->
+              <div class="dynamic-poster-box">
+                <div class="dynamic-poster-top">
+                  <div class="dynamic-poster-brand">
+                    {% if site_settings.site_logo %}
+                      <img src="{{ site_settings.site_logo.url }}" alt="Logo" style="height: 26px; max-width: 120px; object-fit: contain; vertical-align: middle; filter: brightness(0) invert(1);" />
+                    {% else %}
+                      <i class="fa-solid fa-graduation-cap" style="color: #ea580c;"></i> {{ site_settings.site_name }}
+                    {% endif %}
+                  </div>
+                  <div class="dynamic-poster-badge">100% Job & Exam Oriented</div>
+                </div>
+
+                <div class="dynamic-poster-title">
+                  {{ site_settings.popup_title }}
+                </div>
+
+                <div class="dynamic-poster-duration">
+                  <span>Course Batch Duration</span>
+                  <strong>06 MONTHS / 1 YEAR</strong>
+                </div>
+
+                <div class="dynamic-poster-courses">
+                  <div class="dynamic-poster-courses-label">⭐ Registration Started For ⭐</div>
+                  <div class="dynamic-poster-courses-list">
+                    SSC CGL / CHSL • BANK PO / CLERK • RAILWAY NTPC • DEFENCE • IT SKILLS
+                  </div>
+                </div>
+
+                <div class="dynamic-poster-chips">
+                  <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Daily Practice Papers</span>
+                  <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Weekly Mock Tests</span>
+                  <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Smart Classes</span>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Helpline Contact Section -->
+          <div class="entrance-popup-phone">
+            FOR MORE INFORMATION:
+            <strong><i class="fa-solid fa-phone-volume"></i> {{ site_settings.popup_phone|default:site_settings.contact_phone }}</strong>
+          </div>
+
+          <!-- Subtitle / Short Description -->
+          <p class="entrance-popup-desc">
+            {{ site_settings.popup_subtitle }}
+          </p>
+
+          <!-- Call to Action Buttons -->
+          <div class="entrance-popup-actions">
+            <a href="{% url 'courses' %}" class="popup-btn-dark">
+              <i class="fa-solid fa-book-open"></i> {{ site_settings.popup_btn2_text|default:'Explore Courses' }}
+            </a>
+            <a href="{% url 'register' %}" class="popup-btn-cta">
+              <i class="fa-solid fa-user-plus"></i> {{ site_settings.popup_btn1_text|default:'Register Now' }}
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Entrance Popup Auto-Show Logic -->
+    <script>
+      function openEntrancePopup() {
+        const popup = document.getElementById('siteEntrancePopup');
+        if (popup) {
+          popup.classList.add('active');
+        }
+      }
+
+      function closeEntrancePopup() {
+        const popup = document.getElementById('siteEntrancePopup');
+        if (popup) {
+          popup.classList.remove('active');
+        }
+      }
+
+      // Close on Backdrop Click
+      document.addEventListener('click', function(e) {
+        const popup = document.getElementById('siteEntrancePopup');
+        if (popup && popup.classList.contains('active')) {
+          if (e.target === popup) {
+            closeEntrancePopup();
+          }
+        }
+      });
+
+      // Close on ESC Key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeEntrancePopup();
+        }
+      });
+
+      // Auto trigger on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          openEntrancePopup();
+        }, 500);
+      });
+    </script>
+  {% endif %}
+
   <!-- Custom script file -->
-  <script src="{% static 'js/main.js' %}?v=1.2"></script>
+  <script src="{% static 'js/main.js' %}?v=2.0"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -55,6 +55,8 @@ urlpatterns = [
     path('admin-dashboard/certificates/add/', views.admin_add_certificate_view, name='admin_add_certificate'),
     path('admin-dashboard/certificates/delete/<int:cert_id>/', views.admin_delete_certificate_view, name='admin_delete_certificate'),
     path('admin-dashboard/certificates/edit/<int:cert_id>/', views.admin_edit_certificate_view, name='admin_edit_certificate'),
+    path('admin-dashboard/broadcast/send/', views.admin_send_broadcast_mail_view, name='admin_send_broadcast_mail'),
+    path('admin-dashboard/broadcast/delete/<int:log_id>/', views.admin_delete_broadcast_log_view, name='admin_delete_broadcast_log'),
 ]
 
 if settings.DEBUG:
