@@ -176,7 +176,7 @@
   <!-- ==========================================
        Auto Entrance Promotional Announcement Popup (DigiCoders Style)
        ========================================== -->
-  {% if site_settings.show_popup %}
+  {% if site_settings.show_popup and request.path == '/' or site_settings.show_popup and request.path == '/file/' %}
     <style>
       #siteEntrancePopup {
         position: fixed !important;
@@ -510,10 +510,10 @@
 
           <!-- Call to Action Buttons -->
           <div class="entrance-popup-actions">
-            <a href="{% url 'courses' %}" class="popup-btn-dark">
+            <a href="{% url 'courses' %}" class="popup-btn-dark" onclick="closeEntrancePopup()">
               <i class="fa-solid fa-book-open"></i> {{ site_settings.popup_btn2_text|default:'Explore Courses' }}
             </a>
-            <a href="{% url 'register' %}" class="popup-btn-cta">
+            <a href="{% url 'register' %}" class="popup-btn-cta" onclick="closeEntrancePopup()">
               <i class="fa-solid fa-user-plus"></i> {{ site_settings.popup_btn1_text|default:'Register Now' }}
             </a>
           </div>
@@ -536,6 +536,9 @@
         if (popup) {
           popup.classList.remove('active');
         }
+        try {
+          sessionStorage.setItem('teachmantra_popup_closed', 'true');
+        } catch(e) {}
       }
 
       // Close on Backdrop Click
@@ -555,11 +558,19 @@
         }
       });
 
-      // Auto trigger on page load
+      // Auto trigger on home page load only if not previously closed in current session
       document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          openEntrancePopup();
-        }, 500);
+        try {
+          if (!sessionStorage.getItem('teachmantra_popup_closed')) {
+            setTimeout(function() {
+              openEntrancePopup();
+            }, 500);
+          }
+        } catch(e) {
+          setTimeout(function() {
+            openEntrancePopup();
+          }, 500);
+        }
       });
     </script>
   {% endif %}
