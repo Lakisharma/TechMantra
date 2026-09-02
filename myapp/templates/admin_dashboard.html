@@ -12,8 +12,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- Early Theme Initializer (Prevents Theme Flash) -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('teachmantra_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
   <style>
-    :root {
+    :root, [data-theme="dark"] {
       --primary: #6366f1;
       --primary-hover: #4f46e5;
       --primary-glow: rgba(99, 102, 241, 0.4);
@@ -43,6 +51,80 @@
       --border-radius-md: 0.75rem;
       --border-radius-sm: 0.5rem;
     }
+
+    [data-theme="light"] {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-glow: rgba(79, 70, 229, 0.25);
+      --secondary: #db2777;
+      --secondary-glow: rgba(219, 39, 119, 0.25);
+      --accent: #d97706;
+      --accent-glow: rgba(217, 119, 6, 0.25);
+      --success: #059669;
+      --success-glow: rgba(5, 150, 105, 0.25);
+      --danger: #dc2626;
+      --danger-glow: rgba(220, 38, 38, 0.25);
+      
+      --bg-dark: #f8fafc;
+      --bg-panel: #ffffff;
+      --sidebar-bg: #ffffff;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --border-focus: rgba(79, 70, 229, 0.4);
+      
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    [data-theme="light"] .admin-sidebar {
+      background: #ffffff !important;
+      border-right: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .admin-header {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .glass-card,
+    [data-theme="light"] .metric-card {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.04) !important;
+    }
+    [data-theme="light"] .form-control,
+    [data-theme="light"] input,
+    [data-theme="light"] select,
+    [data-theme="light"] textarea {
+      background: #ffffff !important;
+      border: 1.5px solid #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    [data-theme="light"] .modal-content {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .custom-table th {
+      background: #f8fafc !important;
+      color: #475569 !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="light"] .custom-table td {
+      border-bottom: 1px solid #f1f5f9 !important;
+      color: #334155 !important;
+    }
+    [data-theme="light"] .nav-item a {
+      color: #475569;
+    }
+    [data-theme="light"] .nav-item a:hover,
+    [data-theme="light"] .nav-item.active a {
+      background: rgba(79, 70, 229, 0.08);
+      color: var(--primary);
+    }
+    [data-theme="light"] .header-date {
+      background: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+
 
     * {
       box-sizing: border-box;
@@ -1066,6 +1148,10 @@
         </div>
 
         <div class="header-actions">
+          <button id="adminThemeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle Theme (Dark / Light)" style="border-radius: 8px; width: 40px; height: 40px;">
+            <i class="fa-solid fa-moon theme-icon-moon"></i>
+            <i class="fa-solid fa-sun theme-icon-sun"></i>
+          </button>
           <div class="header-date">
             <i class="fa-solid fa-calendar-days"></i>
             <span id="currentDate">Saturday, June 6, 2026</span>
@@ -3527,6 +3613,19 @@ Agli class nirdharit samay par shuru hogi.
     document.addEventListener('DOMContentLoaded', () => {
       updateRecipientCountPreview();
       updateLiveEmailPreview();
+
+      // Theme toggle handler for admin dashboard
+      const adminThemeToggleBtn = document.getElementById('adminThemeToggleBtn');
+      if (adminThemeToggleBtn) {
+        adminThemeToggleBtn.addEventListener('click', () => {
+          const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+          const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', newTheme);
+          try {
+            localStorage.setItem('teachmantra_theme', newTheme);
+          } catch(e) {}
+        });
+      }
     });
   </script>
 </body>

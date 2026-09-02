@@ -3,6 +3,45 @@
    ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // --- Theme Toggle Engine (Dark / Light Mode) ---
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const mobileThemeToggleBtn = document.getElementById('mobileThemeToggleBtn');
+  
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('teachmantra_theme', theme);
+    } catch(e) {}
+    
+    // Update mobile toggle text
+    if (mobileThemeToggleBtn) {
+      const themeText = mobileThemeToggleBtn.querySelector('.theme-text');
+      if (themeText) {
+        themeText.textContent = theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+      }
+    }
+    
+    if (themeToggleBtn) {
+      themeToggleBtn.setAttribute('title', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
+    }
+  }
+
+  // Get current active theme
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(currentTheme);
+
+  function toggleTheme() {
+    const activeTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    applyTheme(activeTheme);
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', toggleTheme);
+  }
+  if (mobileThemeToggleBtn) {
+    mobileThemeToggleBtn.addEventListener('click', toggleTheme);
+  }
+
   // --- Preloader Fade Out ---
   const loader = document.getElementById('premium-loader-overlay');
   if (loader) {
