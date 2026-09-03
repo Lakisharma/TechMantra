@@ -357,29 +357,27 @@ button, input, select, textarea {
 }
 
 /* Navigation Bar */
+/* Navigation Bar */
 .navbar-wrapper {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   z-index: 1000;
-  padding: 1rem 0;
-  transition: var(--transition-normal);
-}
-
-.navbar-wrapper.scrolled {
-  padding: 0.6rem 0;
-  background: rgba(8, 12, 20, 0.85);
+  background: var(--nav-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-glass);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  padding: 0 !important;
 }
 
 .navbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.85rem 1.5rem;
 }
 
 .logo-link {
@@ -389,6 +387,11 @@ button, input, select, textarea {
   font-size: 1.5rem;
   font-weight: 800;
   font-family: var(--font-header);
+  color: var(--text-main);
+  text-decoration: none;
+}
+
+.logo-link span {
   background: linear-gradient(135deg, var(--text-main) 40%, var(--primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -403,18 +406,24 @@ button, input, select, textarea {
   display: flex;
   gap: 2rem;
   list-style: none;
+  align-items: center;
 }
 
 .nav-link {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.95rem;
   position: relative;
-  padding: 0.25rem 0;
+  padding: 0.35rem 0;
   color: var(--text-muted);
+  transition: color 0.2s ease;
 }
 
-.nav-link:hover, .nav-link.active {
-  color: var(--text-main);
+.nav-link:hover {
+  color: var(--primary);
+}
+
+.nav-link.active {
+  color: var(--primary) !important;
 }
 
 .nav-link::after {
@@ -423,9 +432,10 @@ button, input, select, textarea {
   bottom: 0;
   left: 0;
   width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  transition: var(--transition-normal);
+  height: 2.5px;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.25s ease;
 }
 
 .nav-link:hover::after, .nav-link.active::after {
@@ -555,28 +565,46 @@ button, input, select, textarea {
 
 /* Breadcrumb / Section Header Banner */
 .breadcrumb-banner {
-  background: linear-gradient(rgba(8, 12, 20, 0.9), rgba(8, 12, 20, 0.9)), url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80');
+  background: linear-gradient(rgba(8, 12, 20, 0.88), rgba(8, 12, 20, 0.88)), url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80');
   background-size: cover;
   background-position: center;
-  padding: 8rem 0 4rem 0;
+  padding: 9.5rem 0 3.5rem 0;
   text-align: center;
   border-bottom: 1px solid var(--border-glass);
 }
 
 .breadcrumb-banner h1 {
-  font-size: 3rem;
+  font-size: 2.8rem;
   margin-bottom: 0.5rem;
   color: var(--text-main);
+  font-family: var(--font-header);
 }
 
 .breadcrumb-path {
   color: var(--primary);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 1rem;
 }
 
 .breadcrumb-path span {
   color: var(--text-muted);
+}
+
+[data-theme="light"] .breadcrumb-banner {
+  background: linear-gradient(rgba(241, 245, 249, 0.88), rgba(248, 250, 252, 0.95)), url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80');
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .breadcrumb-banner h1 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .breadcrumb-path {
+  color: var(--primary);
+}
+
+[data-theme="light"] .breadcrumb-path span {
+  color: #64748b;
 }
 
 /* ==========================================
@@ -2081,21 +2109,7 @@ textarea.form-control {
   border-color: var(--accent);
 }
 
-/* Adjustments for layout and scroll behaviour */
-.navbar-wrapper {
-  padding: 0 !important;
-}
-
-.navbar-container {
-  padding: 1.2rem 1.5rem;
-}
-
-.navbar-wrapper.scrolled .prem-topbar {
-  margin-top: -38px;
-  opacity: 0;
-  pointer-events: none;
-}
-
+/* Responsive navigation adjustments */
 @media (max-width: 768px) {
   .prem-topbar {
     display: none !important;
