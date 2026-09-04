@@ -73,6 +73,27 @@ class GalleryImage(models.Model):
         return f"{self.title} ({self.category})"
 
 
+class TeamMember(models.Model):
+    MEMBER_TYPE_CHOICES = (
+        ('founder', 'Co-Founder / Visionary'),
+        ('team', 'Team Member / Faculty'),
+    )
+    name = models.CharField(max_length=150)
+    role = models.CharField(max_length=150, help_text="e.g. CO-FOUNDER, TEAM LEAD (FULL STACK)")
+    member_type = models.CharField(max_length=20, choices=MEMBER_TYPE_CHOICES, default='team')
+    tag_color = models.CharField(max_length=20, default='orange', help_text="orange or blue")
+    image = models.ImageField(upload_to='team_images/', blank=True, null=True)
+    order = models.IntegerField(default=0, help_text="Display order (lower numbers come first)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.name} - {self.role} ({self.get_member_type_display()})"
+
+
+
 class WebsiteSettings(models.Model):
     site_name = models.CharField(max_length=100, default="TeachMANTRA")
     site_logo = models.ImageField(upload_to='site_logos/', blank=True, null=True)

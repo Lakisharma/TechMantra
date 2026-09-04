@@ -1024,6 +1024,141 @@
       transform: scale(1.1);
     }
 
+    /* Faculty & Team Admin Management Styles */
+    .team-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .team-admin-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .team-admin-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+
+    .team-admin-actions {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: flex;
+      gap: 0.4rem;
+      z-index: 10;
+    }
+
+    .team-action-btn {
+      border: none;
+      color: #ffffff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: var(--transition-fast);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    }
+
+    .team-action-btn.btn-edit {
+      background: rgba(168, 85, 247, 0.9);
+    }
+
+    .team-action-btn.btn-edit:hover {
+      background: #9333ea;
+      transform: scale(1.1);
+    }
+
+    .team-action-btn.btn-delete {
+      background: rgba(239, 68, 68, 0.9);
+    }
+
+    .team-action-btn.btn-delete:hover {
+      background: #dc2626;
+      transform: scale(1.1);
+    }
+
+    .team-admin-img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #0f172a;
+      overflow: hidden;
+    }
+
+    .team-admin-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 15%;
+      transition: var(--transition-normal);
+    }
+
+    .team-admin-card:hover .team-admin-img-wrap img {
+      transform: scale(1.05);
+    }
+
+    .team-admin-details {
+      padding: 1rem 0.85rem;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .team-admin-details h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0.35rem 0 0.2rem 0;
+    }
+
+    .team-admin-details p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .team-type-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .team-type-badge.badge-founder {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .team-type-badge.badge-team {
+      background: rgba(14, 165, 233, 0.12);
+      color: #0284c7;
+      border: 1px solid rgba(14, 165, 233, 0.25);
+    }
+
+    [data-theme="dark"] .team-type-badge.badge-team {
+      color: #38bdf8;
+    }
+
     /* Mobile hamburger menu button */
     .mobile-nav-toggle {
       display: none;
@@ -1112,6 +1247,15 @@
           <a class="menu-item" data-tab="gallery">
             <i class="fa-solid fa-images" style="width: 20px;"></i>
             <span>Gallery Manager</span>
+          </a>
+        </li>
+        <li>
+          <a class="menu-item" data-tab="team">
+            <i class="fa-solid fa-users-viewfinder" style="width: 20px; color: #a855f7;"></i>
+            <span>Faculty & Team</span>
+            {% if stats.total_team > 0 %}
+              <span class="status-badge badge-primary" style="margin-left: auto; padding: 0.1rem 0.4rem; font-size: 0.7rem; background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.4);">{{ stats.total_team }}</span>
+            {% endif %}
           </a>
         </li>
         <li>
@@ -1212,6 +1356,9 @@
           </button>
           <button class="btn-quick-add" onclick="openModal('addCourseModal')">
             <i class="fa-solid fa-circle-plus"></i> Add Course
+          </button>
+          <button class="btn-quick-add" onclick="openModal('addTeamModal')" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); box-shadow: 0 4px 12px rgba(168,85,247,0.35);">
+            <i class="fa-solid fa-user-plus"></i> Add Faculty / Team
           </button>
           <button class="btn-quick-add" onclick="openModal('addGalleryModal')" style="background: var(--secondary); box-shadow: 0 4px 10px var(--secondary-glow);">
             <i class="fa-solid fa-cloud-arrow-up"></i> Upload Photo
@@ -1577,6 +1724,95 @@
                   <p style="margin-top: 0.5rem;">Add some snapshots of smart classrooms or toppers using the button above.</p>
                 </div>
               {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             TAB PANEL: FACULTY & TEAM MANAGER (CMS)
+             ========================================== -->
+        <div class="panel" id="panel-team">
+          <div class="glass-card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+              <div>
+                <div class="glass-card-title" style="margin-bottom: 0.25rem;">
+                  <i class="fa-solid fa-users-viewfinder" style="color: #a855f7;"></i> Faculty & Team Showcase Manager
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Manage Founders, Visionaries & Team Members displayed on the website.</p>
+              </div>
+              <button class="btn-quick-add" onclick="openModal('addTeamModal')" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); box-shadow: 0 4px 12px rgba(168,85,247,0.35);">
+                <i class="fa-solid fa-user-plus"></i> Add Faculty / Team Member
+              </button>
+            </div>
+
+            <!-- Subsection 1: Visionaries / Founders -->
+            <div style="margin-bottom: 2.5rem;">
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Founded by Visionaries
+                <span class="status-badge" style="font-size: 0.75rem; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);">{{ founders|length }}</span>
+              </h3>
+              
+              <div class="team-admin-grid">
+                {% for f in founders %}
+                  <div class="team-admin-card" id="card-team-{{ f.id }}">
+                    <div class="team-admin-actions">
+                      <button class="team-action-btn btn-edit" onclick="openEditTeamModal('{{ f.id }}', '{{ f.name|escapejs }}', '{{ f.role|escapejs }}', '{{ f.member_type }}', '{{ f.tag_color }}', '{{ f.order }}', '{% if f.image %}{{ f.image.url }}{% endif %}')" title="Edit Details & Change Photo">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <button class="team-action-btn btn-delete" onclick="deleteTeamMember('{{ f.id }}', '{{ f.name|escapejs }}')" title="Delete Member">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </div>
+                    <div class="team-admin-img-wrap">
+                      <img src="{% if f.image %}{{ f.image.url }}{% else %}{% static 'images/team/himanshu_kashyap.jpg' %}{% endif %}" alt="{{ f.name }}">
+                    </div>
+                    <div class="team-admin-details">
+                      <span class="team-type-badge badge-founder">{{ f.role }}</span>
+                      <h4>{{ f.name }}</h4>
+                      <p><i class="fa-solid fa-arrow-down-1-9"></i> Order: {{ f.order }}</p>
+                    </div>
+                  </div>
+                {% empty %}
+                  <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <p>No visionaries / founders added yet.</p>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Subsection 2: Team Members -->
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-users" style="color: #38bdf8;"></i> Our Team Members & Faculty
+                <span class="status-badge" style="font-size: 0.75rem; background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3);">{{ team_members|length }}</span>
+              </h3>
+
+              <div class="team-admin-grid">
+                {% for m in team_members %}
+                  <div class="team-admin-card" id="card-team-{{ m.id }}">
+                    <div class="team-admin-actions">
+                      <button class="team-action-btn btn-edit" onclick="openEditTeamModal('{{ m.id }}', '{{ m.name|escapejs }}', '{{ m.role|escapejs }}', '{{ m.member_type }}', '{{ m.tag_color }}', '{{ m.order }}', '{% if m.image %}{{ m.image.url }}{% endif %}')" title="Edit Details & Change Photo">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <button class="team-action-btn btn-delete" onclick="deleteTeamMember('{{ m.id }}', '{{ m.name|escapejs }}')" title="Delete Member">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </div>
+                    <div class="team-admin-img-wrap">
+                      <img src="{% if m.image %}{{ m.image.url }}{% else %}{% static 'images/team/gaurav_gupta.jpg' %}{% endif %}" alt="{{ m.name }}">
+                    </div>
+                    <div class="team-admin-details">
+                      <span class="team-type-badge badge-team">{{ m.role }}</span>
+                      <h4>{{ m.name }}</h4>
+                      <p><i class="fa-solid fa-arrow-down-1-9"></i> Order: {{ m.order }}</p>
+                    </div>
+                  </div>
+                {% empty %}
+                  <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <p>No team members added yet.</p>
+                  </div>
+                {% endfor %}
+              </div>
             </div>
           </div>
         </div>
@@ -2631,6 +2867,114 @@ Agli class nirdharit samay par shuru hogi.
   </div>
 
   <!-- ==========================================
+       MODAL: ADD FACULTY / TEAM MEMBER
+       ========================================== -->
+  <div class="modal-overlay" id="addTeamModal">
+    <div class="modal-container" style="max-width: 520px;">
+      <button class="modal-close" onclick="closeModal('addTeamModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-plus" style="color: #a855f7;"></i> Add Faculty / Team Member</h3>
+      </div>
+      <form id="addTeamForm" onsubmit="submitAddTeam(event)" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="addTeamName">Full Name *</label>
+          <input type="text" id="addTeamName" name="name" class="form-control" required placeholder="e.g. Er. Himanshu Kashyap / Gaurav Gupta">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addTeamRole">Designation / Role *</label>
+          <input type="text" id="addTeamRole" name="role" class="form-control" required placeholder="e.g. CO-FOUNDER / TEAM LEAD (FULL STACK)">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="addTeamType">Category / Section *</label>
+            <select id="addTeamType" name="member_type" class="form-control" required>
+              <option value="founder">Founded by Visionaries</option>
+              <option value="team" selected>Our Team / Faculty</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addTeamTagColor">Tag Color (For Founders)</label>
+            <select id="addTeamTagColor" name="tag_color" class="form-control">
+              <option value="orange">Orange</option>
+              <option value="blue" selected>Blue / Cyan</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addTeamOrder">Display Order</label>
+          <input type="number" id="addTeamOrder" name="order" class="form-control" value="0" placeholder="0">
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Lower numbers appear first (e.g. 1, 2, 3).</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addTeamImage">Select Portrait Photo *</label>
+          <input type="file" id="addTeamImage" name="image" class="form-control" accept="image/*" required>
+        </div>
+        <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); box-shadow: 0 4px 15px rgba(168,85,247,0.35);">
+          <i class="fa-solid fa-circle-check"></i> Add to Website
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: EDIT FACULTY / TEAM MEMBER
+       ========================================== -->
+  <div class="modal-overlay" id="editTeamModal">
+    <div class="modal-container" style="max-width: 520px;">
+      <button class="modal-close" onclick="closeModal('editTeamModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-pen" style="color: #a855f7;"></i> Edit Details & Change Photo</h3>
+      </div>
+      <form id="editTeamForm" onsubmit="submitUpdateTeam(event)" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" id="edit-team-id" name="member_id">
+        <div class="form-group">
+          <label class="form-label" for="editTeamName">Full Name *</label>
+          <input type="text" id="editTeamName" name="name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editTeamRole">Designation / Role *</label>
+          <input type="text" id="editTeamRole" name="role" class="form-control" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="editTeamType">Category / Section *</label>
+            <select id="editTeamType" name="member_type" class="form-control" required>
+              <option value="founder">Founded by Visionaries</option>
+              <option value="team">Our Team / Faculty</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editTeamTagColor">Tag Color (For Founders)</label>
+            <select id="editTeamTagColor" name="tag_color" class="form-control">
+              <option value="orange">Orange</option>
+              <option value="blue">Blue / Cyan</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editTeamOrder">Display Order</label>
+          <input type="number" id="editTeamOrder" name="order" class="form-control" value="0">
+        </div>
+        <div class="form-group" id="edit-team-current-wrap" style="display: none;">
+          <label class="form-label">Current Photo</label>
+          <div style="border-radius: var(--border-radius-sm); overflow: hidden; max-height: 120px; border: 1px solid var(--border-color); display: inline-block;">
+            <img id="edit-team-preview-thumb" src="" alt="Current Photo" style="max-height: 120px; max-width: 100%; object-fit: cover; display: block;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editTeamImage">Replace Photo (Optional - leave empty to keep current photo)</label>
+          <input type="file" id="editTeamImage" name="image" class="form-control" accept="image/*">
+        </div>
+        <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); box-shadow: 0 4px 15px rgba(168,85,247,0.35);">
+          <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
        MODAL: EDIT STUDENT METRICS
        ========================================== -->
   <div class="modal-overlay" id="editStudentModal">
@@ -3306,6 +3650,7 @@ Agli class nirdharit samay par shuru hogi.
         'students': 'Student Directory',
         'courses': 'Course Catalog Manager',
         'gallery': 'Gallery Media Manager',
+        'team': 'Faculty & Team Showcase Manager',
         'admissions': 'Admission Enquiries',
         'messages': 'Helpdesk Support Logs',
         'settings': 'Website Configuration Settings',
@@ -3781,6 +4126,125 @@ Agli class nirdharit samay par shuru hogi.
         }
       } catch (e) {
         console.error('Gallery delete error:', e);
+        showToast('Server connection failed', 'error');
+      }
+    }
+
+    // ==========================================
+    // TEAM & FACULTY MANAGEMENT HANDLERS
+    // ==========================================
+    // Add Team Member
+    async function submitAddTeam(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/admin-dashboard/team/add/', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('addTeamModal');
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          showToast(data.message || 'Error adding member', 'error');
+        }
+      } catch (e) {
+        console.error('Team add error:', e);
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Open Edit Team Member Modal
+    function openEditTeamModal(id, name, role, member_type, tag_color, order, imgUrl) {
+      document.getElementById('edit-team-id').value = id;
+      document.getElementById('editTeamName').value = name;
+      document.getElementById('editTeamRole').value = role;
+      document.getElementById('editTeamType').value = member_type || 'team';
+      document.getElementById('editTeamTagColor').value = tag_color || 'blue';
+      document.getElementById('editTeamOrder').value = order || '0';
+      document.getElementById('editTeamImage').value = '';
+
+      if (imgUrl) {
+        document.getElementById('edit-team-preview-thumb').src = imgUrl;
+        document.getElementById('edit-team-current-wrap').style.display = 'block';
+      } else {
+        document.getElementById('edit-team-current-wrap').style.display = 'none';
+      }
+      openModal('editTeamModal');
+    }
+
+    // Submit Update Team Member
+    async function submitUpdateTeam(event) {
+      event.preventDefault();
+      const form = event.target;
+      const memberId = document.getElementById('edit-team-id').value;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(`/admin-dashboard/team/update/${memberId}/`, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('editTeamModal');
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          showToast(data.message || 'Error updating member', 'error');
+        }
+      } catch (e) {
+        console.error('Team update error:', e);
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Delete Team Member
+    async function deleteTeamMember(memberId, memberName) {
+      if(!confirm(`Are you sure you want to delete '${memberName}' from the website?`)) {
+        return;
+      }
+
+      const form = new FormData();
+      form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      form.append('ajax', 'true');
+
+      try {
+        const response = await fetch(`/admin-dashboard/team/delete/${memberId}/`, {
+          method: 'POST',
+          body: form,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          const card = document.getElementById(`card-team-${memberId}`);
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.8)';
+            setTimeout(() => card.remove(), 400);
+          }
+        } else {
+          showToast(data.message || 'Failed to delete member', 'error');
+        }
+      } catch (e) {
+        console.error('Team delete error:', e);
         showToast('Server connection failed', 'error');
       }
     }

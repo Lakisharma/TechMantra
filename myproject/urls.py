@@ -58,6 +58,10 @@ urlpatterns = [
     path('admin-dashboard/certificates/edit/<int:cert_id>/', views.admin_edit_certificate_view, name='admin_edit_certificate'),
     path('admin-dashboard/broadcast/send/', views.admin_send_broadcast_mail_view, name='admin_send_broadcast_mail'),
     path('admin-dashboard/broadcast/delete/<int:log_id>/', views.admin_delete_broadcast_log_view, name='admin_delete_broadcast_log'),
+    # Faculty & Team Management Routes
+    path('admin-dashboard/team/add/', views.admin_add_team_member_view, name='admin_add_team_member'),
+    path('admin-dashboard/team/update/<int:member_id>/', views.admin_update_team_member_view, name='admin_update_team_member'),
+    path('admin-dashboard/team/delete/<int:member_id>/', views.admin_delete_team_member_view, name='admin_delete_team_member'),
     # Online Tests & Quizzes Portal Routes
     path('tests/', views.tests_list_view, name='tests_list'),
     path('tests/<int:test_id>/', views.take_test_view, name='take_test'),

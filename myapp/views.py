@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from .models import (
     Services, Admission, ContactMessage, StudentProfile, Course, 
-    GalleryImage, WebsiteSettings, AdminProfile, Certificate, 
+    GalleryImage, TeamMember, WebsiteSettings, AdminProfile, Certificate, 
     BroadcastEmail, OnlineTest, QuizQuestion, TestSubmission
 )
 from django.core.mail import send_mail, EmailMultiAlternatives
@@ -41,7 +41,12 @@ def courses(request):
     return render(request, 'courses.html', {"courses": courses_list})
 
 def faculty(request):
-    return render(request, 'faculty.html')
+    founders = TeamMember.objects.filter(member_type='founder').order_by('order', 'id')
+    team_members = TeamMember.objects.filter(member_type='team').order_by('order', 'id')
+    return render(request, 'faculty.html', {
+        "founders": founders,
+        "team_members": team_members
+    })
 
 def admissions(request):
     success_msg = None
@@ -580,6 +585,8 @@ def admin_dashboard_view(request):
     contacts = ContactMessage.objects.all().order_by('-created_at')
     courses_list = Course.objects.all().order_by('-created_at')
     images_list = GalleryImage.objects.all().order_by('-uploaded_at')
+    founders_list = TeamMember.objects.filter(member_type='founder').order_by('order', 'id')
+    team_list = TeamMember.objects.filter(member_type='team').order_by('order', 'id')
     certificates_list = Certificate.objects.all().order_by('-created_at')
     broadcast_emails = BroadcastEmail.objects.all().order_by('-created_at')
     online_tests = OnlineTest.objects.all().prefetch_related('questions', 'submissions').order_by('-created_at')
@@ -606,6 +613,7 @@ def admin_dashboard_view(request):
     contact_messages = contacts.count()
     total_courses = courses_list.count()
     total_images = images_list.count()
+    total_team = TeamMember.objects.count()
     total_admins = admins.count()
     total_certificates = certificates_list.count()
     total_broadcasts = broadcast_emails.count()
@@ -617,6 +625,8 @@ def admin_dashboard_view(request):
         "contacts": contacts,
         "courses": courses_list,
         "gallery_images": images_list,
+        "founders": founders_list,
+        "team_members": team_list,
         "admins": admins,
         "certificates": certificates_list,
         "broadcast_emails": broadcast_emails,
@@ -629,6 +639,7 @@ def admin_dashboard_view(request):
             "contact_messages": contact_messages,
             "total_courses": total_courses,
             "total_images": total_images,
+            "total_team": total_team,
             "total_admins": total_admins,
             "total_certificates": total_certificates,
             "total_broadcasts": total_broadcasts,
@@ -1029,6 +1040,120 @@ def admin_delete_gallery_view(request, image_id):
             return JsonResponse({"status": "success", "message": "Gallery image deleted successfully!"})
         except GalleryImage.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Gallery image not found."})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+# ==========================================
+# FACULTY & TEAM MANAGEMENT VIEWS
+# ==========================================
+@csrf_exempt
+@login_required(login_url='login')
+def admin_add_team_member_view(request):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        role = request.POST.get("role", "").strip()
+        member_type = request.POST.get("member_type", "team").strip()
+        tag_color = request.POST.get("tag_color", "blue").strip()
+        order = request.POST.get("order", "0").strip()
+        image = request.FILES.get("image")
+
+        if not name or not role:
+            return JsonResponse({"status": "error", "message": "Name and Designation / Role are required."})
+
+        try:
+            order_val = int(order) if order.isdigit() else 0
+        except ValueError:
+            order_val = 0
+
+        try:
+            member = TeamMember.objects.create(
+                name=name,
+                role=role,
+                member_type=member_type,
+                tag_color=tag_color,
+                order=order_val,
+                image=image
+            )
+            return JsonResponse({
+                "status": "success",
+                "message": f"'{name}' added to {member.get_member_type_display()} successfully!",
+                "member_id": member.id
+            })
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error adding member: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@csrf_exempt
+@login_required(login_url='login')
+def admin_update_team_member_view(request, member_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    try:
+        member = TeamMember.objects.get(id=member_id)
+    except TeamMember.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Member record not found."})
+
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        role = request.POST.get("role", "").strip()
+        member_type = request.POST.get("member_type", "").strip()
+        tag_color = request.POST.get("tag_color", "").strip()
+        order = request.POST.get("order", "").strip()
+
+        if not name or not role:
+            return JsonResponse({"status": "error", "message": "Name and Designation / Role are required."})
+
+        member.name = name
+        member.role = role
+        if member_type in ['founder', 'team']:
+            member.member_type = member_type
+        if tag_color:
+            member.tag_color = tag_color
+        if order != "":
+            try:
+                member.order = int(order)
+            except ValueError:
+                pass
+
+        if 'image' in request.FILES and request.FILES['image']:
+            member.image = request.FILES['image']
+
+        member.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Details for '{member.name}' updated successfully!",
+            "member_id": member.id,
+            "name": member.name,
+            "role": member.role,
+            "member_type": member.member_type,
+            "image_url": member.image.url if member.image else None
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@csrf_exempt
+@login_required(login_url='login')
+def admin_delete_team_member_view(request, member_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        try:
+            member = TeamMember.objects.get(id=member_id)
+            name = member.name
+            member.delete()
+            return JsonResponse({"status": "success", "message": f"'{name}' deleted successfully!"})
+        except TeamMember.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Member not found."})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 

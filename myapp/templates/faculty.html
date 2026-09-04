@@ -19,6 +19,7 @@
   <!-- ==========================================
        SECTION 1: FOUNDED BY VISIONARIES
        ========================================== -->
+  {% if founders %}
   <section class="section-padding visionary-section" style="padding-bottom: 2rem;">
     <div class="container">
       <div class="team-section-header text-center">
@@ -26,30 +27,21 @@
       </div>
 
       <div class="visionary-grid">
-        <!-- Founder 1 -->
-        <div class="visionary-card">
-          <div class="visionary-photo-wrap">
-            <img src="{% static 'images/team/himanshu_kashyap.jpg' %}" alt="Er. Himanshu Kashyap" class="visionary-photo">
+        {% for founder in founders %}
+          <div class="visionary-card">
+            <div class="visionary-photo-wrap">
+              <img src="{% if founder.image %}{{ founder.image.url }}{% else %}{% static 'images/team/himanshu_kashyap.jpg' %}{% endif %}" alt="{{ founder.name }}" class="visionary-photo">
+            </div>
+            <div class="visionary-info">
+              <h3 class="visionary-name">{{ founder.name }}</h3>
+              <span class="visionary-tag {% if founder.tag_color == 'orange' %}tag-orange{% else %}tag-blue{% endif %}">{{ founder.role }}</span>
+            </div>
           </div>
-          <div class="visionary-info">
-            <h3 class="visionary-name">Er. Himanshu Kashyap</h3>
-            <span class="visionary-tag tag-orange">CO-FOUNDER</span>
-          </div>
-        </div>
-
-        <!-- Founder 2 -->
-        <div class="visionary-card">
-          <div class="visionary-photo-wrap">
-            <img src="{% static 'images/team/gopal_singh.jpg' %}" alt="Er. Gopal Singh" class="visionary-photo">
-          </div>
-          <div class="visionary-info">
-            <h3 class="visionary-name">Er. Gopal Singh</h3>
-            <span class="visionary-tag tag-blue">CO-FOUNDER</span>
-          </div>
-        </div>
+        {% endfor %}
       </div>
     </div>
   </section>
+  {% endif %}
 
   <!-- ==========================================
        SECTION 2: OUR TEAM
@@ -62,93 +54,21 @@
       </div>
 
       <div class="team-members-grid">
-        <!-- Team Member 1 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/gaurav_gupta.jpg' %}" alt="Gaurav Gupta" class="team-photo">
+        {% for member in team_members %}
+          <div class="team-member-card">
+            <div class="team-photo-wrap">
+              <img src="{% if member.image %}{{ member.image.url }}{% else %}{% static 'images/team/gaurav_gupta.jpg' %}{% endif %}" alt="{{ member.name }}" class="team-photo">
+            </div>
+            <div class="team-info">
+              <div class="team-role-pill">{{ member.role }}</div>
+              <h4 class="team-name">{{ member.name }}</h4>
+            </div>
           </div>
-          <div class="team-info">
-            <div class="team-role-pill">TEAM LEAD (FULL STACK)</div>
-            <h4 class="team-name">Gaurav Gupta</h4>
+        {% empty %}
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <p>No team members listed yet. Add them from Admin Panel.</p>
           </div>
-        </div>
-
-        <!-- Team Member 2 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/anurag_bajpai.jpg' %}" alt="Anurag Bajpai" class="team-photo">
-          </div>
-          <div class="team-info">
-            <div class="team-role-pill">BRANCH HEAD (KANPUR)</div>
-            <h4 class="team-name">Anurag Bajpai</h4>
-          </div>
-        </div>
-
-        <!-- Team Member 3 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/hritik_nishad.jpg' %}" alt="Hritik Nishad" class="team-photo">
-          </div>
-          <div class="team-info">
-            <div class="team-role-pill">TEAM LEAD (WEB DEVELOPMENT)</div>
-            <h4 class="team-name">Hritik Nishad</h4>
-          </div>
-        </div>
-
-        <!-- Team Member 4 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/sumesh_gupta.jpg' %}" alt="Sumesh Gupta" class="team-photo">
-          </div>
-          <div class="team-info">
-            <div class="team-role-pill">TEAM LEAD (GRAPHICS)</div>
-            <h4 class="team-name">Sumesh Gupta</h4>
-          </div>
-        </div>
-
-        <!-- Team Member 5 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/ved_prakash.jpg' %}" alt="Ved Prakash" class="team-photo">
-          </div>
-          <div class="team-info">
-            <div class="team-role-pill">TEAM LEAD (WEB DEVELOPMENT)</div>
-            <h4 class="team-name">Ved Prakash</h4>
-          </div>
-        </div>
-
-        <!-- Team Member 6 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/aditya_kashyap.jpg' %}" alt="Aditya Kashyap" class="team-photo">
-          </div>
-          <div class="team-info">
-            <div class="team-role-pill">BUSINESS DEVELOPMENT MANAGER</div>
-            <h4 class="team-name">Aditya Kashyap</h4>
-          </div>
-        </div>
-
-        <!-- Team Member 7 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/masoom_abbas.jpg' %}" alt="Masoom Abbas" class="team-photo">
-          </div>
-          <div class="team-info">
-            <div class="team-role-pill">BUSINESS DEVELOPMENT ANALYST</div>
-            <h4 class="team-name">Masoom Abbas</h4>
-          </div>
-        </div>
-
-        <!-- Team Member 8 -->
-        <div class="team-member-card">
-          <div class="team-photo-wrap">
-            <img src="{% static 'images/team/richa_sachan.jpg' %}" alt="Richa Sachan" class="team-photo">
-          </div>
-          <div class="team-info">
-            <div class="team-role-pill">HR - EXECUTIVE</div>
-            <h4 class="team-name">Richa Sachan</h4>
-          </div>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- ==========================================
