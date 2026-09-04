@@ -26,6 +26,13 @@
           <i class="fa-solid fa-user-plus" style="color: var(--accent); -webkit-text-fill-color: var(--accent);"></i> Student Registration
         </h3>
 
+        {% if "tests" in request.GET.next or "tests" in next %}
+          <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #f59e0b; padding: 0.85rem 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.6rem; line-height: 1.4;">
+            <i class="fa-solid fa-graduation-cap" style="font-size: 1.1rem; flex-shrink: 0;"></i>
+            <span><strong>Mock Test Access:</strong> Register your student account below to start your mock test immediately!</span>
+          </div>
+        {% endif %}
+
         {% if error_msg %}
           <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -35,6 +42,7 @@
 
         <form method="post" action="{% url 'register' %}" class="ajax-form">
           {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.GET.next|default:next|default:'' }}">
 
           <div class="form-group" style="margin-bottom: 1.25rem;">
             <label for="reg-fullname" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Full Name *</label>
@@ -84,7 +92,7 @@
 
         <div style="margin-top: 2rem; text-align: center; font-size: 0.9rem; color: var(--text-muted); border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1.5rem;">
           Already registered? 
-          <a href="{% url 'login' %}" style="color: var(--accent); font-weight: 600; margin-left: 0.25rem; transition: var(--transition-fast);">Sign In Here</a>
+          <a href="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% elif next %}?next={{ next }}{% endif %}" style="color: var(--accent); font-weight: 600; margin-left: 0.25rem; transition: var(--transition-fast);">Sign In Here</a>
         </div>
       </div>
     </div>

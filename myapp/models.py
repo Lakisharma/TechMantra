@@ -187,6 +187,7 @@ class QuizQuestion(models.Model):
 
 
 class TestSubmission(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='test_submissions')
     test = models.ForeignKey(OnlineTest, on_delete=models.CASCADE, related_name='submissions')
     student_name = models.CharField(max_length=150)
     student_email = models.EmailField(blank=True, null=True)

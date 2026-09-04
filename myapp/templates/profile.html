@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Student Profile Dashboard | TeachMANTRA{% endblock %}
+{% block title %}Student Dashboard & Mock Tests | TeachMANTRA{% endblock %}
 
 {% block content %}
   <!-- ==========================================
@@ -9,21 +9,21 @@
        ========================================== -->
   <section class="breadcrumb-banner">
     <div class="container">
-      <h1>Student Dashboard</h1>
+      <h1>Student Learning Dashboard</h1>
       <div class="breadcrumb-path">
-        <a href="{% url 'home' %}">Home</a> <span>/ Dashboard</span>
+        <a href="{% url 'home' %}">Home</a> <span>/ Student Dashboard</span>
       </div>
     </div>
   </section>
 
   <!-- ==========================================
-       Student Profile Content
+       Student Profile & Test Portal Content
        ========================================== -->
   <section class="section-padding">
     <div class="container">
       
       <!-- Welcome Header -->
-      <div class="glass-card" style="padding: 2rem; margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; border-left: 4px solid var(--primary);">
+      <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; border-left: 4px solid var(--primary);">
         <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
           <!-- Avatar Frame with quick update -->
           <div style="position: relative; width: 5.5rem; height: 5.5rem; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); background: var(--bg-secondary); flex-shrink: 0;" class="profile-avatar-container">
@@ -46,27 +46,231 @@
           </div>
 
           <div>
-            <h2 style="font-size: 2rem; margin-bottom: 0.25rem;">Welcome back, {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}!</h2>
-            <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">Access your academy records, mock test stats, and official certificates.</p>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <h2 style="font-size: 1.85rem; margin: 0;">Welcome, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}!</h2>
+              <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-size: 0.8rem; padding: 0.2rem 0.6rem; border-radius: 9999px;">
+                <i class="fa-solid fa-graduation-cap"></i> {{ profile.course }}
+              </span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0.3rem 0 0 0;">Practice online mock tests, track real-time exam scores, and view certified academy records.</p>
             <label for="id_photo_input" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--primary); cursor: pointer; margin-top: 0.4rem; font-weight: 600; text-decoration: underline;">
               <i class="fa-solid fa-image"></i> Change Profile Photo
             </label>
           </div>
         </div>
-        <div>
-          <a href="{% url 'logout' %}" class="btn-outline" style="border-color: #ef4444; color: #f87171; padding: 0.6rem 1.5rem; font-size: 0.9rem;">
+
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <a href="{% url 'tests_list' %}" class="btn-primary" style="padding: 0.6rem 1.25rem; font-size: 0.88rem;">
+            <i class="fa-solid fa-laptop-file"></i> All Mock Tests
+          </a>
+          <a href="{% url 'logout' %}" class="btn-outline" style="border-color: #ef4444; color: #f87171; padding: 0.6rem 1.25rem; font-size: 0.88rem;">
             <i class="fa-solid fa-right-from-bracket"></i> Logout
           </a>
         </div>
       </div>
 
+      <!-- Quick Metrics Analytics Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <!-- Metric 1: Tests Attempted -->
+        <div class="glass-card" style="padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-top: 3px solid #38bdf8;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(56, 189, 248, 0.12); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+            <i class="fa-solid fa-pen-nib"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tests Attempted</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-top: 0.1rem;">{{ total_tests_attempted }}</div>
+          </div>
+        </div>
 
-      <!-- Dashboard Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin-bottom: 2.5rem; align-items: start;" class="profile-grid">
+        <!-- Metric 2: Tests Passed -->
+        <div class="glass-card" style="padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-top: 3px solid #10b981;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tests Passed</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #10b981; margin-top: 0.1rem;">{{ tests_passed }}</div>
+          </div>
+        </div>
+
+        <!-- Metric 3: Avg Accuracy -->
+        <div class="glass-card" style="padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-top: 3px solid #f59e0b;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+            <i class="fa-solid fa-bullseye"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Average Score</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #f59e0b; margin-top: 0.1rem;">{{ avg_score }}%</div>
+          </div>
+        </div>
+
+        <!-- Metric 4: Academy Certificate -->
+        <div class="glass-card" style="padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-top: 3px solid var(--secondary);">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(236, 72, 153, 0.12); color: var(--secondary); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Certificate Status</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-top: 0.2rem;">
+              {% if matching_cert %}
+                <span style="color: #10b981;"><i class="fa-solid fa-circle-check"></i> Verified</span>
+              {% else %}
+                <span style="color: var(--text-muted); font-size: 1rem;">In Training</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           SECTION 1: AVAILABLE LIVE MOCK TESTS
+           ========================================== -->
+      <div class="glass-card" style="padding: 2rem; margin-bottom: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 style="font-size: 1.35rem; margin: 0; display: flex; align-items: center; gap: 0.6rem; color: #38bdf8;">
+              <i class="fa-solid fa-laptop-file"></i> Live Online Mock Tests & Practice Quizzes
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 0 0;">Select a test to attempt questions with live timer, instant grading, and detailed explanations.</p>
+          </div>
+          <a href="{% url 'tests_list' %}" class="btn-outline" style="padding: 0.4rem 1rem; font-size: 0.82rem; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+            View All Tests <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+
+        {% if available_tests %}
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem;">
+            {% for test in available_tests %}
+              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: 0.75rem; padding: 1.35rem; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition-normal); position: relative;" class="test-card-hover">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                      <i class="fa-solid fa-tag"></i> {{ test.category }}
+                    </span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.3rem;">
+                      <i class="fa-regular fa-clock" style="color: #f59e0b;"></i> {{ test.duration_minutes }} Min
+                    </span>
+                  </div>
+
+                  <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; line-height: 1.3;">
+                    {{ test.title }}
+                  </h4>
+
+                  <p style="color: var(--text-muted); font-size: 0.83rem; line-height: 1.4; margin-bottom: 1rem;">
+                    {{ test.subtitle|default:test.description|truncatechars:90 }}
+                  </p>
+
+                  <div style="display: flex; gap: 0.75rem; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem; flex-wrap: wrap;">
+                    <span><i class="fa-solid fa-list-ol" style="color: var(--primary);"></i> <strong>{{ test.questions_count }}</strong> Questions</span>
+                    <span><i class="fa-solid fa-bullseye" style="color: #10b981;"></i> Pass Target: <strong>{{ test.pass_percentage }}%</strong></span>
+                  </div>
+                </div>
+
+                <div>
+                  {% if test.external_link %}
+                    <a href="{{ test.external_link }}" target="_blank" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.88rem; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Test Link
+                    </a>
+                  {% else %}
+                    <a href="{% url 'take_test' test.id %}" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.88rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+                      <i class="fa-solid fa-bolt"></i> Start Mock Test
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            <i class="fa-solid fa-clipboard-question" style="font-size: 2.5rem; opacity: 0.3; margin-bottom: 0.75rem; display: block;"></i>
+            <p style="margin: 0;">No active mock tests are currently available. Check back soon!</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ==========================================
+           SECTION 2: MY TEST SUBMISSION HISTORY
+           ========================================== -->
+      <div class="glass-card" style="padding: 2rem; margin-bottom: 2.5rem;">
+        <div style="margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.35rem; margin: 0; display: flex; align-items: center; gap: 0.6rem; color: #10b981;">
+            <i class="fa-solid fa-chart-simple"></i> My Mock Test Submission History
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 0 0;">View your past test scores, percentages, and re-attempt exams to improve performance.</p>
+        </div>
+
+        {% if my_submissions %}
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-glass); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <th style="padding: 0.85rem 1rem;">Date & Time</th>
+                  <th style="padding: 0.85rem 1rem;">Test Name</th>
+                  <th style="padding: 0.85rem 1rem; text-align: center;">Score</th>
+                  <th style="padding: 0.85rem 1rem; text-align: center;">Accuracy</th>
+                  <th style="padding: 0.85rem 1rem; text-align: center;">Result</th>
+                  <th style="padding: 0.85rem 1rem; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sub in my_submissions %}
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); transition: var(--transition-fast);">
+                    <td style="padding: 0.85rem 1rem; color: var(--text-muted); font-size: 0.85rem; white-space: nowrap;">
+                      <i class="fa-regular fa-calendar" style="margin-right: 0.3rem;"></i> {{ sub.submitted_at|date:"M d, Y" }} <span style="font-size: 0.78rem; opacity: 0.7;">{{ sub.submitted_at|time:"h:i A" }}</span>
+                    </td>
+                    <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-main);">
+                      {{ sub.test.title }}
+                      <span style="display: block; font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">{{ sub.test.category }}</span>
+                    </td>
+                    <td style="padding: 0.85rem 1rem; text-align: center; font-weight: 700; color: var(--text-main);">
+                      {{ sub.score }} / {{ sub.total_questions }}
+                    </td>
+                    <td style="padding: 0.85rem 1rem; text-align: center; font-weight: 700; color: {% if sub.passed %}#10b981{% else %}#f87171{% endif %};">
+                      {{ sub.percentage }}%
+                    </td>
+                    <td style="padding: 0.85rem 1rem; text-align: center;">
+                      {% if sub.passed %}
+                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700;">
+                          <i class="fa-solid fa-check"></i> PASSED
+                        </span>
+                      {% else %}
+                        <span style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700;">
+                          <i class="fa-solid fa-xmark"></i> FAILED
+                        </span>
+                      {% endif %}
+                    </td>
+                    <td style="padding: 0.85rem 1rem; text-align: right; white-space: nowrap;">
+                      <a href="{% url 'take_test' sub.test.id %}" class="btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+                        <i class="fa-solid fa-rotate-right"></i> Re-take
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); background: rgba(255, 255, 255, 0.01); border-radius: 0.5rem; border: 1px dashed var(--border-glass);">
+            <i class="fa-solid fa-pen-to-square" style="font-size: 2.5rem; opacity: 0.25; margin-bottom: 0.75rem; display: block;"></i>
+            <p style="margin: 0; font-weight: 600; color: var(--text-main);">No Mock Tests Attempted Yet</p>
+            <p style="margin: 0.25rem 0 1rem 0; font-size: 0.85rem;">Pick one of the live mock tests above and start testing your preparation!</p>
+            {% if available_tests.first %}
+              <a href="{% url 'take_test' available_tests.first.id %}" class="btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;">
+                <i class="fa-solid fa-bolt"></i> Attempt First Test Now
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ==========================================
+           SECTION 3: CREDENTIALS & ACADEMIC STATS
+           ========================================== -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem; align-items: start;" class="profile-grid">
         
         <!-- Column 1: Academic & Contact Profile -->
-        <div class="glass-card" style="padding: 2.5rem 2rem;">
-          <h3 style="font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--primary);">
+        <div class="glass-card" style="padding: 2rem;">
+          <h3 style="font-size: 1.35rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--primary);">
             <i class="fa-solid fa-id-card"></i> Student Credentials
           </h3>
           
@@ -78,12 +282,12 @@
             
             <div class="profile-detail-row">
               <span class="profile-detail-label">Email Address</span>
-              <span class="profile-detail-value">{{ user.email }}</span>
+              <span class="profile-detail-value">{{ user.email|default:"Not recorded" }}</span>
             </div>
 
             <div class="profile-detail-row">
               <span class="profile-detail-label">Phone Number</span>
-              <span class="profile-detail-value">{{ profile.phone }}</span>
+              <span class="profile-detail-value">{{ profile.phone|default:"Not recorded" }}</span>
             </div>
 
             <div class="profile-detail-row">
@@ -93,45 +297,45 @@
 
             <div class="profile-detail-row">
               <span class="profile-detail-label">All India Rank (AIR)</span>
-              <span class="profile-detail-value highlight-rank">{{ profile.rank }}</span>
+              <span class="profile-detail-value highlight-rank">{{ profile.rank|default:"N/A" }}</span>
             </div>
 
             <div class="profile-detail-row last">
               <span class="profile-detail-label">Overall Grade</span>
-              <span class="profile-detail-value highlight-grade">{{ profile.grade }}</span>
+              <span class="profile-detail-value highlight-grade">{{ profile.grade|default:"N/A" }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Column 2: Mock Test Progress Tracker -->
-        <div class="glass-card" style="padding: 2.5rem 2rem;">
-          <h3 style="font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--secondary);">
-            <i class="fa-solid fa-chart-line"></i> Mock Test Series Analytics
+        <!-- Column 2: Preparation Analytics & Recommendations -->
+        <div class="glass-card" style="padding: 2rem;">
+          <h3 style="font-size: 1.35rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--secondary);">
+            <i class="fa-solid fa-chart-line"></i> Exam Readiness & Progress
           </h3>
 
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
-              <span style="color: var(--text-muted);">Syllabus Covered</span>
-              <span style="font-weight: bold; color: var(--primary);">82%</span>
+              <span style="color: var(--text-muted);">Syllabus Coverage</span>
+              <span style="font-weight: bold; color: var(--primary);">85%</span>
             </div>
             <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden;">
-              <div style="width: 82%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px;"></div>
+              <div style="width: 85%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px;"></div>
             </div>
           </div>
 
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
-              <span style="color: var(--text-muted);">Mock Test Average Accuracy</span>
-              <span style="font-weight: bold; color: var(--secondary);">76%</span>
+              <span style="color: var(--text-muted);">Average Mock Accuracy</span>
+              <span style="font-weight: bold; color: var(--secondary);">{{ avg_score }}%</span>
             </div>
             <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden;">
-              <div style="width: 76%; height: 100%; background: linear-gradient(90deg, var(--secondary), #10b981); border-radius: 10px;"></div>
+              <div style="width: {% if avg_score > 0 %}{{ avg_score }}{% else %}10{% endif %}%; height: 100%; background: linear-gradient(90deg, var(--secondary), #10b981); border-radius: 10px;"></div>
             </div>
           </div>
 
-          <div style="margin-bottom: 2rem;">
+          <div style="margin-bottom: 1.75rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
-              <span style="color: var(--text-muted);">Weekly Practice Hours Goal</span>
+              <span style="color: var(--text-muted);">Weekly Practice Target</span>
               <span style="font-weight: bold; color: var(--accent);">90%</span>
             </div>
             <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden;">
@@ -140,32 +344,34 @@
           </div>
 
           <!-- Academic Recommendations -->
-          <div style="background: rgba(6, 182, 212, 0.05); border: 1px dashed rgba(6, 182, 212, 0.2); border-radius: 0.5rem; padding: 1.25rem; font-size: 0.9rem;">
-            <h4 style="color: var(--secondary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
-              <i class="fa-solid fa-lightbulb"></i> Study recommendation:
+          <div style="background: rgba(6, 182, 212, 0.05); border: 1px dashed rgba(6, 182, 212, 0.25); border-radius: 0.5rem; padding: 1.25rem; font-size: 0.9rem;">
+            <h4 style="color: #38bdf8; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem;">
+              <i class="fa-solid fa-lightbulb"></i> Faculty Guidance:
             </h4>
-            <p style="margin: 0; color: var(--text-muted); line-height: 1.5;">Focus on quantitative aptitude mock series #8. Accuracy in geometry and algebra modules fell below threshold last week.</p>
+            <p style="margin: 0; color: var(--text-muted); line-height: 1.5; font-size: 0.85rem;">Regularly attempt online mock tests to build time management and test accuracy. Review the explanations after each test to reinforce weak concepts.</p>
           </div>
         </div>
 
       </div>
 
-      <!-- Row 3: Certificate Showcase -->
-      <div class="glass-card" style="padding: 2.5rem 2rem;">
-        <h3 style="font-size: 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--accent);">
+      <!-- ==========================================
+           SECTION 4: ACADEMY CERTIFICATES
+           ========================================== -->
+      <div class="glass-card" style="padding: 2rem;">
+        <h3 style="font-size: 1.35rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--accent);">
           <i class="fa-solid fa-certificate"></i> Verified Academy Certificates
         </h3>
 
         {% if matching_cert %}
           <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;" class="cert-flex">
-            <div style="font-size: 4rem; color: var(--accent);">
+            <div style="font-size: 3.5rem; color: var(--accent);">
               <i class="fa-solid fa-award"></i>
             </div>
             <div style="flex-grow: 1;">
-              <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem;">Congratulations! You have an active certificate.</h4>
-              <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">Your certificate (ID: <strong>{{ matching_cert.id }}</strong>) has been verified and registered in the TeachMANTRA repository database.</p>
+              <h4 style="font-size: 1.2rem; margin-bottom: 0.25rem; color: var(--text-main);">Congratulations! You have an active certificate.</h4>
+              <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem;">Your certificate (ID: <strong>{{ matching_cert.id }}</strong>) has been verified and registered in the TeachMANTRA repository database.</p>
               
-              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                 <a href="{% url 'verify_certificate' %}?cert_id={{ matching_cert.id }}" class="btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 4px;">
                   <i class="fa-solid fa-eye"></i> View Certificate Details
                 </a>
@@ -188,9 +394,9 @@
           </div>
         {% else %}
           <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
-            <i class="fa-solid fa-hourglass-half" style="font-size: 3rem; color: rgba(255, 255, 255, 0.1); margin-bottom: 1rem; display: block;"></i>
-            <p style="margin: 0; font-size: 0.95rem;">No certificate is currently registered under your name.</p>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Certificates are automatically generated and linked upon course completion and verification by admin panel managers.</p>
+            <i class="fa-solid fa-hourglass-half" style="font-size: 2.5rem; color: rgba(255, 255, 255, 0.1); margin-bottom: 0.75rem; display: block;"></i>
+            <p style="margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text-main);">No certificate is currently registered under your name.</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Official certificates are automatically generated and linked upon course completion and verification by admin managers.</p>
           </div>
         {% endif %}
       </div>
@@ -201,6 +407,11 @@
   <style>
     .profile-avatar-container:hover #photo-upload-form {
       opacity: 1 !important;
+    }
+    .test-card-hover:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4) !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
     }
     @media (max-width: 768px) {
       .profile-grid {
@@ -228,7 +439,7 @@
         container.style.height = '209mm';
         container.style.display = 'flex';
         container.style.alignItems = 'center';
-        container.style.justify = 'center';
+        container.style.justifyContent = 'center';
         container.style.background = '#ffffff';
         container.style.padding = '10mm';
         container.style.boxSizing = 'border-box';

@@ -316,8 +316,9 @@ from .models import StudentProfile
 from django.shortcuts import redirect
 
 def register_view(request):
+    next_url = request.GET.get('next') or request.POST.get('next') or '/profile/'
     if request.user.is_authenticated:
-        return redirect('profile')
+        return redirect(next_url)
         
     courses_list = [
         "SSC CGL Coaching Program",
@@ -327,6 +328,7 @@ def register_view(request):
     ]
     
     if request.method == "POST":
+        next_url = request.POST.get('next') or request.GET.get('next') or '/profile/'
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
@@ -339,19 +341,19 @@ def register_view(request):
             msg = "Please fill all required fields."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
                 return JsonResponse({"status": "error", "message": msg})
-            return render(request, 'register.html', {"error_msg": msg, "courses": courses_list})
+            return render(request, 'register.html', {"error_msg": msg, "courses": courses_list, "next": next_url})
             
         if User.objects.filter(username=username).exists():
             msg = "Username already exists."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
                 return JsonResponse({"status": "error", "message": msg})
-            return render(request, 'register.html', {"error_msg": msg, "courses": courses_list})
+            return render(request, 'register.html', {"error_msg": msg, "courses": courses_list, "next": next_url})
             
         if User.objects.filter(email=email).exists():
             msg = "Email already registered."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
                 return JsonResponse({"status": "error", "message": msg})
-            return render(request, 'register.html', {"error_msg": msg, "courses": courses_list})
+            return render(request, 'register.html', {"error_msg": msg, "courses": courses_list, "next": next_url})
             
         # Create User
         first_name = full_name
@@ -382,17 +384,19 @@ def register_view(request):
         login(request, user)
         
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-            return JsonResponse({"status": "success", "message": "Registration successful!", "redirect_url": "/profile/"})
-        return redirect('profile')
+            return JsonResponse({"status": "success", "message": "Registration successful!", "redirect_url": next_url})
+        return redirect(next_url)
         
-    return render(request, 'register.html', {"courses": courses_list})
+    return render(request, 'register.html', {"courses": courses_list, "next": next_url})
 
 
 def login_view(request):
+    next_url = request.GET.get('next') or request.POST.get('next') or '/profile/'
     if request.user.is_authenticated:
-        return redirect('profile')
+        return redirect(next_url)
         
     if request.method == "POST":
+        next_url = request.POST.get('next') or request.GET.get('next') or '/profile/'
         username = request.POST.get("username")
         password = request.POST.get("password")
         
@@ -400,21 +404,21 @@ def login_view(request):
             msg = "Please provide both username and password."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
                 return JsonResponse({"status": "error", "message": msg})
-            return render(request, 'login.html', {"error_msg": msg})
+            return render(request, 'login.html', {"error_msg": msg, "next": next_url})
             
         user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "success", "message": "Login successful!", "redirect_url": "/profile/"})
-            return redirect('profile')
+                return JsonResponse({"status": "success", "message": "Login successful!", "redirect_url": next_url})
+            return redirect(next_url)
         else:
             msg = "Invalid username or password."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
                 return JsonResponse({"status": "error", "message": msg})
-            return render(request, 'login.html', {"error_msg": msg})
+            return render(request, 'login.html', {"error_msg": msg, "next": next_url})
             
-    return render(request, 'login.html')
+    return render(request, 'login.html', {"next": next_url})
 
 
 from django.http import HttpResponse
@@ -452,6 +456,8 @@ def temp_create_admin(request):
 
 @login_required(login_url='login')
 def profile_view(request):
+    populate_default_online_tests()
+    
     # Ensure profile exists for the user (handles superusers/staff created via CLI)
     profile, created = StudentProfile.objects.get_or_create(
         user=request.user,
@@ -490,10 +496,35 @@ def profile_view(request):
             "grade": db_cert.grade,
             "file_url": db_cert.certificate_file.url if db_cert.certificate_file else None
         }
+
+    # Available Tests for the student
+    available_tests = OnlineTest.objects.filter(is_active=True).order_by('-created_at')
+
+    # Student Test Submissions & Performance History
+    my_submissions = TestSubmission.objects.filter(
+        models.Q(user=request.user) | 
+        models.Q(student_email=request.user.email) | 
+        models.Q(student_name__iexact=user_fullname) |
+        models.Q(student_name__icontains=request.user.username)
+    ).order_by('-submitted_at')
+
+    total_tests_attempted = my_submissions.count()
+    tests_passed = my_submissions.filter(passed=True).count()
+    tests_failed = total_tests_attempted - tests_passed
+    
+    # Calculate average score percentage
+    avg_score_raw = my_submissions.aggregate(models.Avg('percentage'))['percentage__avg']
+    avg_score = round(avg_score_raw, 1) if avg_score_raw is not None else 0
             
     return render(request, 'profile.html', {
         "profile": profile,
-        "matching_cert": matching_cert
+        "matching_cert": matching_cert,
+        "available_tests": available_tests,
+        "my_submissions": my_submissions,
+        "total_tests_attempted": total_tests_attempted,
+        "tests_passed": tests_passed,
+        "tests_failed": tests_failed,
+        "avg_score": avg_score
     })
 
 
@@ -1430,9 +1461,11 @@ def tests_list_view(request):
     })
 
 
+@login_required(login_url='login')
 def take_test_view(request, test_id):
     """
     Interactive test/quiz page matching the modern exam interface.
+    Requires student authentication to start.
     """
     populate_default_online_tests()
     test = get_object_or_404(OnlineTest, id=test_id)
@@ -1465,6 +1498,7 @@ def take_test_view(request, test_id):
 
 
 @csrf_exempt
+@login_required(login_url='login')
 def submit_test_view(request, test_id):
     """
     Processes quiz answers submitted via AJAX, evaluates score, records submission,
@@ -1480,8 +1514,8 @@ def submit_test_view(request, test_id):
     except Exception:
         data = request.POST
 
-    student_name = data.get("student_name", "").strip() or (request.user.get_full_name() or request.user.username if request.user.is_authenticated else "Student")
-    student_email = data.get("student_email", "").strip() or (request.user.email if request.user.is_authenticated else "")
+    student_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+    student_email = request.user.email or f"{request.user.username}@techmantra.com"
     user_answers = data.get("answers", {})  # e.g. {"1": "A", "2": "C"}
 
     questions = test.questions.all().order_by('order', 'id')
@@ -1515,8 +1549,9 @@ def submit_test_view(request, test_id):
     percentage = round((score / total_q) * 100, 1)
     passed = percentage >= test.pass_percentage
 
-    # Record submission in database
+    # Record submission in database with foreign key to User
     TestSubmission.objects.create(
+        user=request.user,
         test=test,
         student_name=student_name,
         student_email=student_email,
