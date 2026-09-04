@@ -3223,6 +3223,7 @@ Agli class nirdharit samay par shuru hogi.
         'messages': 'Helpdesk Support Logs',
         'settings': 'Website Configuration Settings',
         'certificates': 'Certificate Registry',
+        'tests': 'Online Mock Tests & Quizzes',
         'broadcast': 'Student Bulk Mail Broadcast Console',
         'admins': 'System Administrators'
       };
@@ -4046,6 +4047,9 @@ Agli class nirdharit samay par shuru hogi.
       document.getElementById('view-broadcast-date').textContent = date;
       document.getElementById('view-broadcast-message').textContent = message;
       document.getElementById('view-broadcast-recipients').textContent = recipients;
+
+      openModal('viewBroadcastModal');
+    }
 
     // ============================================================
     // ONLINE TESTS & QUIZ SYSTEM CONTROLLERS
