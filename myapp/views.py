@@ -1,4 +1,6 @@
 import json
+from django.db import models
+from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from .models import (
