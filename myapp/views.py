@@ -775,6 +775,7 @@ def admin_add_student_view(request):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_update_settings_view(request):
     if not request.user.is_staff:
