@@ -1589,11 +1589,24 @@ def admin_add_test_view(request):
         category = request.POST.get("category", "").strip() or "General Studies"
         subtitle = request.POST.get("subtitle", "").strip() or "परीक्षा अभ्यास • Mock Test Series"
         description = request.POST.get("description", "").strip()
-        duration_minutes = int(request.POST.get("duration_minutes") or 30)
-        total_questions = int(request.POST.get("total_questions") or 50)
-        pass_percentage = int(request.POST.get("pass_percentage") or 40)
+        
+        try:
+            duration_minutes = int(request.POST.get("duration_minutes") or 30)
+        except (ValueError, TypeError):
+            duration_minutes = 30
+            
+        try:
+            total_questions = int(request.POST.get("total_questions") or 50)
+        except (ValueError, TypeError):
+            total_questions = 50
+            
+        try:
+            pass_percentage = int(request.POST.get("pass_percentage") or 40)
+        except (ValueError, TypeError):
+            pass_percentage = 40
+            
         external_link = request.POST.get("external_link", "").strip()
-        is_active = request.POST.get("is_active") == "on" or request.POST.get("is_active") == "true" or request.POST.get("is_active") == "1"
+        is_active = request.POST.get("is_active") in ["on", "true", "1", True]
 
         if not title:
             return JsonResponse({"status": "error", "message": "Test title is required."})
@@ -1610,11 +1623,13 @@ def admin_add_test_view(request):
             is_active=is_active
         )
 
-        return JsonResponse({
-            "status": "success",
-            "message": f"Test '{test.title}' created successfully!",
-            "test_id": test.id
-        })
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({
+                "status": "success",
+                "message": f"Test '{test.title}' created successfully!",
+                "test_id": test.id
+            })
+        return redirect('/admin-dashboard/')
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
@@ -1638,9 +1653,22 @@ def admin_update_test_view(request, test_id):
         test.category = request.POST.get("category", "").strip() or test.category
         test.subtitle = request.POST.get("subtitle", "").strip() or test.subtitle
         test.description = request.POST.get("description", "").strip()
-        test.duration_minutes = int(request.POST.get("duration_minutes") or test.duration_minutes)
-        test.total_questions = int(request.POST.get("total_questions") or test.total_questions)
-        test.pass_percentage = int(request.POST.get("pass_percentage") or test.pass_percentage)
+        
+        try:
+            test.duration_minutes = int(request.POST.get("duration_minutes") or test.duration_minutes)
+        except (ValueError, TypeError):
+            pass
+            
+        try:
+            test.total_questions = int(request.POST.get("total_questions") or test.total_questions)
+        except (ValueError, TypeError):
+            pass
+            
+        try:
+            test.pass_percentage = int(request.POST.get("pass_percentage") or test.pass_percentage)
+        except (ValueError, TypeError):
+            pass
+            
         test.external_link = request.POST.get("external_link", "").strip()
         
         status_val = request.POST.get("is_active")
@@ -1649,15 +1677,17 @@ def admin_update_test_view(request, test_id):
             
         test.save()
 
-        return JsonResponse({
-            "status": "success",
-            "message": f"Test '{test.title}' updated successfully!",
-            "test_id": test.id,
-            "title": test.title,
-            "category": test.category,
-            "external_link": test.external_link,
-            "is_active": test.is_active
-        })
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({
+                "status": "success",
+                "message": f"Test '{test.title}' updated successfully!",
+                "test_id": test.id,
+                "title": test.title,
+                "category": test.category,
+                "external_link": test.external_link,
+                "is_active": test.is_active
+            })
+        return redirect('/admin-dashboard/')
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
