@@ -1,10 +1,18 @@
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import Services, Admission, ContactMessage, StudentProfile, Course, GalleryImage, WebsiteSettings, AdminProfile, Certificate, BroadcastEmail
+import json
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse
+from .models import (
+    Services, Admission, ContactMessage, StudentProfile, Course, 
+    GalleryImage, WebsiteSettings, AdminProfile, Certificate, 
+    BroadcastEmail, OnlineTest, QuizQuestion, TestSubmission
+)
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils.html import strip_tags
+from django.views.decorators.csrf import csrf_exempt
+
 def index(request):
+    populate_default_online_tests()
     success_msg = None
     if request.method == "POST":
         name = request.POST.get("name")
@@ -17,7 +25,11 @@ def index(request):
                 return JsonResponse({"status": "success", "message": "Data submitted successfully!"})
             success_msg = "Data submitted successfully!"
             
-    return render(request, 'index.html', {"success_msg": success_msg})
+    active_tests = OnlineTest.objects.filter(is_active=True).order_by('-created_at')[:6]
+    return render(request, 'index.html', {
+        "success_msg": success_msg,
+        "active_tests": active_tests
+    })
 
 def about(request):
     return render(request, 'about.html')
@@ -132,6 +144,124 @@ def populate_default_certificates():
             certificate_id=d["certificate_id"],
             defaults=d
         )
+
+def populate_default_online_tests():
+    if not OnlineTest.objects.exists():
+        test = OnlineTest.objects.create(
+            title="GS MIX — Online Quiz",
+            category="Mixed General Studies",
+            subtitle="50 Questions • Mixed General Studies • परीक्षा अभ्यास",
+            description="TeachMANTRA Academy All India Level Practice Mock Test Series for SSC CGL, Railway NTPC, Banking, State PCS & Competitive Exams.",
+            duration_minutes=30,
+            total_questions=10,
+            pass_percentage=40,
+            is_active=True
+        )
+        sample_questions = [
+            {
+                "question_text": "भारत में हरित क्रांति के जनक के रूप में किसे जाना जाता है?",
+                "option_a": "एम. एस. स्वामीनाथन",
+                "option_b": "नॉर्मन बोरलॉग",
+                "option_c": "वर्गीज कुरियन",
+                "option_d": "होमी भाभा",
+                "correct_option": "A",
+                "explanation": "डॉ. एम. एस. स्वामीनाथन को भारत में हरित क्रांति (Green Revolution) का जनक माना जाता है।",
+                "order": 1
+            },
+            {
+                "question_text": "भारतीय संविधान के किस अनुच्छेद के तहत वित्तीय आपातकाल की घोषणा की जाती है?",
+                "option_a": "अनुच्छेद 352",
+                "option_b": "अनुच्छेद 356",
+                "option_c": "अनुच्छेद 360",
+                "option_d": "अनुच्छेद 368",
+                "correct_option": "C",
+                "explanation": "अनुच्छेद 360 के तहत भारत के राष्ट्रपति को वित्तीय आपातकाल लगाने का अधिकार है।",
+                "order": 2
+            },
+            {
+                "question_text": "विश्व का सबसे बड़ा डेल्टा कौन सा है?",
+                "option_a": "सुंदरवन डेल्टा",
+                "option_b": "अमेज़ॅन डेल्टा",
+                "option_c": "नील नदी डेल्टा",
+                "option_d": "मिसिसिपी डेल्टा",
+                "correct_option": "A",
+                "explanation": "गंगा और ब्रह्मपुत्र नदियों द्वारा निर्मित सुंदरवन डेल्टा विश्व का सबसे बड़ा डेल्टा है।",
+                "order": 3
+            },
+            {
+                "question_text": "मानव शरीर में रक्त का शुद्धिकरण किस अंग में होता है?",
+                "option_a": "हृदय (Heart)",
+                "option_b": "वृक्क / गुर्दा (Kidney)",
+                "option_c": "फेफड़े (Lungs)",
+                "option_d": "यकृत (Liver)",
+                "correct_option": "B",
+                "explanation": "किडनी (Kidney) रक्त को छानकर अपशिष्ट पदार्थों को अलग करती है।",
+                "order": 4
+            },
+            {
+                "question_text": "Who is known as the 'Father of the Indian Constitution'?",
+                "option_a": "Mahatma Gandhi",
+                "option_b": "Dr. B. R. Ambedkar",
+                "option_c": "Jawaharlal Nehru",
+                "option_d": "Dr. Rajendra Prasad",
+                "correct_option": "B",
+                "explanation": "Dr. B. R. Ambedkar was the Chairman of the Drafting Committee of the Constitution of India.",
+                "order": 5
+            },
+            {
+                "question_text": "प्रकाश वर्ष (Light Year) किसकी इकाई है?",
+                "option_a": "समय (Time)",
+                "option_b": "दूरी (Distance)",
+                "option_c": "प्रकाश की तीव्रता (Intensity of Light)",
+                "option_d": "द्रव्यमान (Mass)",
+                "correct_option": "B",
+                "explanation": "प्रकाश वर्ष खगोलीय दूरी (Astronomical Distance) मापने की इकाई है।",
+                "order": 6
+            },
+            {
+                "question_text": "कर्क रेखा भारत के कितने राज्यों से होकर गुजरती है?",
+                "option_a": "6 राज्य",
+                "option_b": "7 राज्य",
+                "option_c": "8 राज्य",
+                "option_d": "9 राज्य",
+                "correct_option": "C",
+                "explanation": "कर्क रेखा भारत के 8 राज्यों (गुजरात, राजस्थान, मध्य प्रदेश, छत्तीसगढ़, झारखंड, पश्चिम बंगाल, त्रिपुरा, मिजोरम) से गुजरती है।",
+                "order": 7
+            },
+            {
+                "question_text": "Which gas is used in the manufacturing of Vanaspati Ghee from vegetable oil?",
+                "option_a": "Oxygen",
+                "option_b": "Nitrogen",
+                "option_c": "Hydrogen",
+                "option_d": "Carbon Dioxide",
+                "correct_option": "C",
+                "explanation": "Hydrogenation process using Nickel catalyst and Hydrogen gas converts vegetable oil to ghee.",
+                "order": 8
+            },
+            {
+                "question_text": "भारतीय रिजर्व बैंक (RBI) की स्थापना किस वर्ष हुई थी?",
+                "option_a": "1935",
+                "option_b": "1947",
+                "option_c": "1950",
+                "option_d": "1969",
+                "correct_option": "A",
+                "explanation": "भारतीय रिजर्व बैंक की स्थापना 1 अप्रैल 1935 को RBI अधिनियम 1934 के तहत की गई थी।",
+                "order": 9
+            },
+            {
+                "question_text": "पानीपत का प्रथम युद्ध (First Battle of Panipat) किस वर्ष लड़ा गया था?",
+                "option_a": "1526",
+                "option_b": "1556",
+                "option_c": "1761",
+                "option_d": "1576",
+                "correct_option": "A",
+                "explanation": "21 अप्रैल 1526 को बाबर और इब्राहिम लोदी के बीच पानीपत की पहली लड़ाई लड़ी गई थी।",
+                "order": 10
+            }
+        ]
+        for q in sample_questions:
+            QuizQuestion.objects.create(test=test, **q)
+
 
 def verify_certificate(request):
     if request.GET.get('debug_storage') == '1':
@@ -410,6 +540,7 @@ def admin_dashboard_view(request):
         return redirect('home')
 
     populate_default_certificates()
+    populate_default_online_tests()
 
     students = StudentProfile.objects.select_related('user').all()
     admissions = Admission.objects.all().order_by('-created_at')
@@ -418,6 +549,8 @@ def admin_dashboard_view(request):
     images_list = GalleryImage.objects.all().order_by('-uploaded_at')
     certificates_list = Certificate.objects.all().order_by('-created_at')
     broadcast_emails = BroadcastEmail.objects.all().order_by('-created_at')
+    online_tests = OnlineTest.objects.all().prefetch_related('questions', 'submissions').order_by('-created_at')
+    test_submissions = TestSubmission.objects.all().select_related('test').order_by('-submitted_at')[:50]
 
     # Fetch and ensure profiles for admins
     admins = User.objects.filter(is_staff=True).order_by('date_joined')
@@ -443,6 +576,7 @@ def admin_dashboard_view(request):
     total_admins = admins.count()
     total_certificates = certificates_list.count()
     total_broadcasts = broadcast_emails.count()
+    total_online_tests = online_tests.count()
 
     return render(request, 'admin_dashboard.html', {
         "students": students,
@@ -453,6 +587,8 @@ def admin_dashboard_view(request):
         "admins": admins,
         "certificates": certificates_list,
         "broadcast_emails": broadcast_emails,
+        "online_tests": online_tests,
+        "test_submissions": test_submissions,
         "debug_info": debug_info,
         "stats": {
             "total_students": total_students,
@@ -462,7 +598,8 @@ def admin_dashboard_view(request):
             "total_images": total_images,
             "total_admins": total_admins,
             "total_certificates": total_certificates,
-            "total_broadcasts": total_broadcasts
+            "total_broadcasts": total_broadcasts,
+            "total_online_tests": total_online_tests
         }
     })
 
@@ -1276,4 +1413,365 @@ def admin_delete_broadcast_log_view(request, log_id):
             return JsonResponse({"status": "error", "message": "Broadcast log not found."})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+# ==============================================================================
+# ONLINE TESTS & QUIZ SYSTEM VIEWS (PUBLIC + ADMIN)
+# ==============================================================================
+
+def tests_list_view(request):
+    """
+    Public listing of all available mock tests and practice quizzes.
+    """
+    populate_default_online_tests()
+    tests = OnlineTest.objects.filter(is_active=True).prefetch_related('questions').order_by('-created_at')
+    return render(request, 'tests_list.html', {
+        "tests": tests
+    })
+
+
+def take_test_view(request, test_id):
+    """
+    Interactive test/quiz page matching the modern exam interface.
+    """
+    populate_default_online_tests()
+    test = get_object_or_404(OnlineTest, id=test_id)
+    
+    # If test has an external link and user opted for redirect
+    if test.external_link and request.GET.get('launch_external') == '1':
+        return redirect(test.external_link)
+
+    questions = test.questions.all().order_by('order', 'id')
+    
+    # Serialize questions for client-side instant navigation
+    questions_list = []
+    for idx, q in enumerate(questions, start=1):
+        questions_list.append({
+            "id": q.id,
+            "number": idx,
+            "question_text": q.question_text,
+            "option_a": q.option_a,
+            "option_b": q.option_b,
+            "option_c": q.option_c,
+            "option_d": q.option_d,
+            "order": q.order
+        })
+
+    return render(request, 'quiz.html', {
+        "test": test,
+        "questions_count": questions.count(),
+        "questions_json": json.dumps(questions_list, ensure_ascii=False)
+    })
+
+
+@csrf_exempt
+def submit_test_view(request, test_id):
+    """
+    Processes quiz answers submitted via AJAX, evaluates score, records submission,
+    and returns detailed scorecard with explanations.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method."})
+
+    test = get_object_or_404(OnlineTest, id=test_id)
+    
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    student_name = data.get("student_name", "").strip() or (request.user.get_full_name() or request.user.username if request.user.is_authenticated else "Student")
+    student_email = data.get("student_email", "").strip() or (request.user.email if request.user.is_authenticated else "")
+    user_answers = data.get("answers", {})  # e.g. {"1": "A", "2": "C"}
+
+    questions = test.questions.all().order_by('order', 'id')
+    total_q = questions.count()
+    if total_q == 0:
+        return JsonResponse({"status": "error", "message": "No questions available in this test."})
+
+    score = 0
+    review_list = []
+
+    for idx, q in enumerate(questions, start=1):
+        # Answers dict keys might be string or int
+        ans = user_answers.get(str(q.id)) or user_answers.get(q.id) or None
+        is_correct = (ans == q.correct_option)
+        if is_correct:
+            score += 1
+            
+        review_list.append({
+            "number": idx,
+            "question_text": q.question_text,
+            "option_a": q.option_a,
+            "option_b": q.option_b,
+            "option_c": q.option_c,
+            "option_d": q.option_d,
+            "user_answer": ans,
+            "correct_answer": q.correct_option,
+            "is_correct": is_correct,
+            "explanation": q.explanation or ""
+        })
+
+    percentage = round((score / total_q) * 100, 1)
+    passed = percentage >= test.pass_percentage
+
+    # Record submission in database
+    TestSubmission.objects.create(
+        test=test,
+        student_name=student_name,
+        student_email=student_email,
+        score=score,
+        total_questions=total_q,
+        percentage=percentage,
+        passed=passed,
+        answers_json=json.dumps(user_answers)
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "student_name": student_name,
+        "score": score,
+        "total_questions": total_q,
+        "percentage": percentage,
+        "passed": passed,
+        "pass_percentage": test.pass_percentage,
+        "review": review_list
+    })
+
+
+@login_required(login_url='login')
+def admin_add_test_view(request):
+    """
+    Creates a new Online Test from Admin Dashboard.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "").strip() or "General Studies"
+        subtitle = request.POST.get("subtitle", "").strip() or "परीक्षा अभ्यास • Mock Test Series"
+        description = request.POST.get("description", "").strip()
+        duration_minutes = int(request.POST.get("duration_minutes") or 30)
+        total_questions = int(request.POST.get("total_questions") or 50)
+        pass_percentage = int(request.POST.get("pass_percentage") or 40)
+        external_link = request.POST.get("external_link", "").strip()
+        is_active = request.POST.get("is_active") == "on" or request.POST.get("is_active") == "true" or request.POST.get("is_active") == "1"
+
+        if not title:
+            return JsonResponse({"status": "error", "message": "Test title is required."})
+
+        test = OnlineTest.objects.create(
+            title=title,
+            category=category,
+            subtitle=subtitle,
+            description=description,
+            duration_minutes=duration_minutes,
+            total_questions=total_questions,
+            pass_percentage=pass_percentage,
+            external_link=external_link,
+            is_active=is_active
+        )
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Test '{test.title}' created successfully!",
+            "test_id": test.id
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_update_test_view(request, test_id):
+    """
+    Updates test details / link from Admin Dashboard.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    test = get_object_or_404(OnlineTest, id=test_id)
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        if not title:
+            return JsonResponse({"status": "error", "message": "Test title is required."})
+
+        test.title = title
+        test.category = request.POST.get("category", "").strip() or test.category
+        test.subtitle = request.POST.get("subtitle", "").strip() or test.subtitle
+        test.description = request.POST.get("description", "").strip()
+        test.duration_minutes = int(request.POST.get("duration_minutes") or test.duration_minutes)
+        test.total_questions = int(request.POST.get("total_questions") or test.total_questions)
+        test.pass_percentage = int(request.POST.get("pass_percentage") or test.pass_percentage)
+        test.external_link = request.POST.get("external_link", "").strip()
+        
+        status_val = request.POST.get("is_active")
+        if status_val is not None:
+            test.is_active = status_val in ['true', 'on', '1', True]
+            
+        test.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Test '{test.title}' updated successfully!",
+            "test_id": test.id,
+            "title": test.title,
+            "category": test.category,
+            "external_link": test.external_link,
+            "is_active": test.is_active
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_delete_test_view(request, test_id):
+    """
+    Deletes an online test and all its questions.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        try:
+            test = OnlineTest.objects.get(id=test_id)
+            title = test.title
+            test.delete()
+            return JsonResponse({"status": "success", "message": f"Test '{title}' deleted successfully!"})
+        except OnlineTest.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Test not found."})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_toggle_test_status_view(request, test_id):
+    """
+    Quickly toggles Active/Inactive status of a test.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        try:
+            test = OnlineTest.objects.get(id=test_id)
+            test.is_active = not test.is_active
+            test.save()
+            return JsonResponse({
+                "status": "success", 
+                "message": f"Test status updated to {'Active' if test.is_active else 'Inactive'}.",
+                "is_active": test.is_active
+            })
+        except OnlineTest.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Test not found."})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_add_question_view(request, test_id):
+    """
+    Adds a new MCQ question to an existing test.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    test = get_object_or_404(OnlineTest, id=test_id)
+
+    if request.method == "POST":
+        question_text = request.POST.get("question_text", "").strip()
+        option_a = request.POST.get("option_a", "").strip()
+        option_b = request.POST.get("option_b", "").strip()
+        option_c = request.POST.get("option_c", "").strip()
+        option_d = request.POST.get("option_d", "").strip()
+        correct_option = request.POST.get("correct_option", "A").strip().upper()
+        explanation = request.POST.get("explanation", "").strip()
+
+        if not question_text or not option_a or not option_b or not option_c or not option_d:
+            return JsonResponse({"status": "error", "message": "Please fill question and all 4 options."})
+
+        if correct_option not in ['A', 'B', 'C', 'D']:
+            correct_option = 'A'
+
+        order = test.questions.count() + 1
+        question = QuizQuestion.objects.create(
+            test=test,
+            question_text=question_text,
+            option_a=option_a,
+            option_b=option_b,
+            option_c=option_c,
+            option_d=option_d,
+            correct_option=correct_option,
+            explanation=explanation,
+            order=order
+        )
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Question added successfully!",
+            "question_id": question.id,
+            "total_questions": test.questions.count()
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_delete_question_view(request, question_id):
+    """
+    Deletes an individual question from a test.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        try:
+            q = QuizQuestion.objects.get(id=question_id)
+            test_id = q.test_id
+            q.delete()
+            total = QuizQuestion.objects.filter(test_id=test_id).count()
+            return JsonResponse({
+                "status": "success", 
+                "message": "Question deleted successfully!",
+                "total_questions": total
+            })
+        except QuizQuestion.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Question not found."})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_get_test_questions_view(request, test_id):
+    """
+    Returns JSON list of questions for a test for the admin modal.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    test = get_object_or_404(OnlineTest, id=test_id)
+    questions = test.questions.all().order_by('order', 'id')
+    
+    data = []
+    for idx, q in enumerate(questions, start=1):
+        data.append({
+            "id": q.id,
+            "number": idx,
+            "question_text": q.question_text,
+            "option_a": q.option_a,
+            "option_b": q.option_b,
+            "option_c": q.option_c,
+            "option_d": q.option_d,
+            "correct_option": q.correct_option,
+            "explanation": q.explanation or ""
+        })
+
+    return JsonResponse({
+        "status": "success",
+        "test_title": test.title,
+        "test_id": test.id,
+        "questions": data
+    })
+
 

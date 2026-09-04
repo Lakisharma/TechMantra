@@ -134,3 +134,72 @@ class BroadcastEmail(models.Model):
 
     def __str__(self):
         return f"[{self.created_at.strftime('%Y-%m-%d %H:%M')}] {self.subject} ({self.recipient_count} recipients)"
+
+
+class OnlineTest(models.Model):
+    title = models.CharField(max_length=200, default="GS MIX — Online Quiz")
+    category = models.CharField(max_length=100, default="Mixed General Studies")
+    subtitle = models.CharField(max_length=250, default="परीक्षा अभ्यास • Comprehensive Mock Test Series")
+    description = models.TextField(blank=True, default="Practice general knowledge, current affairs, and mock test questions designed by TeachMANTRA expert faculty.")
+    duration_minutes = models.IntegerField(default=30, help_text="Test time in minutes")
+    total_questions = models.IntegerField(default=50, help_text="Target question count")
+    pass_percentage = models.IntegerField(default=40, help_text="Passing percentage (e.g. 40)")
+    external_link = models.CharField(max_length=500, blank=True, null=True, help_text="Optional external test portal or Google Form URL. Leave blank for interactive built-in portal.")
+    is_active = models.BooleanField(default=True, help_text="Show in Home Page and Tests portal")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.category})"
+
+    @property
+    def questions_count(self):
+        count = self.questions.count()
+        return count if count > 0 else self.total_questions
+
+
+class QuizQuestion(models.Model):
+    OPTION_CHOICES = (
+        ('A', 'Option A'),
+        ('B', 'Option B'),
+        ('C', 'Option C'),
+        ('D', 'Option D'),
+    )
+    test = models.ForeignKey(OnlineTest, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.TextField(help_text="Question statement (Supports Hindi and English)")
+    option_a = models.CharField(max_length=500)
+    option_b = models.CharField(max_length=500)
+    option_c = models.CharField(max_length=500)
+    option_d = models.CharField(max_length=500)
+    correct_option = models.CharField(max_length=5, choices=OPTION_CHOICES, default='A')
+    explanation = models.TextField(blank=True, null=True, help_text="Explanation shown after test completion")
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"[{self.test.title}] Q: {self.question_text[:50]}..."
+
+
+class TestSubmission(models.Model):
+    test = models.ForeignKey(OnlineTest, on_delete=models.CASCADE, related_name='submissions')
+    student_name = models.CharField(max_length=150)
+    student_email = models.EmailField(blank=True, null=True)
+    score = models.IntegerField(default=0)
+    total_questions = models.IntegerField(default=0)
+    percentage = models.FloatField(default=0.0)
+    passed = models.BooleanField(default=False)
+    answers_json = models.TextField(blank=True, null=True, help_text="Recorded answers for review")
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.student_name} - {self.test.title} ({self.score}/{self.total_questions})"
+

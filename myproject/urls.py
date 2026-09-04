@@ -57,6 +57,18 @@ urlpatterns = [
     path('admin-dashboard/certificates/edit/<int:cert_id>/', views.admin_edit_certificate_view, name='admin_edit_certificate'),
     path('admin-dashboard/broadcast/send/', views.admin_send_broadcast_mail_view, name='admin_send_broadcast_mail'),
     path('admin-dashboard/broadcast/delete/<int:log_id>/', views.admin_delete_broadcast_log_view, name='admin_delete_broadcast_log'),
+    # Online Tests & Quizzes Portal Routes
+    path('tests/', views.tests_list_view, name='tests_list'),
+    path('tests/<int:test_id>/', views.take_test_view, name='take_test'),
+    path('tests/<int:test_id>/submit/', views.submit_test_view, name='submit_test'),
+    # Admin Online Tests Management
+    path('admin-dashboard/tests/add/', views.admin_add_test_view, name='admin_add_test'),
+    path('admin-dashboard/tests/update/<int:test_id>/', views.admin_update_test_view, name='admin_update_test'),
+    path('admin-dashboard/tests/delete/<int:test_id>/', views.admin_delete_test_view, name='admin_delete_test'),
+    path('admin-dashboard/tests/toggle-status/<int:test_id>/', views.admin_toggle_test_status_view, name='admin_toggle_test_status'),
+    path('admin-dashboard/tests/<int:test_id>/questions/', views.admin_get_test_questions_view, name='admin_get_test_questions'),
+    path('admin-dashboard/tests/<int:test_id>/questions/add/', views.admin_add_question_view, name='admin_add_question'),
+    path('admin-dashboard/tests/questions/delete/<int:question_id>/', views.admin_delete_question_view, name='admin_delete_question'),
 ]
 
 if settings.DEBUG:

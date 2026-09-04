@@ -1,17 +1,18 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TeachMANTRA | {% block title %}Student Academy{% endblock %}</title>
-  
+
   <!-- FontAwesome for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- Early Theme Initializer (Prevents Theme Flash) -->
   <script>
-    (function() {
+    (function () {
       const savedTheme = localStorage.getItem('teachmantra_theme') || 'dark';
       document.documentElement.setAttribute('data-theme', savedTheme);
     })();
@@ -45,9 +46,11 @@
     <div class="prem-topbar">
       <div class="container prem-topbar-inner">
         <div class="prem-topbar-left">
-          <a href="tel:{{ site_settings.contact_phone }}"><i class="fa-solid fa-phone"></i> {{ site_settings.contact_phone }}</a>
+          <a href="tel:{{ site_settings.contact_phone }}"><i class="fa-solid fa-phone"></i> {{
+            site_settings.contact_phone }}</a>
           <span class="prem-sep">|</span>
-          <a href="mailto:{{ site_settings.contact_email }}"><i class="fa-solid fa-envelope"></i> {{ site_settings.contact_email }}</a>
+          <a href="mailto:{{ site_settings.contact_email }}"><i class="fa-solid fa-envelope"></i> {{
+            site_settings.contact_email }}</a>
         </div>
         <div class="prem-topbar-right">
           <div class="prem-topbar-downloads">
@@ -57,25 +60,26 @@
           </div>
           <span class="prem-sep-bold">|</span>
           {% if user.is_authenticated %}
-            {% if user.is_staff %}
-              <a href="{% url 'admin_dashboard' %}" class="prem-pill-verify" style="background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.25); color: var(--primary) !important;">
-                <i class="fa-solid fa-shield-halved"></i> Admin Console
-              </a>
-            {% endif %}
-            <a href="{% url 'verify_certificate' %}" class="prem-pill-verify">
-              <i class="fa-solid fa-certificate"></i> Verify Certificate
-            </a>
+          {% if user.is_staff %}
+          <a href="{% url 'admin_dashboard' %}" class="prem-pill-verify"
+            style="background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.25); color: var(--primary) !important;">
+            <i class="fa-solid fa-shield-halved"></i> Admin Console
+          </a>
+          {% endif %}
+          <a href="{% url 'verify_certificate' %}" class="prem-pill-verify">
+            <i class="fa-solid fa-certificate"></i> Verify Certificate
+          </a>
 
-            <a href="{% url 'logout' %}" class="prem-pill-register">
-              <i class="fa-solid fa-right-from-bracket"></i> Logout
-            </a>
+          <a href="{% url 'logout' %}" class="prem-pill-register">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </a>
           {% else %}
-            <a href="{% url 'verify_certificate' %}" class="prem-pill-verify">
-              <i class="fa-solid fa-certificate"></i> Verify Certificate
-            </a>
-            <a href="{% url 'register' %}" class="prem-pill-register">
-              <i class="fa-solid fa-user-plus"></i> Register
-            </a>
+          <a href="{% url 'verify_certificate' %}" class="prem-pill-verify">
+            <i class="fa-solid fa-certificate"></i> Verify Certificate
+          </a>
+          <a href="{% url 'register' %}" class="prem-pill-register">
+            <i class="fa-solid fa-user-plus"></i> Register
+          </a>
           {% endif %}
         </div>
       </div>
@@ -83,15 +87,17 @@
 
     <!-- Main Navigation Bar -->
     <div class="container navbar-container">
-      <a href="{% url 'home' %}" class="logo-link" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+      <a href="{% url 'home' %}" class="logo-link"
+        style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
         {% if site_settings.site_logo %}
-          <img src="{{ site_settings.site_logo.url }}" alt="Logo" style="height: 48px; max-width: 180px; object-fit: contain; vertical-align: middle;" />
+        <img src="{{ site_settings.site_logo.url }}" alt="Logo"
+          style="height: 48px; max-width: 180px; object-fit: contain; vertical-align: middle;" />
         {% else %}
-          <i class="fa-solid fa-graduation-cap" style="vertical-align: middle;"></i>
+        <i class="fa-solid fa-graduation-cap" style="vertical-align: middle;"></i>
         {% endif %}
         <span style="vertical-align: middle;">{{ site_settings.site_name }}</span>
       </a>
-      
+
       <button class="menu-toggle" aria-label="Toggle Navigation Menu">
         <span></span>
         <span></span>
@@ -102,54 +108,62 @@
         <li><a href="{% url 'home' %}" class="nav-link">Home</a></li>
         <li><a href="{% url 'about' %}" class="nav-link">About Us</a></li>
         <li><a href="{% url 'courses' %}" class="nav-link">Courses</a></li>
+        <li><a href="{% url 'tests_list' %}" class="nav-link"><i class="fa-solid fa-laptop-file" style="color: var(--primary);"></i> Online Tests</a></li>
         <li><a href="{% url 'faculty' %}" class="nav-link">Faculty</a></li>
         <li><a href="{% url 'admissions' %}" class="nav-link">Admissions</a></li>
         <li><a href="{% url 'gallery' %}" class="nav-link">Gallery</a></li>
         <li><a href="{% url 'results' %}" class="nav-link">Results</a></li>
         <li><a href="{% url 'contact' %}" class="nav-link">Contact Us</a></li>
         {% if user.is_authenticated and user.is_staff %}
-          <li><a href="{% url 'admin_dashboard' %}" class="nav-link" style="color: var(--primary); font-weight: 600;"><i class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
+        <li><a href="{% url 'admin_dashboard' %}" class="nav-link" style="color: var(--primary); font-weight: 600;"><i
+              class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
         {% endif %}
-        <li class="mobile-only"><a href="{% url 'verify_certificate' %}" class="nav-link"><i class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
+        <li class="mobile-only"><a href="{% url 'verify_certificate' %}" class="nav-link"><i
+              class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
         {% if user.is_authenticated %}
-          <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link">Dashboard</a></li>
-          <li class="mobile-only"><a href="{% url 'logout' %}" style="display: inline-block; margin-top: 1rem; color: #f87171;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link">Dashboard</a></li>
+        <li class="mobile-only"><a href="{% url 'logout' %}"
+            style="display: inline-block; margin-top: 1rem; color: #f87171;"><i
+              class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
         {% else %}
-          <li class="mobile-only"><a href="{% url 'login' %}" style="display: inline-block; margin-top: 1rem;"><i class="fa-solid fa-lock"></i> Login</a></li>
+        <li class="mobile-only"><a href="{% url 'login' %}" style="display: inline-block; margin-top: 1rem;"><i
+              class="fa-solid fa-lock"></i> Login</a></li>
         {% endif %}
         <li class="mobile-only" style="margin-top: 1rem;">
-          <button id="mobileThemeToggleBtn" class="theme-toggle-btn" style="width: 100%; border-radius: 8px; height: 42px; gap: 0.5rem; font-size: 0.9rem; font-weight: 600;">
+          <button id="mobileThemeToggleBtn" class="theme-toggle-btn"
+            style="width: 100%; border-radius: 8px; height: 42px; gap: 0.5rem; font-size: 0.9rem; font-weight: 600;">
             <i class="fa-solid fa-sun theme-icon-sun"></i>
             <i class="fa-solid fa-moon theme-icon-moon"></i>
             <span class="theme-text">Toggle Theme</span>
           </button>
         </li>
       </ul>
-        
-        <!-- Desktop Actions Group -->
-        <div style="display: inline-flex; align-items: center; gap: 0.75rem;">
-          <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle Theme (Dark / Light)">
-            <i class="fa-solid fa-moon theme-icon-moon"></i>
-            <i class="fa-solid fa-sun theme-icon-sun"></i>
-          </button>
 
-          {% if user.is_authenticated %}
-            <a href="{% url 'profile' %}" class="btn-login btn-login-dashboard">
-              {% if user.profile.photo %}
-                <img src="{{ user.profile.photo.url }}" class="btn-login-avatar" alt="Avatar" />
-              {% else %}
-                <i class="fa-solid fa-user-gear"></i>
-              {% endif %}
-              Dashboard
-            </a>
+      <!-- Desktop Actions Group -->
+      <div style="display: inline-flex; align-items: center; gap: 0.75rem;">
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode"
+          title="Toggle Theme (Dark / Light)">
+          <i class="fa-solid fa-moon theme-icon-moon"></i>
+          <i class="fa-solid fa-sun theme-icon-sun"></i>
+        </button>
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'profile' %}" class="btn-login btn-login-dashboard">
+          {% if user.profile.photo %}
+          <img src="{{ user.profile.photo.url }}" class="btn-login-avatar" alt="Avatar" />
           {% else %}
-            <a href="{% url 'login' %}" class="btn-login">
-              <i class="fa-solid fa-lock"></i> Login
-            </a>
+          <i class="fa-solid fa-user-gear"></i>
           {% endif %}
-        </div>
+          Dashboard
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn-login">
+          <i class="fa-solid fa-lock"></i> Login
+        </a>
+        {% endif %}
       </div>
-    </header>
+    </div>
+  </header>
 
   <!-- ==========================================
        Main Content Area
@@ -165,14 +179,15 @@
     <div class="container">
       <a href="{% url 'home' %}" class="footer-logo">
         {% if site_settings.site_logo %}
-          <img src="{{ site_settings.site_logo.url }}" alt="Logo" />
+        <img src="{{ site_settings.site_logo.url }}" alt="Logo" />
         {% else %}
-          <i class="fa-solid fa-graduation-cap" style="color: var(--primary);"></i>
+        <i class="fa-solid fa-graduation-cap" style="color: var(--primary);"></i>
         {% endif %}
         <span>{{ site_settings.site_name }}</span>
       </a>
-      <p class="tagline">Providing quality classroom education and specialized mock test series for competitive exams.</p>
-      
+      <p class="tagline">Providing quality classroom education and specialized mock test series for competitive exams.
+      </p>
+
       <ul class="footer-nav">
         <li><a href="{% url 'home' %}">Home</a></li>
         <li><a href="{% url 'about' %}">About Us</a></li>
@@ -183,7 +198,7 @@
         <li><a href="{% url 'results' %}">Results</a></li>
         <li><a href="{% url 'contact' %}">Contact Us</a></li>
       </ul>
-      
+
       <div class="footer-copyright">
         &copy; 2026 {{ site_settings.site_name }} Academy. All Rights Reserved. Developed By LakshmanSharma ❤️
       </div>
@@ -199,406 +214,422 @@
        Auto Entrance Promotional Announcement Popup (DigiCoders Style)
        ========================================== -->
   {% if site_settings.show_popup and request.path == '/' or site_settings.show_popup and request.path == '/file/' %}
-    <style>
-      #siteEntrancePopup {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(0, 0, 0, 0.75) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        z-index: 999999 !important;
-        display: none;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 1rem !important;
-        box-sizing: border-box !important;
+  <style>
+    #siteEntrancePopup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(0, 0, 0, 0.75) !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      z-index: 999999 !important;
+      display: none;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 1rem !important;
+      box-sizing: border-box !important;
+    }
+
+    #siteEntrancePopup.active {
+      display: flex !important;
+      animation: popupBackdropFade 0.3s ease forwards;
+    }
+
+    @keyframes popupBackdropFade {
+      from {
+        opacity: 0;
       }
 
-      #siteEntrancePopup.active {
-        display: flex !important;
-        animation: popupBackdropFade 0.3s ease forwards;
+      to {
+        opacity: 1;
+      }
+    }
+
+    .entrance-popup-card {
+      max-width: 490px !important;
+      width: 100% !important;
+      background: #ffffff !important;
+      border-radius: 18px !important;
+      overflow: hidden !important;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
+      position: relative !important;
+      box-sizing: border-box !important;
+      animation: popupScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes popupScaleIn {
+      from {
+        transform: scale(0.85) translateY(20px);
+        opacity: 0;
       }
 
-      @keyframes popupBackdropFade {
-        from { opacity: 0; }
-        to { opacity: 1; }
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
       }
+    }
 
-      .entrance-popup-card {
-        max-width: 490px !important;
-        width: 100% !important;
-        background: #ffffff !important;
-        border-radius: 18px !important;
-        overflow: hidden !important;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
-        position: relative !important;
-        box-sizing: border-box !important;
-        animation: popupScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
+    .entrance-popup-close {
+      position: absolute !important;
+      top: 12px !important;
+      right: 12px !important;
+      width: 34px !important;
+      height: 34px !important;
+      background: #ffffff !important;
+      border: 1.5px solid #e2e8f0 !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 1rem !important;
+      color: #475569 !important;
+      cursor: pointer !important;
+      z-index: 50 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+      transition: all 0.2s ease !important;
+      padding: 0 !important;
+      line-height: 1 !important;
+    }
 
-      @keyframes popupScaleIn {
-        from { transform: scale(0.85) translateY(20px); opacity: 0; }
-        to { transform: scale(1) translateY(0); opacity: 1; }
-      }
+    .entrance-popup-close:hover {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+      border-color: #ef4444 !important;
+      transform: rotate(90deg) scale(1.1) !important;
+    }
 
-      .entrance-popup-close {
-        position: absolute !important;
-        top: 12px !important;
-        right: 12px !important;
-        width: 34px !important;
-        height: 34px !important;
-        background: #ffffff !important;
-        border: 1.5px solid #e2e8f0 !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 1rem !important;
-        color: #475569 !important;
-        cursor: pointer !important;
-        z-index: 50 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        transition: all 0.2s ease !important;
-        padding: 0 !important;
-        line-height: 1 !important;
-      }
+    .entrance-popup-body {
+      padding: 1.25rem 1.25rem 1.5rem !important;
+      color: #1e293b !important;
+      text-align: center !important;
+      box-sizing: border-box !important;
+    }
 
-      .entrance-popup-close:hover {
-        background: #ef4444 !important;
-        color: #ffffff !important;
-        border-color: #ef4444 !important;
-        transform: rotate(90deg) scale(1.1) !important;
-      }
+    .dynamic-poster-box {
+      background: linear-gradient(145deg, #090a16 0%, #151a30 50%, #0d1222 100%) !important;
+      padding: 1.5rem 1.25rem 1.25rem !important;
+      color: #ffffff !important;
+      text-align: center !important;
+      position: relative !important;
+      border-radius: 12px !important;
+      border-bottom: 3.5px solid #ea580c !important;
+      box-sizing: border-box !important;
+    }
 
-      .entrance-popup-body {
-        padding: 1.25rem 1.25rem 1.5rem !important;
-        color: #1e293b !important;
-        text-align: center !important;
-        box-sizing: border-box !important;
-      }
+    .dynamic-poster-top {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      margin-bottom: 0.85rem !important;
+    }
 
-      .dynamic-poster-box {
-        background: linear-gradient(145deg, #090a16 0%, #151a30 50%, #0d1222 100%) !important;
-        padding: 1.5rem 1.25rem 1.25rem !important;
-        color: #ffffff !important;
-        text-align: center !important;
-        position: relative !important;
-        border-radius: 12px !important;
-        border-bottom: 3.5px solid #ea580c !important;
-        box-sizing: border-box !important;
-      }
+    .dynamic-poster-brand {
+      font-size: 1.1rem !important;
+      font-weight: 800 !important;
+      color: #ffffff !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 0.4rem !important;
+    }
 
-      .dynamic-poster-top {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        margin-bottom: 0.85rem !important;
-      }
+    .dynamic-poster-badge {
+      background: #ea580c !important;
+      color: #ffffff !important;
+      padding: 3px 9px !important;
+      border-radius: 4px !important;
+      font-size: 0.7rem !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.5px !important;
+      text-transform: uppercase !important;
+    }
 
-      .dynamic-poster-brand {
-        font-size: 1.1rem !important;
-        font-weight: 800 !important;
-        color: #ffffff !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 0.4rem !important;
-      }
+    .dynamic-poster-title {
+      font-size: 1.65rem !important;
+      font-weight: 900 !important;
+      color: #84cc16 !important;
+      text-transform: uppercase !important;
+      letter-spacing: -0.5px !important;
+      line-height: 1.15 !important;
+      margin-bottom: 0.65rem !important;
+      text-shadow: 0 2px 10px rgba(132, 204, 22, 0.3) !important;
+    }
 
-      .dynamic-poster-badge {
-        background: #ea580c !important;
-        color: #ffffff !important;
-        padding: 3px 9px !important;
-        border-radius: 4px !important;
-        font-size: 0.7rem !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.5px !important;
-        text-transform: uppercase !important;
-      }
+    .dynamic-poster-duration {
+      display: inline-block !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+      border-radius: 8px !important;
+      padding: 0.35rem 1.1rem !important;
+      margin-bottom: 0.85rem !important;
+    }
 
-      .dynamic-poster-title {
-        font-size: 1.65rem !important;
-        font-weight: 900 !important;
-        color: #84cc16 !important;
-        text-transform: uppercase !important;
-        letter-spacing: -0.5px !important;
-        line-height: 1.15 !important;
-        margin-bottom: 0.65rem !important;
-        text-shadow: 0 2px 10px rgba(132, 204, 22, 0.3) !important;
-      }
+    .dynamic-poster-duration span {
+      display: block !important;
+      font-size: 0.65rem !important;
+      color: #94a3b8 !important;
+      letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+    }
 
-      .dynamic-poster-duration {
-        display: inline-block !important;
-        background: rgba(255, 255, 255, 0.08) !important;
-        border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 8px !important;
-        padding: 0.35rem 1.1rem !important;
-        margin-bottom: 0.85rem !important;
-      }
+    .dynamic-poster-duration strong {
+      font-size: 1.25rem !important;
+      font-weight: 900 !important;
+      color: #f1f5f9 !important;
+    }
 
-      .dynamic-poster-duration span {
-        display: block !important;
-        font-size: 0.65rem !important;
-        color: #94a3b8 !important;
-        letter-spacing: 1px !important;
-        text-transform: uppercase !important;
-      }
+    .dynamic-poster-courses {
+      background: rgba(0, 0, 0, 0.45) !important;
+      border-radius: 6px !important;
+      padding: 0.45rem !important;
+      margin-bottom: 0.75rem !important;
+      border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+    }
 
-      .dynamic-poster-duration strong {
-        font-size: 1.25rem !important;
-        font-weight: 900 !important;
-        color: #f1f5f9 !important;
-      }
+    .dynamic-poster-courses-label {
+      font-size: 0.68rem !important;
+      color: #fbbf24 !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      margin-bottom: 0.2rem !important;
+    }
 
-      .dynamic-poster-courses {
-        background: rgba(0, 0, 0, 0.45) !important;
-        border-radius: 6px !important;
-        padding: 0.45rem !important;
-        margin-bottom: 0.75rem !important;
-        border: 1px dashed rgba(255, 255, 255, 0.15) !important;
-      }
+    .dynamic-poster-courses-list {
+      font-size: 0.78rem !important;
+      font-weight: 700 !important;
+      color: #e2e8f0 !important;
+    }
 
-      .dynamic-poster-courses-label {
-        font-size: 0.68rem !important;
-        color: #fbbf24 !important;
-        font-weight: 700 !important;
-        text-transform: uppercase !important;
-        margin-bottom: 0.2rem !important;
-      }
+    .dynamic-poster-chips {
+      display: flex !important;
+      justify-content: center !important;
+      flex-wrap: wrap !important;
+      gap: 0.35rem !important;
+      font-size: 0.68rem !important;
+      color: #94a3b8 !important;
+    }
 
-      .dynamic-poster-courses-list {
-        font-size: 0.78rem !important;
-        font-weight: 700 !important;
-        color: #e2e8f0 !important;
-      }
+    .dynamic-poster-chips span {
+      background: rgba(255, 255, 255, 0.06) !important;
+      padding: 2px 8px !important;
+      border-radius: 4px !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
 
-      .dynamic-poster-chips {
-        display: flex !important;
-        justify-content: center !important;
-        flex-wrap: wrap !important;
-        gap: 0.35rem !important;
-        font-size: 0.68rem !important;
-        color: #94a3b8 !important;
-      }
+    .entrance-popup-phone {
+      margin: 0.85rem 0 0.4rem !important;
+      font-size: 0.75rem !important;
+      color: #64748b !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.5px !important;
+      text-transform: uppercase !important;
+    }
 
-      .dynamic-poster-chips span {
-        background: rgba(255, 255, 255, 0.06) !important;
-        padding: 2px 8px !important;
-        border-radius: 4px !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      }
+    .entrance-popup-phone strong {
+      display: block !important;
+      font-size: 1.25rem !important;
+      font-weight: 900 !important;
+      color: #0f172a !important;
+      letter-spacing: 0.5px !important;
+      margin-top: 0.2rem !important;
+    }
 
-      .entrance-popup-phone {
-        margin: 0.85rem 0 0.4rem !important;
-        font-size: 0.75rem !important;
-        color: #64748b !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.5px !important;
-        text-transform: uppercase !important;
-      }
+    .entrance-popup-phone strong i {
+      color: #ea580c !important;
+      margin-right: 0.25rem !important;
+    }
 
-      .entrance-popup-phone strong {
-        display: block !important;
-        font-size: 1.25rem !important;
-        font-weight: 900 !important;
-        color: #0f172a !important;
-        letter-spacing: 0.5px !important;
-        margin-top: 0.2rem !important;
-      }
+    .entrance-popup-desc {
+      font-size: 0.85rem !important;
+      color: #475569 !important;
+      line-height: 1.5 !important;
+      margin: 0.5rem 0 1.15rem !important;
+    }
 
-      .entrance-popup-phone strong i {
-        color: #ea580c !important;
-        margin-right: 0.25rem !important;
-      }
+    .entrance-popup-actions {
+      display: grid !important;
+      grid-template-columns: 1fr 1.25fr !important;
+      gap: 0.75rem !important;
+    }
 
-      .entrance-popup-desc {
-        font-size: 0.85rem !important;
-        color: #475569 !important;
-        line-height: 1.5 !important;
-        margin: 0.5rem 0 1.15rem !important;
-      }
+    .popup-btn-dark {
+      background: #1e293b !important;
+      color: #ffffff !important;
+      text-decoration: none !important;
+      font-weight: 700 !important;
+      font-size: 0.9rem !important;
+      padding: 0.75rem 1rem !important;
+      border-radius: 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0.4rem !important;
+      transition: all 0.2s ease !important;
+    }
 
-      .entrance-popup-actions {
-        display: grid !important;
-        grid-template-columns: 1fr 1.25fr !important;
-        gap: 0.75rem !important;
-      }
+    .popup-btn-dark:hover {
+      background: #0f172a !important;
+      transform: translateY(-2px) !important;
+    }
 
-      .popup-btn-dark {
-        background: #1e293b !important;
-        color: #ffffff !important;
-        text-decoration: none !important;
-        font-weight: 700 !important;
-        font-size: 0.9rem !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0.4rem !important;
-        transition: all 0.2s ease !important;
-      }
+    .popup-btn-cta {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+      color: #ffffff !important;
+      text-decoration: none !important;
+      font-weight: 800 !important;
+      font-size: 0.92rem !important;
+      padding: 0.75rem 1rem !important;
+      border-radius: 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0.4rem !important;
+      box-shadow: 0 4px 15px rgba(234, 88, 12, 0.35) !important;
+      transition: all 0.2s ease !important;
+    }
 
-      .popup-btn-dark:hover {
-        background: #0f172a !important;
-        transform: translateY(-2px) !important;
-      }
+    .popup-btn-cta:hover {
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+      transform: translateY(-2px) !important;
+    }
+  </style>
 
-      .popup-btn-cta {
-        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-        color: #ffffff !important;
-        text-decoration: none !important;
-        font-weight: 800 !important;
-        font-size: 0.92rem !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0.4rem !important;
-        box-shadow: 0 4px 15px rgba(234, 88, 12, 0.35) !important;
-        transition: all 0.2s ease !important;
-      }
+  <div id="siteEntrancePopup">
+    <div class="entrance-popup-card">
+      <button class="entrance-popup-close" onclick="closeEntrancePopup()" aria-label="Close Notice">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
 
-      .popup-btn-cta:hover {
-        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
-        transform: translateY(-2px) !important;
-      }
-    </style>
+      <div class="entrance-popup-body">
 
-    <div id="siteEntrancePopup">
-      <div class="entrance-popup-card">
-        <button class="entrance-popup-close" onclick="closeEntrancePopup()" aria-label="Close Notice">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-
-        <div class="entrance-popup-body">
-          
-          <!-- Poster Section -->
-          <div style="border-radius: 12px; overflow: hidden; margin-bottom: 0.5rem;">
-            {% if site_settings.popup_image %}
-              <img src="{{ site_settings.popup_image.url }}" alt="{{ site_settings.popup_title }}" style="width: 100%; max-height: 320px; object-fit: cover; display: block;" />
-            {% else %}
-              <!-- Built-in High Impact Dynamic Poster matching DigiCoders -->
-              <div class="dynamic-poster-box">
-                <div class="dynamic-poster-top">
-                  <div class="dynamic-poster-brand">
-                    {% if site_settings.site_logo %}
-                      <img src="{{ site_settings.site_logo.url }}" alt="Logo" style="height: 26px; max-width: 120px; object-fit: contain; vertical-align: middle; filter: brightness(0) invert(1);" />
-                    {% else %}
-                      <i class="fa-solid fa-graduation-cap" style="color: #ea580c;"></i> {{ site_settings.site_name }}
-                    {% endif %}
-                  </div>
-                  <div class="dynamic-poster-badge">100% Job & Exam Oriented</div>
-                </div>
-
-                <div class="dynamic-poster-title">
-                  {{ site_settings.popup_title }}
-                </div>
-
-                <div class="dynamic-poster-duration">
-                  <span>Course Batch Duration</span>
-                  <strong>06 MONTHS / 1 YEAR</strong>
-                </div>
-
-                <div class="dynamic-poster-courses">
-                  <div class="dynamic-poster-courses-label">⭐ Registration Started For ⭐</div>
-                  <div class="dynamic-poster-courses-list">
-                    SSC CGL / CHSL • BANK PO / CLERK • RAILWAY NTPC • DEFENCE • IT SKILLS
-                  </div>
-                </div>
-
-                <div class="dynamic-poster-chips">
-                  <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Daily Practice Papers</span>
-                  <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Weekly Mock Tests</span>
-                  <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Smart Classes</span>
-                </div>
+        <!-- Poster Section -->
+        <div style="border-radius: 12px; overflow: hidden; margin-bottom: 0.5rem;">
+          {% if site_settings.popup_image %}
+          <img src="{{ site_settings.popup_image.url }}" alt="{{ site_settings.popup_title }}"
+            style="width: 100%; max-height: 320px; object-fit: cover; display: block;" />
+          {% else %}
+          <!-- Built-in High Impact Dynamic Poster matching DigiCoders -->
+          <div class="dynamic-poster-box">
+            <div class="dynamic-poster-top">
+              <div class="dynamic-poster-brand">
+                {% if site_settings.site_logo %}
+                <img src="{{ site_settings.site_logo.url }}" alt="Logo"
+                  style="height: 26px; max-width: 120px; object-fit: contain; vertical-align: middle; filter: brightness(0) invert(1);" />
+                {% else %}
+                <i class="fa-solid fa-graduation-cap" style="color: #ea580c;"></i> {{ site_settings.site_name }}
+                {% endif %}
               </div>
-            {% endif %}
+              <div class="dynamic-poster-badge">100% Job & Exam Oriented</div>
+            </div>
+
+            <div class="dynamic-poster-title">
+              {{ site_settings.popup_title }}
+            </div>
+
+            <div class="dynamic-poster-duration">
+              <span>Course Batch Duration</span>
+              <strong>06 MONTHS / 1 YEAR</strong>
+            </div>
+
+            <div class="dynamic-poster-courses">
+              <div class="dynamic-poster-courses-label">⭐ Registration Started For ⭐</div>
+              <div class="dynamic-poster-courses-list">
+                SSC CGL / CHSL • BANK PO / CLERK • RAILWAY NTPC • DEFENCE • IT SKILLS
+              </div>
+            </div>
+
+            <div class="dynamic-poster-chips">
+              <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Daily Practice Papers</span>
+              <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Weekly Mock Tests</span>
+              <span><i class="fa-solid fa-circle-check" style="color: #84cc16;"></i> Smart Classes</span>
+            </div>
           </div>
-
-          <!-- Helpline Contact Section -->
-          <div class="entrance-popup-phone">
-            FOR MORE INFORMATION:
-            <strong><i class="fa-solid fa-phone-volume"></i> {{ site_settings.popup_phone|default:site_settings.contact_phone }}</strong>
-          </div>
-
-          <!-- Subtitle / Short Description -->
-          <p class="entrance-popup-desc">
-            {{ site_settings.popup_subtitle }}
-          </p>
-
-          <!-- Call to Action Buttons -->
-          <div class="entrance-popup-actions">
-            <a href="{% url 'courses' %}" class="popup-btn-dark" onclick="closeEntrancePopup()">
-              <i class="fa-solid fa-book-open"></i> {{ site_settings.popup_btn2_text|default:'Explore Courses' }}
-            </a>
-            <a href="{% url 'register' %}" class="popup-btn-cta" onclick="closeEntrancePopup()">
-              <i class="fa-solid fa-user-plus"></i> {{ site_settings.popup_btn1_text|default:'Register Now' }}
-            </a>
-          </div>
-
+          {% endif %}
         </div>
+
+        <!-- Helpline Contact Section -->
+        <div class="entrance-popup-phone">
+          FOR MORE INFORMATION:
+          <strong><i class="fa-solid fa-phone-volume"></i> {{
+            site_settings.popup_phone|default:site_settings.contact_phone }}</strong>
+        </div>
+
+        <!-- Subtitle / Short Description -->
+        <p class="entrance-popup-desc">
+          {{ site_settings.popup_subtitle }}
+        </p>
+
+        <!-- Call to Action Buttons -->
+        <div class="entrance-popup-actions">
+          <a href="{% url 'courses' %}" class="popup-btn-dark" onclick="closeEntrancePopup()">
+            <i class="fa-solid fa-book-open"></i> {{ site_settings.popup_btn2_text|default:'Explore Courses' }}
+          </a>
+          <a href="{% url 'register' %}" class="popup-btn-cta" onclick="closeEntrancePopup()">
+            <i class="fa-solid fa-user-plus"></i> {{ site_settings.popup_btn1_text|default:'Register Now' }}
+          </a>
+        </div>
+
       </div>
     </div>
+  </div>
 
-    <!-- Entrance Popup Auto-Show Logic -->
-    <script>
-      function openEntrancePopup() {
-        const popup = document.getElementById('siteEntrancePopup');
-        if (popup) {
-          popup.classList.add('active');
-        }
+  <!-- Entrance Popup Auto-Show Logic -->
+  <script>
+    function openEntrancePopup() {
+      const popup = document.getElementById('siteEntrancePopup');
+      if (popup) {
+        popup.classList.add('active');
       }
+    }
 
-      function closeEntrancePopup() {
-        const popup = document.getElementById('siteEntrancePopup');
-        if (popup) {
-          popup.classList.remove('active');
-        }
-        try {
-          sessionStorage.setItem('teachmantra_popup_closed', 'true');
-        } catch(e) {}
+    function closeEntrancePopup() {
+      const popup = document.getElementById('siteEntrancePopup');
+      if (popup) {
+        popup.classList.remove('active');
       }
+      try {
+        sessionStorage.setItem('teachmantra_popup_closed', 'true');
+      } catch (e) { }
+    }
 
-      // Close on Backdrop Click
-      document.addEventListener('click', function(e) {
-        const popup = document.getElementById('siteEntrancePopup');
-        if (popup && popup.classList.contains('active')) {
-          if (e.target === popup) {
-            closeEntrancePopup();
-          }
-        }
-      });
-
-      // Close on ESC Key
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
+    // Close on Backdrop Click
+    document.addEventListener('click', function (e) {
+      const popup = document.getElementById('siteEntrancePopup');
+      if (popup && popup.classList.contains('active')) {
+        if (e.target === popup) {
           closeEntrancePopup();
         }
-      });
+      }
+    });
 
-      // Auto trigger on home page load only if not previously closed in current session
-      document.addEventListener('DOMContentLoaded', function() {
-        try {
-          if (!sessionStorage.getItem('teachmantra_popup_closed')) {
-            setTimeout(function() {
-              openEntrancePopup();
-            }, 500);
-          }
-        } catch(e) {
-          setTimeout(function() {
+    // Close on ESC Key
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeEntrancePopup();
+      }
+    });
+
+    // Auto trigger on home page load only if not previously closed in current session
+    document.addEventListener('DOMContentLoaded', function () {
+      try {
+        if (!sessionStorage.getItem('teachmantra_popup_closed')) {
+          setTimeout(function () {
             openEntrancePopup();
           }, 500);
         }
-      });
-    </script>
+      } catch (e) {
+        setTimeout(function () {
+          openEntrancePopup();
+        }, 500);
+      }
+    });
+  </script>
   {% endif %}
 
   <!-- Custom script file -->
   <script src="{% static 'js/main.js' %}?v=2.0"></script>
   {% block extra_js %}{% endblock %}
 </body>
+
 </html>

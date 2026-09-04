@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Online Mock Tests & Quizzes | {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+  <!-- Breadcrumb Header Banner -->
+  <div class="breadcrumb-banner">
+    <div class="container">
+      <div class="hero-badge" style="background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.3); color: var(--primary);">
+        <i class="fa-solid fa-laptop-code"></i> Live Examination Portal
+      </div>
+      <h1 class="breadcrumb-title">Online Mock Tests & Practice Quizzes</h1>
+      <p class="breadcrumb-subtitle">
+        Attempt full-length and topic-wise mock tests designed by TeachMANTRA expert faculties to evaluate your competitive exam preparedness.
+      </p>
+    </div>
+  </div>
+
+  <!-- Tests Grid Section -->
+  <section class="section-padding" style="background: var(--bg-primary);">
+    <div class="container">
+      
+      {% if tests %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem;">
+          {% for t in tests %}
+            <div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 1.25rem; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: all 0.3s ease; position: relative;"
+                 onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary)';"
+                 onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color, #e2e8f0)';">
+              
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.3rem 0.8rem; border-radius: 9999px; text-transform: uppercase;">
+                    {{ t.category }}
+                  </span>
+                  <span style="font-size: 0.8rem; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.35rem;">
+                    <i class="fa-solid fa-circle" style="font-size: 0.55rem;"></i> Active Now
+                  </span>
+                </div>
+
+                <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; line-height: 1.3;">
+                  {{ t.title }}
+                </h3>
+
+                <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem;">
+                  {{ t.description|default:t.subtitle|truncatewords:20 }}
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.75rem; padding: 0.85rem; border-radius: 0.75rem; background: rgba(148, 163, 184, 0.08);">
+                  <div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Questions</span>
+                    <strong style="font-size: 1rem; color: var(--text-main);"><i class="fa-solid fa-list-check" style="color: var(--primary);"></i> {{ t.questions_count }} MCQs</strong>
+                  </div>
+                  <div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Duration</span>
+                    <strong style="font-size: 1rem; color: var(--text-main);"><i class="fa-solid fa-clock" style="color: #f59e0b;"></i> {{ t.duration_minutes }} Mins</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {% if t.external_link %}
+                  <a href="{{ t.external_link }}" target="_blank" class="btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.85rem;">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Test Portal
+                  </a>
+                {% else %}
+                  <a href="{% url 'take_test' t.id %}" class="btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.85rem; background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);">
+                    <i class="fa-solid fa-play"></i> Start Test Now
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 4rem 1rem;">
+          <i class="fa-solid fa-file-circle-question" style="font-size: 3.5rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+          <h3 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 0.5rem;">No Active Mock Tests</h3>
+          <p style="color: var(--text-muted);">Check back shortly or visit our courses section.</p>
+        </div>
+      {% endif %}
+
+    </div>
+  </section>
+{% endblock %}
