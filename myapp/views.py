@@ -866,6 +866,7 @@ def admin_approve_admission_view(request, admission_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_delete_record_view(request, record_type, record_id):
     if not request.user.is_staff:
@@ -893,6 +894,7 @@ def admin_delete_record_view(request, record_type, record_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_add_course_view(request):
     if not request.user.is_staff:
@@ -928,6 +930,7 @@ def admin_add_course_view(request):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_delete_course_view(request, course_id):
     if not request.user.is_staff:
@@ -944,32 +947,76 @@ def admin_delete_course_view(request, course_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_add_gallery_view(request):
     if not request.user.is_staff:
         return JsonResponse({"status": "error", "message": "Access denied."})
 
     if request.method == "POST":
-        title = request.POST.get("title")
-        category = request.POST.get("category")
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "").strip()
         image = request.FILES.get("image")
 
         if not title or not category or not image:
             return JsonResponse({"status": "error", "message": "Please fill all fields and select an image."})
 
         try:
-            GalleryImage.objects.create(
+            img = GalleryImage.objects.create(
                 title=title,
                 category=category,
                 image=image
             )
-            return JsonResponse({"status": "success", "message": "Gallery image uploaded successfully!"})
+            return JsonResponse({
+                "status": "success", 
+                "message": "Gallery image uploaded successfully!",
+                "image_id": img.id
+            })
         except Exception as e:
             return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
+@login_required(login_url='login')
+def admin_update_gallery_view(request, image_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    try:
+        img = GalleryImage.objects.get(id=image_id)
+    except GalleryImage.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Gallery image not found."})
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "").strip()
+
+        if not title or not category:
+            return JsonResponse({"status": "error", "message": "Title and album category are required."})
+
+        img.title = title
+        img.category = category
+
+        if 'image' in request.FILES and request.FILES['image']:
+            img.image = request.FILES['image']
+
+        img.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Gallery photo updated successfully!",
+            "image_id": img.id,
+            "title": img.title,
+            "category": img.get_category_display() if hasattr(img, 'get_category_display') else img.category,
+            "image_url": img.image.url if img.image else None
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@csrf_exempt
 @login_required(login_url='login')
 def admin_delete_gallery_view(request, image_id):
     if not request.user.is_staff:

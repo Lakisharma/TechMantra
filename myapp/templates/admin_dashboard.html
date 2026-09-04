@@ -982,15 +982,20 @@
       text-transform: uppercase;
     }
 
-    .gallery-delete-btn-overlay {
+    .gallery-card-actions {
       position: absolute;
       top: 0.5rem;
       right: 0.5rem;
-      background: rgba(239, 68, 68, 0.85);
+      display: flex;
+      gap: 0.4rem;
+      z-index: 10;
+    }
+
+    .gallery-btn {
       border: none;
-      color: var(--text-main);
-      width: 28px;
-      height: 28px;
+      color: #ffffff;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -998,11 +1003,24 @@
       cursor: pointer;
       font-size: 0.8rem;
       transition: var(--transition-fast);
-      z-index: 10;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    .gallery-delete-btn-overlay:hover {
-      background: var(--danger);
+    .gallery-btn-edit {
+      background: rgba(99, 102, 241, 0.9);
+    }
+
+    .gallery-btn-edit:hover {
+      background: #4f46e5;
+      transform: scale(1.1);
+    }
+
+    .gallery-btn-delete {
+      background: rgba(239, 68, 68, 0.9);
+    }
+
+    .gallery-btn-delete:hover {
+      background: #dc2626;
       transform: scale(1.1);
     }
 
@@ -1538,9 +1556,14 @@
             <div class="gallery-preview-grid" id="galleryGrid">
               {% for img in gallery_images %}
                 <div class="gallery-preview-card" id="card-gallery-{{ img.id }}">
-                  <button class="gallery-delete-btn-overlay" onclick="deleteGalleryImage('{{ img.id }}')" title="Delete Photo">
-                    <i class="fa-solid fa-trash-can"></i>
-                  </button>
+                  <div class="gallery-card-actions">
+                    <button class="gallery-btn gallery-btn-edit" onclick="openEditGalleryModal('{{ img.id }}', '{{ img.title|escapejs }}', '{{ img.category|escapejs }}', '{% if img.image %}{{ img.image.url }}{% endif %}')" title="Edit / Change Photo">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button class="gallery-btn gallery-btn-delete" onclick="deleteGalleryImage('{{ img.id }}')" title="Delete Photo">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </div>
                   <img src="{% if img.image %}{{ img.image.url }}{% else %}https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=400&q=80{% endif %}" class="gallery-preview-img" alt="Gallery">
                   <div class="gallery-preview-overlay">
                     <h5>{{ img.title }}</h5>
@@ -2531,7 +2554,7 @@ Agli class nirdharit samay par shuru hogi.
   </div>
 
   <!-- ==========================================
-       MODAL: UPLOAD PHOTO FORM
+       MODAL: ADD GALLERY HIGHLIGHT
        ========================================== -->
   <div class="modal-overlay" id="addGalleryModal">
     <div class="modal-container">
@@ -2560,6 +2583,48 @@ Agli class nirdharit samay par shuru hogi.
         </div>
         <button type="submit" class="btn-submit" style="background: var(--secondary); box-shadow: 0 4px 15px var(--secondary-glow);">
           <i class="fa-solid fa-circle-arrow-up"></i> Upload to Gallery
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: EDIT GALLERY PHOTO
+       ========================================== -->
+  <div class="modal-overlay" id="editGalleryModal">
+    <div class="modal-container">
+      <button class="modal-close" onclick="closeModal('editGalleryModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--secondary);"></i> Edit / Change Photo</h3>
+      </div>
+      <form id="editGalleryForm" onsubmit="submitUpdateGallery(event)" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" id="edit-gallery-id" name="image_id">
+        <div class="form-group">
+          <label class="form-label" for="editGalleryTitle">Photo Title *</label>
+          <input type="text" id="editGalleryTitle" name="title" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editGalleryCategory">Album Category *</label>
+          <select id="editGalleryCategory" name="category" class="form-control" required>
+            <option value="classrooms">Classrooms</option>
+            <option value="events">Events</option>
+            <option value="results">Results</option>
+            <option value="other">Activities</option>
+          </select>
+        </div>
+        <div class="form-group" id="edit-gallery-current-wrap" style="display: none;">
+          <label class="form-label">Current Photo</label>
+          <div style="border-radius: var(--border-radius-sm); overflow: hidden; max-height: 120px; border: 1px solid var(--border-color); display: inline-block;">
+            <img id="edit-gallery-preview-thumb" src="" alt="Current Photo" style="max-height: 120px; max-width: 100%; object-fit: cover; display: block;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editGalleryImage">Replace Photo (Optional - leave empty to keep current photo)</label>
+          <input type="file" id="editGalleryImage" name="image" class="form-control" accept="image/*">
+        </div>
+        <button type="submit" class="btn-submit" style="background: var(--secondary); box-shadow: 0 4px 15px var(--secondary-glow);">
+          <i class="fa-solid fa-floppy-disk"></i> Save Photo Changes
         </button>
       </form>
     </div>
@@ -3608,6 +3673,84 @@ Agli class nirdharit samay par shuru hogi.
       }
     }
 
+    // Upload Gallery Image
+    async function submitAddGallery(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/admin-dashboard/gallery/add/', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('addGalleryModal');
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          showToast(data.message || 'Error adding photo', 'error');
+        }
+      } catch (e) {
+        console.error('Gallery add error:', e);
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Open Edit Gallery Modal
+    function openEditGalleryModal(id, title, category, imgUrl) {
+      document.getElementById('edit-gallery-id').value = id;
+      document.getElementById('editGalleryTitle').value = title;
+      document.getElementById('editGalleryCategory').value = category;
+      document.getElementById('editGalleryImage').value = '';
+      if (imgUrl) {
+        document.getElementById('edit-gallery-preview-thumb').src = imgUrl;
+        document.getElementById('edit-gallery-current-wrap').style.display = 'block';
+      } else {
+        document.getElementById('edit-gallery-current-wrap').style.display = 'none';
+      }
+      openModal('editGalleryModal');
+    }
+
+    // Submit Update Gallery Image
+    async function submitUpdateGallery(event) {
+      event.preventDefault();
+      const form = event.target;
+      const imageId = document.getElementById('edit-gallery-id').value;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(`/admin-dashboard/gallery/update/${imageId}/`, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('editGalleryModal');
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          showToast(data.message || 'Error updating photo', 'error');
+        }
+      } catch (e) {
+        console.error('Gallery update error:', e);
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
     // Delete Gallery Image
     async function deleteGalleryImage(imageId) {
       if(!confirm("Are you sure you want to delete this photo from the media gallery?")) {
@@ -3630,13 +3773,14 @@ Agli class nirdharit samay par shuru hogi.
           const card = document.getElementById(`card-gallery-${imageId}`);
           if (card) {
             card.style.opacity = '0';
-            card.style.transform = 'scale(0.9)';
+            card.style.transform = 'scale(0.8)';
             setTimeout(() => card.remove(), 400);
           }
         } else {
           showToast(data.message || 'Failed to delete photo', 'error');
         }
       } catch (e) {
+        console.error('Gallery delete error:', e);
         showToast('Server connection failed', 'error');
       }
     }
