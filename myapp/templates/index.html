@@ -38,7 +38,8 @@
         <div class="hero-image-glow"></div>
         <div class="hero-brand-showcase">
           <div class="hero-logo-container">
-            <img src="{% if site_settings.site_logo %}{{ site_settings.site_logo.url }}{% else %}{% static 'images/teachmantra_logo.png' %}{% endif %}" alt="TeachMANTRA Logo" class="hero-main-logo">
+            <img src="{% static 'images/teachmantra_logo.png' %}" alt="TeachMANTRA Logo" class="hero-main-logo logo-dark-mode">
+            <img src="{% static 'images/teachmantra_logo_light.png' %}" alt="TeachMANTRA Logo" class="hero-main-logo logo-light-mode">
           </div>
           <div class="hero-floating-badge badge-top-left">
             <i class="fa-solid fa-graduation-cap"></i> <span>Premier Academy</span>

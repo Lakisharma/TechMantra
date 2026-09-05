@@ -824,6 +824,29 @@ button, input, select, textarea {
   justify-content: center;
 }
 
+/* Universal Logo Theme Switching */
+.logo-dark-mode {
+  display: inline-block;
+}
+.logo-light-mode {
+  display: none !important;
+}
+
+[data-theme="light"] .logo-dark-mode {
+  display: none !important;
+}
+[data-theme="light"] .logo-light-mode {
+  display: inline-block !important;
+}
+
+.site-logo-img {
+  height: 40px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
 .hero-main-logo {
   width: 100%;
   max-width: 320px;
