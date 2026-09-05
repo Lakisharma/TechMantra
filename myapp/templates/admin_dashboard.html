@@ -1259,6 +1259,15 @@
           </a>
         </li>
         <li>
+          <a class="menu-item" data-tab="results">
+            <i class="fa-solid fa-trophy" style="width: 20px; color: #f59e0b;"></i>
+            <span>Results & Toppers</span>
+            {% if stats.total_toppers > 0 %}
+              <span class="status-badge badge-primary" style="margin-left: auto; padding: 0.1rem 0.4rem; font-size: 0.7rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border-color: rgba(245, 158, 11, 0.4);">{{ stats.total_toppers }}</span>
+            {% endif %}
+          </a>
+        </li>
+        <li>
           <a class="menu-item" data-tab="admissions">
             <i class="fa-solid fa-file-contract" style="width: 20px;"></i>
             <span>Admissions</span>
@@ -1357,6 +1366,9 @@
           <button class="btn-quick-add" onclick="openModal('addCourseModal')">
             <i class="fa-solid fa-circle-plus"></i> Add Course
           </button>
+          <button class="btn-quick-add" onclick="openModal('addResultModal')" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 12px rgba(245,158,11,0.35);">
+            <i class="fa-solid fa-trophy"></i> Add Topper Result
+          </button>
           <button class="btn-quick-add" onclick="openModal('addTeamModal')" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); box-shadow: 0 4px 12px rgba(168,85,247,0.35);">
             <i class="fa-solid fa-user-plus"></i> Add Faculty / Team
           </button>
@@ -1405,6 +1417,14 @@
               <div class="metric-info">
                 <h3>{{ stats.total_images }}</h3>
                 <p>Gallery Photos</p>
+              </div>
+            </div>
+
+            <div class="metric-card" style="--color-glow: rgba(245, 158, 11, 0.45); cursor: pointer;" onclick="switchTab('results')">
+              <div class="metric-icon" style="color: #f59e0b;"><i class="fa-solid fa-trophy"></i></div>
+              <div class="metric-info">
+                <h3>{{ stats.total_toppers }}</h3>
+                <p>Academic Toppers</p>
               </div>
             </div>
 
@@ -1821,6 +1841,63 @@
                   </div>
                 {% endfor %}
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             TAB PANEL: RESULTS & TOPPERS (CMS)
+             ========================================== -->
+        <div class="panel" id="panel-results">
+          <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+              <div>
+                <div class="glass-card-title" style="margin-bottom: 0.25rem;">
+                  <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> Academic Milestones & Toppers Showcase
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                  Manage top-ranking students and competitive exam crack milestones shown on the Results page.
+                </p>
+              </div>
+              <button class="btn-quick-add" onclick="openModal('addResultModal')" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 12px rgba(245,158,11,0.35);">
+                <i class="fa-solid fa-plus"></i> Add New Topper
+              </button>
+            </div>
+
+            <div class="topper-admin-grid" id="toppersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;">
+              {% for t in toppers %}
+                <div class="glass-card topper-admin-card" id="card-topper-{{ t.id }}" style="position: relative; padding: 1.5rem 1.25rem; text-align: center; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); transition: var(--transition-normal);">
+                  <div style="position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.35rem; z-index: 2;">
+                    <button class="gallery-btn gallery-btn-edit" onclick="openEditResultModal('{{ t.id }}', '{{ t.name|escapejs }}', '{{ t.exam_name|escapejs }}', '{{ t.rank|escapejs }}', '{{ t.badge|escapejs }}', '{{ t.order }}', '{% if t.image %}{{ t.image.url }}{% endif %}')" title="Edit Topper Details">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button class="gallery-btn gallery-btn-delete" onclick="deleteTopperResult('{{ t.id }}', '{{ t.name|escapejs }}')" title="Delete Topper">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </div>
+
+                  <div style="margin-bottom: 0.85rem;">
+                    <span class="status-badge" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.35); font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.65rem; border-radius: 20px;">
+                      <i class="fa-solid fa-star" style="font-size: 0.65rem;"></i> {{ t.badge }}
+                    </span>
+                  </div>
+
+                  <div style="width: 84px; height: 84px; border-radius: 50%; overflow: hidden; margin: 0 auto 1rem; border: 3px solid #f59e0b; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
+                    <img src="{% if t.image %}{{ t.image.url }}{% else %}https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80{% endif %}" alt="{{ t.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+
+                  <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">{{ t.name }}</h4>
+                  <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.25rem;">{{ t.exam_name }}</p>
+                  <p style="font-size: 0.95rem; font-weight: 800; color: #f59e0b; margin-bottom: 0.5rem;">{{ t.rank }}</p>
+                  <p style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-arrow-down-1-9"></i> Order: {{ t.order }}</p>
+                </div>
+              {% empty %}
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1.5rem; color: var(--text-muted);" class="glass-card">
+                  <i class="fa-solid fa-trophy" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                  <h3>No Toppers Added Yet</h3>
+                  <p style="margin-top: 0.5rem;">Click the "Add New Topper" button above to publish topper milestones on the website.</p>
+                </div>
+              {% endfor %}
             </div>
           </div>
         </div>
@@ -3027,6 +3104,105 @@ Agli class nirdharit samay par shuru hogi.
         </div>
         <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); box-shadow: 0 4px 15px rgba(168,85,247,0.35);">
           <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: ADD TOPPER RESULT
+       ========================================== -->
+  <div class="modal-overlay" id="addResultModal">
+    <div class="modal-container" style="max-width: 520px;">
+      <button class="modal-close" onclick="closeModal('addResultModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> Add Academic Topper</h3>
+      </div>
+      <form id="addResultForm" onsubmit="submitAddResult(event)" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label" for="addResultName">Student Full Name *</label>
+          <input type="text" id="addResultName" name="name" class="form-control" required placeholder="e.g. Sunanda yadav / Rahul Pal">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="addResultExam">Exam / Course *</label>
+            <input type="text" id="addResultExam" name="exam_name" class="form-control" required placeholder="e.g. UP POLICE 2024 / RRB NTPC 2024">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addResultRank">Rank / Score *</label>
+            <input type="text" id="addResultRank" name="rank" class="form-control" required placeholder="e.g. AIR 16753 / AIR 29">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="addResultBadge">Badge Label</label>
+            <input type="text" id="addResultBadge" name="badge" class="form-control" value="Rank 1" placeholder="e.g. Rank 1 / Selected / AIR 1st">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="addResultOrder">Display Order</label>
+            <input type="number" id="addResultOrder" name="order" class="form-control" value="0" placeholder="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addResultImage">Student Photo (Optional)</label>
+          <input type="file" id="addResultImage" name="image" class="form-control" accept="image/*">
+        </div>
+        <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 15px rgba(245,158,11,0.35);">
+          <i class="fa-solid fa-circle-check"></i> Add Topper Result
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: EDIT TOPPER RESULT
+       ========================================== -->
+  <div class="modal-overlay" id="editResultModal">
+    <div class="modal-container" style="max-width: 520px;">
+      <button class="modal-close" onclick="closeModal('editResultModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-to-square" style="color: #f59e0b;"></i> Edit Topper Details</h3>
+      </div>
+      <form id="editResultForm" onsubmit="submitUpdateResult(event)" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" id="edit-result-id" name="result_id">
+        <div class="form-group">
+          <label class="form-label" for="editResultName">Student Full Name *</label>
+          <input type="text" id="editResultName" name="name" class="form-control" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="editResultExam">Exam / Course *</label>
+            <input type="text" id="editResultExam" name="exam_name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editResultRank">Rank / Score *</label>
+            <input type="text" id="editResultRank" name="rank" class="form-control" required>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="editResultBadge">Badge Label</label>
+            <input type="text" id="editResultBadge" name="badge" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editResultOrder">Display Order</label>
+            <input type="number" id="editResultOrder" name="order" class="form-control" value="0">
+          </div>
+        </div>
+        <div class="form-group" id="edit-result-current-wrap" style="display: none;">
+          <label class="form-label">Current Photo</label>
+          <div style="border-radius: var(--border-radius-sm); overflow: hidden; max-height: 120px; border: 1px solid var(--border-color); display: inline-block;">
+            <img id="edit-result-preview-thumb" src="" alt="Current Photo" style="max-height: 120px; max-width: 100%; object-fit: cover; display: block;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editResultImage">Replace Photo (Optional - leave empty to keep current photo)</label>
+          <input type="file" id="editResultImage" name="image" class="form-control" accept="image/*">
+        </div>
+        <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 15px rgba(245,158,11,0.35);">
+          <i class="fa-solid fa-floppy-disk"></i> Save Topper Changes
         </button>
       </form>
     </div>
@@ -4351,6 +4527,125 @@ Agli class nirdharit samay par shuru hogi.
         }
       } catch (e) {
         console.error('Team delete error:', e);
+        showToast('Server connection failed', 'error');
+      }
+    }
+
+    // ==========================================
+    // TOPPER & RESULTS MANAGEMENT HANDLERS
+    // ==========================================
+    // Add Topper Result
+    async function submitAddResult(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/admin-dashboard/results/add/', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('addResultModal');
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          showToast(data.message || 'Error adding topper', 'error');
+        }
+      } catch (e) {
+        console.error('Topper add error:', e);
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Open Edit Topper Modal
+    function openEditResultModal(id, name, exam_name, rank, badge, order, imgUrl) {
+      document.getElementById('edit-result-id').value = id;
+      document.getElementById('editResultName').value = name;
+      document.getElementById('editResultExam').value = exam_name;
+      document.getElementById('editResultRank').value = rank;
+      document.getElementById('editResultBadge').value = badge || 'Rank 1';
+      document.getElementById('editResultOrder').value = order || '0';
+      document.getElementById('editResultImage').value = '';
+
+      if (imgUrl) {
+        document.getElementById('edit-result-preview-thumb').src = imgUrl;
+        document.getElementById('edit-result-current-wrap').style.display = 'block';
+      } else {
+        document.getElementById('edit-result-current-wrap').style.display = 'none';
+      }
+      openModal('editResultModal');
+    }
+
+    // Submit Update Topper Result
+    async function submitUpdateResult(event) {
+      event.preventDefault();
+      const form = event.target;
+      const resultId = document.getElementById('edit-result-id').value;
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(`/admin-dashboard/results/update/${resultId}/`, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          closeModal('editResultModal');
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          showToast(data.message || 'Error updating topper', 'error');
+        }
+      } catch (e) {
+        console.error('Topper update error:', e);
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Delete Topper Result
+    async function deleteTopperResult(resultId, topperName) {
+      if(!confirm(`Are you sure you want to delete '${topperName}' from toppers milestones?`)) {
+        return;
+      }
+
+      const form = new FormData();
+      form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      form.append('ajax', 'true');
+
+      try {
+        const response = await fetch(`/admin-dashboard/results/delete/${resultId}/`, {
+          method: 'POST',
+          body: form,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          const card = document.getElementById(`card-topper-${resultId}`);
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.8)';
+            setTimeout(() => card.remove(), 400);
+          }
+        } else {
+          showToast(data.message || 'Failed to delete topper', 'error');
+        }
+      } catch (e) {
+        console.error('Topper delete error:', e);
         showToast('Server connection failed', 'error');
       }
     }

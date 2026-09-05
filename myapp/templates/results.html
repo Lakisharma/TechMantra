@@ -29,49 +29,26 @@
       <!-- Toppers Grid -->
       <h3 class="testimonials-heading text-center">Our Toppers</h3>
       <div class="toppers-grid">
-        <!-- Topper 1 -->
+        {% for topper in toppers %}
         <div class="glass-card topper-card">
-          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
+          <div class="topper-badge"><i class="fa-solid fa-star"></i> {{ topper.badge|default:"Rank 1" }}</div>
           <div class="topper-avatar-wrapper">
-            <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80" alt="Sunanda yadav" class="topper-avatar">
+            {% if topper.image %}
+              <img src="{{ topper.image.url }}" alt="{{ topper.name }}" class="topper-avatar">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="{{ topper.name }}" class="topper-avatar">
+            {% endif %}
           </div>
-          <h3>Sunanda yadav</h3>
-          <p class="topper-exam">UP POLICE 2024 </p>
-          <p class="topper-rank">AIR 16753</p>
+          <h3>{{ topper.name }}</h3>
+          <p class="topper-exam">{{ topper.exam_name }}</p>
+          <p class="topper-rank">{{ topper.rank }}</p>
         </div>
-
-        <!-- Topper 2 -->
-        <div class="glass-card topper-card">
-          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
-          <div class="topper-avatar-wrapper">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Rahul Pal" class="topper-avatar">
-          </div>
-          <h3>Rahul Pal </h3>
-          <p class="topper-exam">UP POLICE 2024</p>
-          <p class="topper-rank">AIR 22863</p>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
+          <i class="fa-solid fa-trophy" style="font-size: 2.5rem; color: #f59e0b; margin-bottom: 0.75rem; display: block;"></i>
+          <p>No topper achievements published yet.</p>
         </div>
-
-        <!-- Topper 3 -->
-        <div class="glass-card topper-card">
-          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
-          <div class="topper-avatar-wrapper">
-            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80" alt="Rahul Verma" class="topper-avatar">
-          </div>
-          <h3>Rahul Verma</h3>
-          <p class="topper-exam">RRB NTPC 2024</p>
-          <p class="topper-rank">AIR 29</p>
-        </div>
-
-        <!-- Topper 4 -->
-        <div class="glass-card topper-card">
-          <div class="topper-badge"><i class="fa-solid fa-star"></i> Rank 1</div>
-          <div class="topper-avatar-wrapper">
-            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" alt="Neha Singh" class="topper-avatar">
-          </div>
-          <h3>Neha Singh</h3>
-          <p class="topper-exam">NDA 2024</p>
-          <p class="topper-rank">AIR 15</p>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- Testimonials -->

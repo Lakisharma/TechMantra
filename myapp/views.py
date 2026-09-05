@@ -7,7 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from .models import (
     Services, Admission, ContactMessage, StudentProfile, Course, 
     GalleryImage, TeamMember, WebsiteSettings, AdminProfile, Certificate, 
-    BroadcastEmail, OnlineTest, QuizQuestion, TestSubmission
+    BroadcastEmail, OnlineTest, QuizQuestion, TestSubmission, TopperResult
 )
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
@@ -90,7 +90,9 @@ def gallery(request):
     return render(request, 'gallery.html', {"images": images_list})
 
 def results(request):
-    return render(request, 'results.html')
+    populate_default_toppers()
+    toppers_list = TopperResult.objects.all().order_by('order', 'id')
+    return render(request, 'results.html', {"toppers": toppers_list})
 
 def contact(request):
     success_msg = None
@@ -372,6 +374,42 @@ def populate_default_courses():
                 fee=c["fee"],
                 description=c["description"]
             )
+
+
+def populate_default_toppers():
+    if not TopperResult.objects.exists():
+        defaults = [
+            {
+                "name": "Sunanda yadav",
+                "exam_name": "UP POLICE 2024",
+                "rank": "AIR 16753",
+                "badge": "Rank 1",
+                "order": 1
+            },
+            {
+                "name": "Rahul Pal",
+                "exam_name": "UP POLICE 2024",
+                "rank": "AIR 22863",
+                "badge": "Rank 1",
+                "order": 2
+            },
+            {
+                "name": "Rahul Verma",
+                "exam_name": "RRB NTPC 2024",
+                "rank": "AIR 29",
+                "badge": "Rank 1",
+                "order": 3
+            },
+            {
+                "name": "Neha Singh",
+                "exam_name": "NDA 2024",
+                "rank": "AIR 15",
+                "badge": "Rank 1",
+                "order": 4
+            },
+        ]
+        for d in defaults:
+            TopperResult.objects.create(**d)
 
 
 def verify_certificate(request):
@@ -698,6 +736,7 @@ def admin_dashboard_view(request):
     populate_default_certificates()
     populate_default_online_tests()
     populate_default_courses()
+    populate_default_toppers()
 
     students = StudentProfile.objects.select_related('user').all()
     admissions = Admission.objects.all().order_by('-created_at')
@@ -706,6 +745,7 @@ def admin_dashboard_view(request):
     images_list = GalleryImage.objects.all().order_by('-uploaded_at')
     founders_list = TeamMember.objects.filter(member_type='founder').order_by('order', 'id')
     team_list = TeamMember.objects.filter(member_type='team').order_by('order', 'id')
+    toppers_list = TopperResult.objects.all().order_by('order', 'id')
     certificates_list = Certificate.objects.all().order_by('-created_at')
     broadcast_emails = BroadcastEmail.objects.all().order_by('-created_at')
     online_tests = OnlineTest.objects.all().prefetch_related('questions', 'submissions').order_by('-created_at')
@@ -733,6 +773,7 @@ def admin_dashboard_view(request):
     total_courses = courses_list.count()
     total_images = images_list.count()
     total_team = TeamMember.objects.count()
+    total_toppers = toppers_list.count()
     total_admins = admins.count()
     total_certificates = certificates_list.count()
     total_broadcasts = broadcast_emails.count()
@@ -746,6 +787,7 @@ def admin_dashboard_view(request):
         "gallery_images": images_list,
         "founders": founders_list,
         "team_members": team_list,
+        "toppers": toppers_list,
         "admins": admins,
         "certificates": certificates_list,
         "broadcast_emails": broadcast_emails,
@@ -759,6 +801,7 @@ def admin_dashboard_view(request):
             "total_courses": total_courses,
             "total_images": total_images,
             "total_team": total_team,
+            "total_toppers": total_toppers,
             "total_admins": total_admins,
             "total_certificates": total_certificates,
             "total_broadcasts": total_broadcasts,
@@ -1394,6 +1437,121 @@ def admin_delete_team_member_view(request, member_id):
             return JsonResponse({"status": "error", "message": "Member not found."})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+# ==========================================
+# ACADEMIC MILESTONES & TOPPERS RESULTS VIEWS
+# ==========================================
+@csrf_exempt
+@login_required(login_url='login')
+def admin_add_result_view(request):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        exam_name = request.POST.get("exam_name", "").strip()
+        rank = request.POST.get("rank", "").strip()
+        badge = request.POST.get("badge", "Rank 1").strip() or "Rank 1"
+        order = request.POST.get("order", "0").strip()
+        image = request.FILES.get("image")
+
+        if not name or not exam_name or not rank:
+            return JsonResponse({"status": "error", "message": "Name, Exam Name, and Rank / AIR are required."})
+
+        try:
+            order_val = int(order) if order.isdigit() else 0
+        except ValueError:
+            order_val = 0
+
+        try:
+            topper = TopperResult.objects.create(
+                name=name,
+                exam_name=exam_name,
+                rank=rank,
+                badge=badge,
+                order=order_val,
+                image=image
+            )
+            return JsonResponse({
+                "status": "success",
+                "message": f"Topper '{name}' added successfully!",
+                "topper_id": topper.id
+            })
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@csrf_exempt
+@login_required(login_url='login')
+def admin_update_result_view(request, result_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    try:
+        topper = TopperResult.objects.get(id=result_id)
+    except TopperResult.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Topper record not found."})
+
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        exam_name = request.POST.get("exam_name", "").strip()
+        rank = request.POST.get("rank", "").strip()
+        badge = request.POST.get("badge", "").strip()
+        order = request.POST.get("order", "").strip()
+
+        if not name or not exam_name or not rank:
+            return JsonResponse({"status": "error", "message": "Name, Exam Name, and Rank / AIR are required."})
+
+        topper.name = name
+        topper.exam_name = exam_name
+        topper.rank = rank
+        if badge:
+            topper.badge = badge
+        if order != "":
+            try:
+                topper.order = int(order)
+            except ValueError:
+                pass
+
+        if 'image' in request.FILES and request.FILES['image']:
+            topper.image = request.FILES['image']
+
+        topper.save()
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Details for topper '{topper.name}' updated successfully!",
+            "topper_id": topper.id,
+            "name": topper.name,
+            "exam_name": topper.exam_name,
+            "rank": topper.rank,
+            "badge": topper.badge,
+            "image_url": topper.image.url if topper.image else None
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@csrf_exempt
+@login_required(login_url='login')
+def admin_delete_result_view(request, result_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        try:
+            topper = TopperResult.objects.get(id=result_id)
+            name = topper.name
+            topper.delete()
+            return JsonResponse({"status": "success", "message": f"Topper '{name}' deleted successfully!"})
+        except TopperResult.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Topper record not found."})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
 
 
 @login_required(login_url='login')

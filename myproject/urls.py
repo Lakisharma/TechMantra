@@ -65,6 +65,10 @@ urlpatterns = [
     path('admin-dashboard/team/add/', views.admin_add_team_member_view, name='admin_add_team_member'),
     path('admin-dashboard/team/update/<int:member_id>/', views.admin_update_team_member_view, name='admin_update_team_member'),
     path('admin-dashboard/team/delete/<int:member_id>/', views.admin_delete_team_member_view, name='admin_delete_team_member'),
+    # Academic Results & Toppers Management Routes
+    path('admin-dashboard/results/add/', views.admin_add_result_view, name='admin_add_result'),
+    path('admin-dashboard/results/update/<int:result_id>/', views.admin_update_result_view, name='admin_update_result'),
+    path('admin-dashboard/results/delete/<int:result_id>/', views.admin_delete_result_view, name='admin_delete_result'),
     # Online Tests & Quizzes Portal Routes
     path('tests/', views.tests_list_view, name='tests_list'),
     path('tests/<int:test_id>/', views.take_test_view, name='take_test'),

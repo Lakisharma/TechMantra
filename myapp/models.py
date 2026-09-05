@@ -225,3 +225,20 @@ class TestSubmission(models.Model):
     def __str__(self):
         return f"{self.student_name} - {self.test.title} ({self.score}/{self.total_questions})"
 
+
+class TopperResult(models.Model):
+    name = models.CharField(max_length=150)
+    exam_name = models.CharField(max_length=150, help_text="e.g. UP POLICE 2024, RRB NTPC 2024, NDA 2024")
+    rank = models.CharField(max_length=100, help_text="e.g. AIR 16753, AIR 29, 98.6%")
+    badge = models.CharField(max_length=100, default="Rank 1", help_text="e.g. Rank 1, Topper, Selected")
+    image = models.ImageField(upload_to='toppers/', blank=True, null=True)
+    order = models.IntegerField(default=0, help_text="Display order (lower numbers appear first)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.name} - {self.exam_name} ({self.rank})"
+
+
