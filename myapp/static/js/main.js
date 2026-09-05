@@ -137,6 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  });
+
   // --- Gallery Lightbox Image Viewer ---
   const lightboxModal = document.getElementById('imageLightboxModal');
   const lightboxImage = document.getElementById('lightboxImage');
