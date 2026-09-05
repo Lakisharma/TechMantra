@@ -36,7 +36,17 @@
       
       <div class="hero-image-wrapper">
         <div class="hero-image-glow"></div>
-        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80" alt="TeachMANTRA Student" class="hero-image">
+        <div class="hero-brand-showcase">
+          <div class="hero-logo-container">
+            <img src="{% if site_settings.site_logo %}{{ site_settings.site_logo.url }}{% else %}{% static 'images/teachmantra_logo.png' %}{% endif %}" alt="TeachMANTRA Logo" class="hero-main-logo">
+          </div>
+          <div class="hero-floating-badge badge-top-left">
+            <i class="fa-solid fa-graduation-cap"></i> <span>Premier Academy</span>
+          </div>
+          <div class="hero-floating-badge badge-bottom-right">
+            <i class="fa-solid fa-award"></i> <span>100% Exam Oriented</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
