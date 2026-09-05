@@ -137,9 +137,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  // --- Gallery Lightbox Image Viewer ---
+  const lightboxModal = document.getElementById('imageLightboxModal');
+  const lightboxImage = document.getElementById('lightboxImage');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+  const lightboxCloseBtn = document.getElementById('lightboxCloseBtn');
+
+  function openLightbox(src, title) {
+    if (!lightboxModal || !lightboxImage || !src) return;
+    lightboxImage.src = src;
+    if (title && lightboxCaption) {
+      lightboxCaption.textContent = title;
+      lightboxCaption.style.display = 'inline-block';
+    } else if (lightboxCaption) {
+      lightboxCaption.textContent = '';
+      lightboxCaption.style.display = 'none';
+    }
+    lightboxModal.classList.add('active');
+    lightboxModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    if (!lightboxModal) return;
+    lightboxModal.classList.remove('active');
+    lightboxModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    setTimeout(() => {
+      if (lightboxImage) lightboxImage.src = '';
+    }, 300);
+  }
+
+  // Attach click listener to all gallery items
+  galleryItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const img = item.querySelector('img');
+      const src = item.getAttribute('data-src') || (img ? img.src : '');
+      const title = item.getAttribute('data-title') || (img ? img.alt : '');
+      openLightbox(src, title);
+    });
   });
 
-  // --- Form Submission Handling (AJAX) ---
+  // Attach click listener to topper avatar images as well
+  const topperAvatars = document.querySelectorAll('.topper-avatar-wrapper');
+  topperAvatars.forEach(wrapper => {
+    wrapper.style.cursor = 'pointer';
+    wrapper.setAttribute('title', 'Click to view photo');
+    wrapper.addEventListener('click', () => {
+      const img = wrapper.querySelector('img');
+      const card = wrapper.closest('.topper-card');
+      const name = card ? card.querySelector('h3')?.textContent : (img ? img.alt : '');
+      if (img && img.src) {
+        openLightbox(img.src, name ? `Topper: ${name}` : 'Student Photo');
+      }
+    });
+  });
+
+  // Close triggers
+  if (lightboxCloseBtn) {
+    lightboxCloseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeLightbox();
+    });
+  }
+
+  if (lightboxModal) {
+    lightboxModal.addEventListener('click', (e) => {
+      // Clicking anywhere on modal or image closes it as requested
+      closeLightbox();
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightboxModal && lightboxModal.classList.contains('active')) {
+      closeLightbox();
+    }
+  });
   const forms = document.querySelectorAll('.ajax-form');
 
   forms.forEach(form => {

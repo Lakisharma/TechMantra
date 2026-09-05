@@ -611,8 +611,19 @@
   </script>
   {% endif %}
 
+  <!-- Global Image Lightbox Modal -->
+  <div id="imageLightboxModal" class="image-lightbox" aria-hidden="true">
+    <div class="lightbox-container" onclick="event.stopPropagation();">
+      <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" title="Close (Esc)" aria-label="Close image">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <img src="" alt="Full view" id="lightboxImage" class="lightbox-img" />
+      <div id="lightboxCaption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
   <!-- Custom script file -->
-  <script src="{% static 'js/main.js' %}?v=2.0"></script>
+  <script src="{% static 'js/main.js' %}?v=2.1"></script>
   {% block extra_js %}{% endblock %}
 </body>
 

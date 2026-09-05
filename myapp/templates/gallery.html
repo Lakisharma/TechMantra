@@ -38,11 +38,12 @@
       <!-- Grid -->
       <div class="gallery-grid">
         {% for img in images %}
-        <div class="gallery-item" data-category="{{ img.category }}">
-          <img src="{% if img.image %}{{ img.image.url }}{% else %}https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=400&q=80{% endif %}" alt="{{ img.title }}" class="gallery-img">
+        <div class="gallery-item" data-category="{{ img.category }}" data-src="{% if img.image %}{{ img.image.url }}{% else %}https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=85{% endif %}" data-title="{{ img.title }}">
+          <img src="{% if img.image %}{{ img.image.url }}{% else %}https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80{% endif %}" alt="{{ img.title }}" class="gallery-img" loading="lazy">
           <div class="gallery-overlay">
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="gallery-overlay-icon"><i class="fa-solid fa-expand"></i></div>
             <h4>{{ img.title }}</h4>
+            <span class="gallery-view-text"><i class="fa-solid fa-magnifying-glass-plus"></i> Click to view</span>
           </div>
         </div>
         {% empty %}
