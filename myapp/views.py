@@ -38,7 +38,8 @@ def about(request):
     return render(request, 'about.html')
 
 def courses(request):
-    courses_list = Course.objects.all().order_by('-created_at')
+    populate_default_courses()
+    courses_list = Course.objects.all().order_by('id')
     return render(request, 'courses.html', {"courses": courses_list})
 
 def faculty(request):
@@ -285,6 +286,92 @@ def populate_default_online_tests():
         ]
         for q in sample_questions:
             QuizQuestion.objects.create(test=test, **q)
+
+
+def populate_default_courses():
+    official_courses = [
+        {
+            "title": "SSC GD",
+            "duration": "6 Months",
+            "fee": 3100,
+            "description": "Comprehensive coaching for SSC GD Constable Exam covering Reasoning, General Knowledge, Elementary Mathematics, and Hindi/English."
+        },
+        {
+            "title": "AIRFORCE / NAVY (X & Y GROUP)",
+            "duration": "6 Months",
+            "fee": 3100,
+            "description": "Dedicated coaching for Indian Air Force & Navy X & Y Group entrance examinations with written test & physical test guidance."
+        },
+        {
+            "title": "ARMY GD",
+            "duration": "6 Months",
+            "fee": 3100,
+            "description": "Targeted training for Indian Army General Duty written exam, regular practice tests, and physical training guidance."
+        },
+        {
+            "title": "UP POLICE / DELHI POLICE",
+            "duration": "6 Months",
+            "fee": 2999,
+            "description": "Special batch for UP Police Constable & Delhi Police SI/Constable recruitment exams with complete syllabus coverage and test series."
+        },
+        {
+            "title": "UPSSSC / LEKHPAL / VDO / PET",
+            "duration": "6 Months",
+            "fee": 2999,
+            "description": "All-in-one preparation for UPSSSC PET, Lekhpal, VDO, and Junior Assistant state government competitive examinations."
+        },
+        {
+            "title": "TEACHERS PACK ( SUPER TET / CTET / TET )",
+            "duration": "6 Months",
+            "fee": 2999,
+            "description": "Master teaching competitive exams with Super TET, CTET Paper 1 & 2, and UPTET focused pedagogy & subject preparation."
+        },
+        {
+            "title": "RAILWAY NTPC / ALP / GROUP D",
+            "duration": "6 Months",
+            "fee": 3100,
+            "description": "Complete coaching for RRB NTPC, Assistant Loco Pilot (ALP), and Railway Group D exams with mock test practice."
+        },
+        {
+            "title": "NDA / CDS (Defence)",
+            "duration": "1 Year",
+            "fee": 6100,
+            "description": "1-Year comprehensive foundation & advanced program for UPSC NDA & CDS examinations with SSB interview guidance."
+        },
+        {
+            "title": "COMPUTER PACK",
+            "duration": "3 Months",
+            "fee": 6500,
+            "description": "Practical computer skills covering CCC, MS Office, Internet, Graphic basics, and typing skills with certification."
+        },
+        {
+            "title": "SPOKEN ENGLISH PROGRAM",
+            "duration": "2 Months",
+            "fee": 2500,
+            "description": "Intensive 2-Month English communication, vocabulary, grammar, and public speaking confidence-building course."
+        }
+    ]
+
+    # Clean up any old mock courses
+    official_titles = {c["title"].strip().upper() for c in official_courses}
+    old_names = [
+        "javascript", "css", "html", "python", "python developer",
+        "ssc preparation", "banking exam prep", "railway exams",
+        "nda / cds prep", "computer courses", "spoken english"
+    ]
+    for c in Course.objects.all():
+        if c.title.strip().lower() in old_names or (c.title.strip().upper() not in official_titles and c.fee in [5000, 6000, 12000, 8000, 4000, 25000]):
+            c.delete()
+
+    existing_titles = set(Course.objects.values_list('title', flat=True))
+    for c in official_courses:
+        if c["title"] not in existing_titles:
+            Course.objects.create(
+                title=c["title"],
+                duration=c["duration"],
+                fee=c["fee"],
+                description=c["description"]
+            )
 
 
 def verify_certificate(request):
@@ -610,11 +697,12 @@ def admin_dashboard_view(request):
 
     populate_default_certificates()
     populate_default_online_tests()
+    populate_default_courses()
 
     students = StudentProfile.objects.select_related('user').all()
     admissions = Admission.objects.all().order_by('-created_at')
     contacts = ContactMessage.objects.all().order_by('-created_at')
-    courses_list = Course.objects.all().order_by('-created_at')
+    courses_list = Course.objects.all().order_by('id')
     images_list = GalleryImage.objects.all().order_by('-uploaded_at')
     founders_list = TeamMember.objects.filter(member_type='founder').order_by('order', 'id')
     team_list = TeamMember.objects.filter(member_type='team').order_by('order', 'id')
@@ -1037,6 +1125,54 @@ def admin_add_course_view(request):
                 image=image
             )
             return JsonResponse({"status": "success", "message": "Course added successfully!"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@csrf_exempt
+@login_required(login_url='login')
+def admin_update_course_view(request, course_id):
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        duration = request.POST.get("duration", "").strip()
+        fee = request.POST.get("fee", "").strip()
+        description = request.POST.get("description", "").strip()
+        image = request.FILES.get("image")
+
+        if not title or not duration or not fee or not description:
+            return JsonResponse({"status": "error", "message": "Please fill all required fields."})
+
+        try:
+            fee_val = int(fee)
+        except ValueError:
+            return JsonResponse({"status": "error", "message": "Fee must be a valid number."})
+
+        try:
+            course = Course.objects.get(id=course_id)
+            course.title = title
+            course.duration = duration
+            course.fee = fee_val
+            course.description = description
+            if image:
+                course.image = image
+            course.save()
+            return JsonResponse({
+                "status": "success", 
+                "message": "Course updated successfully!",
+                "course_id": course.id,
+                "title": course.title,
+                "duration": course.duration,
+                "fee": course.fee,
+                "description": course.description,
+                "image_url": course.image.url if course.image else None
+            })
+        except Course.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Course not found."})
         except Exception as e:
             return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 

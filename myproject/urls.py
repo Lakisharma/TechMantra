@@ -48,6 +48,7 @@ urlpatterns = [
     path('admin-dashboard/approve-admission/<int:admission_id>/', views.admin_approve_admission_view, name='admin_approve_admission'),
     path('admin-dashboard/delete/<str:record_type>/<int:record_id>/', views.admin_delete_record_view, name='admin_delete_record'),
     path('admin-dashboard/courses/add/', views.admin_add_course_view, name='admin_add_course'),
+    path('admin-dashboard/courses/update/<int:course_id>/', views.admin_update_course_view, name='admin_update_course'),
     path('admin-dashboard/courses/delete/<int:course_id>/', views.admin_delete_course_view, name='admin_delete_course'),
     path('admin-dashboard/gallery/add/', views.admin_add_gallery_view, name='admin_add_gallery'),
     path('admin-dashboard/gallery/update/<int:image_id>/', views.admin_update_gallery_view, name='admin_update_gallery'),
