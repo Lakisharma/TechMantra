@@ -1553,9 +1553,12 @@
               <div class="glass-card-title" style="margin-bottom: 0;">
                 <i class="fa-solid fa-users"></i> Registered Student Directory
               </div>
-              <div style="display: flex; align-items: center; gap: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <input type="text" id="studentSearch" onkeyup="filterTable('studentSearch', 'studentTable')" 
-                       placeholder="Search username, name, or course..." class="form-control" style="width: 260px; padding: 0.5rem 1rem;">
+                       placeholder="Search username, name, or course..." class="form-control" style="width: 250px; padding: 0.5rem 1rem;">
+                <a href="{% url 'admin_export_students_excel' %}" class="btn-quick-add" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16,185,129,0.35); text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 0.5rem;" title="Download Student Directory as Excel Sheet">
+                  <i class="fa-solid fa-file-excel"></i> Export Excel
+                </a>
                 <button class="btn-quick-add" onclick="openModal('addStudentModal')">
                   <i class="fa-solid fa-user-plus"></i> Add Student
                 </button>
@@ -1826,9 +1829,12 @@
               <div class="glass-card-title" style="margin-bottom: 0;">
                 <i class="fa-solid fa-file-contract"></i> Pending Admission Applications
               </div>
-              <div>
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <input type="text" id="admissionSearch" onkeyup="filterTable('admissionSearch', 'admissionTable')" 
-                       placeholder="Search applicant or course..." class="form-control" style="width: 260px; padding: 0.5rem 1rem;">
+                       placeholder="Search applicant or course..." class="form-control" style="width: 250px; padding: 0.5rem 1rem;">
+                <a href="{% url 'admin_export_admissions_excel' %}" class="btn-quick-add" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16,185,129,0.35); text-decoration: none; color: #fff; display: inline-flex; align-items: center; gap: 0.5rem;" title="Download Admissions Requests as Excel Sheet">
+                  <i class="fa-solid fa-file-excel"></i> Export Excel
+                </a>
               </div>
             </div>
 

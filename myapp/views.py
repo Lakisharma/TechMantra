@@ -1,4 +1,5 @@
 import json
+import csv
 from django.db import models
 from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
@@ -779,6 +780,76 @@ def admin_add_student_view(request):
             return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_export_students_excel(request):
+    if not request.user.is_staff:
+        return HttpResponse("Access denied", status=403)
+        
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="TeachMantra_Registered_Students.csv"'
+    
+    # Write UTF-8 BOM for Microsoft Excel compatibility
+    response.write('\ufeff')
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'S.No', 'Username', 'Full Name', 'Email Address', 'Phone Number', 
+        'Registered Course', 'All India Rank', 'Grade', 'Account Status', 'Date Joined'
+    ])
+    
+    students = StudentProfile.objects.select_related('user').all().order_by('-created_at')
+    for idx, s in enumerate(students, 1):
+        if not s.user.is_staff:
+            full_name = f"{s.user.first_name} {s.user.last_name}".strip() or s.user.username
+            status = "Active" if s.user.is_active else "Inactive"
+            date_joined = s.user.date_joined.strftime('%d-%m-%Y %H:%M') if s.user.date_joined else "N/A"
+            writer.writerow([
+                idx,
+                s.user.username,
+                full_name,
+                s.user.email,
+                s.phone,
+                s.course,
+                s.rank or "N/A",
+                s.grade or "N/A",
+                status,
+                date_joined
+            ])
+            
+    return response
+
+
+@login_required(login_url='login')
+def admin_export_admissions_excel(request):
+    if not request.user.is_staff:
+        return HttpResponse("Access denied", status=403)
+        
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="TeachMantra_Admissions_Requests.csv"'
+    response.write('\ufeff')
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'S.No', 'Applicant Name', 'Email Address', 'Phone Number', 
+        'Selected Course & Fee', 'Message / Query', 'Date Applied'
+    ])
+    
+    admissions = Admission.objects.all().order_by('-created_at')
+    for idx, adm in enumerate(admissions, 1):
+        date_applied = adm.created_at.strftime('%d-%m-%Y %H:%M') if adm.created_at else "N/A"
+        writer.writerow([
+            idx,
+            adm.name,
+            adm.email,
+            adm.phone,
+            adm.course,
+            adm.message or "",
+            date_applied
+        ])
+        
+    return response
 
 
 @csrf_exempt
