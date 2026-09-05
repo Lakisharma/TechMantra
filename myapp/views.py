@@ -1452,12 +1452,12 @@ def admin_add_result_view(request):
         name = request.POST.get("name", "").strip()
         exam_name = request.POST.get("exam_name", "").strip()
         rank = request.POST.get("rank", "").strip()
-        badge = request.POST.get("badge", "Rank 1").strip() or "Rank 1"
+        badge = request.POST.get("badge", "").strip()
         order = request.POST.get("order", "0").strip()
         image = request.FILES.get("image")
 
-        if not name or not exam_name or not rank:
-            return JsonResponse({"status": "error", "message": "Name, Exam Name, and Rank / AIR are required."})
+        if not name or not exam_name:
+            return JsonResponse({"status": "error", "message": "Student Full Name and Exam / Course name are required."})
 
         try:
             order_val = int(order) if order.isdigit() else 0
@@ -1502,14 +1502,13 @@ def admin_update_result_view(request, result_id):
         badge = request.POST.get("badge", "").strip()
         order = request.POST.get("order", "").strip()
 
-        if not name or not exam_name or not rank:
-            return JsonResponse({"status": "error", "message": "Name, Exam Name, and Rank / AIR are required."})
+        if not name or not exam_name:
+            return JsonResponse({"status": "error", "message": "Student Full Name and Exam / Course name are required."})
 
         topper.name = name
         topper.exam_name = exam_name
         topper.rank = rank
-        if badge:
-            topper.badge = badge
+        topper.badge = badge
         if order != "":
             try:
                 topper.order = int(order)

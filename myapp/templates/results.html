@@ -31,7 +31,9 @@
       <div class="toppers-grid">
         {% for topper in toppers %}
         <div class="glass-card topper-card">
-          <div class="topper-badge"><i class="fa-solid fa-star"></i> {{ topper.badge|default:"Rank 1" }}</div>
+          {% if topper.badge %}
+            <div class="topper-badge"><i class="fa-solid fa-star"></i> {{ topper.badge }}</div>
+          {% endif %}
           <div class="topper-avatar-wrapper">
             {% if topper.image %}
               <img src="{{ topper.image.url }}" alt="{{ topper.name }}" class="topper-avatar">
@@ -41,7 +43,9 @@
           </div>
           <h3>{{ topper.name }}</h3>
           <p class="topper-exam">{{ topper.exam_name }}</p>
-          <p class="topper-rank">{{ topper.rank }}</p>
+          {% if topper.rank %}
+            <p class="topper-rank">{{ topper.rank }}</p>
+          {% endif %}
         </div>
         {% empty %}
         <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">

@@ -1876,10 +1876,14 @@
                     </button>
                   </div>
 
-                  <div style="margin-bottom: 0.85rem;">
-                    <span class="status-badge" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.35); font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.65rem; border-radius: 20px;">
-                      <i class="fa-solid fa-star" style="font-size: 0.65rem;"></i> {{ t.badge }}
-                    </span>
+                  <div style="margin-bottom: 0.85rem; min-height: 24px;">
+                    {% if t.badge %}
+                      <span class="status-badge" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.35); font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.65rem; border-radius: 20px;">
+                        <i class="fa-solid fa-star" style="font-size: 0.65rem;"></i> {{ t.badge }}
+                      </span>
+                    {% else %}
+                      <span style="font-size: 0.75rem; color: var(--text-muted); opacity: 0.6;">(No Badge)</span>
+                    {% endif %}
                   </div>
 
                   <div style="width: 84px; height: 84px; border-radius: 50%; overflow: hidden; margin: 0 auto 1rem; border: 3px solid #f59e0b; box-shadow: 0 4px 15px rgba(245,158,11,0.25);">
@@ -1888,7 +1892,11 @@
 
                   <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">{{ t.name }}</h4>
                   <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.25rem;">{{ t.exam_name }}</p>
-                  <p style="font-size: 0.95rem; font-weight: 800; color: #f59e0b; margin-bottom: 0.5rem;">{{ t.rank }}</p>
+                  {% if t.rank %}
+                    <p style="font-size: 0.95rem; font-weight: 800; color: #f59e0b; margin-bottom: 0.5rem;">{{ t.rank }}</p>
+                  {% else %}
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">(No Rank Assigned)</p>
+                  {% endif %}
                   <p style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-arrow-down-1-9"></i> Order: {{ t.order }}</p>
                 </div>
               {% empty %}
@@ -3124,25 +3132,23 @@ Agli class nirdharit samay par shuru hogi.
           <label class="form-label" for="addResultName">Student Full Name *</label>
           <input type="text" id="addResultName" name="name" class="form-control" required placeholder="e.g. Sunanda yadav / Rahul Pal">
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-          <div class="form-group">
-            <label class="form-label" for="addResultExam">Exam / Course *</label>
-            <input type="text" id="addResultExam" name="exam_name" class="form-control" required placeholder="e.g. UP POLICE 2024 / RRB NTPC 2024">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="addResultRank">Rank / Score *</label>
-            <input type="text" id="addResultRank" name="rank" class="form-control" required placeholder="e.g. AIR 16753 / AIR 29">
-          </div>
+        <div class="form-group">
+          <label class="form-label" for="addResultExam">Exam / Course *</label>
+          <input type="text" id="addResultExam" name="exam_name" class="form-control" required placeholder="e.g. UP POLICE 2024 / RRB NTPC 2024">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label class="form-label" for="addResultBadge">Badge Label</label>
-            <input type="text" id="addResultBadge" name="badge" class="form-control" value="Rank 1" placeholder="e.g. Rank 1 / Selected / AIR 1st">
+            <label class="form-label" for="addResultRank">Rank / AIR (Optional)</label>
+            <input type="text" id="addResultRank" name="rank" class="form-control" placeholder="e.g. AIR 16753 (or leave blank)">
           </div>
           <div class="form-group">
-            <label class="form-label" for="addResultOrder">Display Order</label>
-            <input type="number" id="addResultOrder" name="order" class="form-control" value="0" placeholder="0">
+            <label class="form-label" for="addResultBadge">Badge Label (Optional)</label>
+            <input type="text" id="addResultBadge" name="badge" class="form-control" placeholder="e.g. Rank 1, Selected (or leave blank)">
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addResultOrder">Display Order</label>
+          <input type="number" id="addResultOrder" name="order" class="form-control" value="0" placeholder="0">
         </div>
         <div class="form-group">
           <label class="form-label" for="addResultImage">Student Photo (Optional)</label>
@@ -3171,25 +3177,23 @@ Agli class nirdharit samay par shuru hogi.
           <label class="form-label" for="editResultName">Student Full Name *</label>
           <input type="text" id="editResultName" name="name" class="form-control" required>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-          <div class="form-group">
-            <label class="form-label" for="editResultExam">Exam / Course *</label>
-            <input type="text" id="editResultExam" name="exam_name" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="editResultRank">Rank / Score *</label>
-            <input type="text" id="editResultRank" name="rank" class="form-control" required>
-          </div>
+        <div class="form-group">
+          <label class="form-label" for="editResultExam">Exam / Course *</label>
+          <input type="text" id="editResultExam" name="exam_name" class="form-control" required>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label class="form-label" for="editResultBadge">Badge Label</label>
-            <input type="text" id="editResultBadge" name="badge" class="form-control">
+            <label class="form-label" for="editResultRank">Rank / AIR (Optional)</label>
+            <input type="text" id="editResultRank" name="rank" class="form-control" placeholder="e.g. AIR 16753 (or leave blank)">
           </div>
           <div class="form-group">
-            <label class="form-label" for="editResultOrder">Display Order</label>
-            <input type="number" id="editResultOrder" name="order" class="form-control" value="0">
+            <label class="form-label" for="editResultBadge">Badge Label (Optional)</label>
+            <input type="text" id="editResultBadge" name="badge" class="form-control" placeholder="e.g. Rank 1 (or leave blank)">
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editResultOrder">Display Order</label>
+          <input type="number" id="editResultOrder" name="order" class="form-control" value="0">
         </div>
         <div class="form-group" id="edit-result-current-wrap" style="display: none;">
           <label class="form-label">Current Photo</label>
