@@ -46,7 +46,7 @@
 
           <div class="form-group" style="margin-bottom: 1.25rem;">
             <label for="reg-fullname" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Full Name *</label>
-            <input type="text" id="reg-fullname" name="full_name" class="form-control" placeholder="Enter full name" required 
+            <input type="text" id="reg-fullname" name="full_name" class="form-control" placeholder="Enter full name" required pattern="[A-Za-z\s.]+" title="Please enter valid name (letters only)" oninput="this.value = this.value.replace(/[^A-Za-z\s.]/g, '')"
                    style="width: 100%; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal);">
           </div>
 
@@ -64,7 +64,7 @@
 
           <div class="form-group" style="margin-bottom: 1.25rem;">
             <label for="reg-phone" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; color: var(--text-muted);">Mobile Number *</label>
-            <input type="tel" id="reg-phone" name="phone" class="form-control" placeholder="Enter 10-digit mobile number" required 
+            <input type="tel" id="reg-phone" name="phone" class="form-control" placeholder="Enter 10-digit mobile number" required pattern="[0-9]{10}" maxlength="10" minlength="10" inputmode="numeric" title="Please enter 10 digits mobile number only" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
                    style="width: 100%; padding: 0.8rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass); border-radius: 0.5rem; color: var(--text-main); font-size: 0.95rem; transition: var(--transition-normal);">
           </div>
 

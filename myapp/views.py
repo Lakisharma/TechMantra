@@ -52,27 +52,35 @@ def faculty(request):
 def admissions(request):
     success_msg = None
     if request.method == "POST":
-        name = request.POST.get("name")
-        email = request.POST.get("email")
-        phone = request.POST.get("phone")
-        course = request.POST.get("course")
-        message = request.POST.get("message", "")
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        course = request.POST.get("course", "").strip()
+        message = request.POST.get("message", "").strip()
         
-        if name and email and phone and course:
-            Admission.objects.create(
-                name=name,
-                email=email,
-                phone=phone,
-                course=course,
-                message=message
-            )
+        if not (name and email and phone and course):
+            msg = "Please fill all required fields."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "success", "message": "Admission request submitted successfully!"})
-            success_msg = "Admission request submitted successfully!"
-        else:
+                return JsonResponse({"status": "error", "message": msg})
+            return render(request, 'admissions.html', {"success_msg": f"Error: {msg}"})
+            
+        clean_phone = ''.join(c for c in phone if c.isdigit())
+        if len(clean_phone) != 10:
+            msg = "Please enter a valid 10-digit mobile number (numbers only)."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "error", "message": "Please fill all required fields."})
-            success_msg = "Error: Please fill all required fields."
+                return JsonResponse({"status": "error", "message": msg})
+            return render(request, 'admissions.html', {"success_msg": f"Error: {msg}"})
+            
+        Admission.objects.create(
+            name=name,
+            email=email,
+            phone=clean_phone,
+            course=course,
+            message=message
+        )
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({"status": "success", "message": "Admission request submitted successfully!"})
+        success_msg = "Admission request submitted successfully!"
             
     return render(request, 'admissions.html', {"success_msg": success_msg})
 
@@ -86,25 +94,33 @@ def results(request):
 def contact(request):
     success_msg = None
     if request.method == "POST":
-        name = request.POST.get("name")
-        email = request.POST.get("email")
-        phone = request.POST.get("phone")
-        message = request.POST.get("message")
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        message = request.POST.get("message", "").strip()
         
-        if name and email and phone and message:
-            ContactMessage.objects.create(
-                name=name,
-                email=email,
-                phone=phone,
-                message=message
-            )
+        if not (name and email and phone and message):
+            msg = "Please fill all required fields."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "success", "message": "Message sent successfully!"})
-            success_msg = "Message sent successfully!"
-        else:
+                return JsonResponse({"status": "error", "message": msg})
+            return render(request, 'contact.html', {"success_msg": f"Error: {msg}"})
+            
+        clean_phone = ''.join(c for c in phone if c.isdigit())
+        if len(clean_phone) != 10:
+            msg = "Please enter a valid 10-digit mobile number (numbers only)."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "error", "message": "Please fill all required fields."})
-            success_msg = "Error: Please fill all required fields."
+                return JsonResponse({"status": "error", "message": msg})
+            return render(request, 'contact.html', {"success_msg": f"Error: {msg}"})
+            
+        ContactMessage.objects.create(
+            name=name,
+            email=email,
+            phone=clean_phone,
+            message=message
+        )
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({"status": "success", "message": "Message sent successfully!"})
+        success_msg = "Message sent successfully!"
             
     return render(request, 'contact.html', {"success_msg": success_msg})
 
@@ -356,6 +372,14 @@ def register_view(request):
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
                 return JsonResponse({"status": "error", "message": msg})
             return render(request, 'register.html', {"error_msg": msg, "courses": courses_list, "next": next_url})
+            
+        clean_phone = ''.join(c for c in phone if c.isdigit())
+        if len(clean_phone) != 10:
+            msg = "Please enter a valid 10-digit mobile number (numbers only)."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                return JsonResponse({"status": "error", "message": msg})
+            return render(request, 'register.html', {"error_msg": msg, "courses": courses_list, "next": next_url})
+        phone = clean_phone
             
         if User.objects.filter(username=username).exists():
             msg = "Username already exists."
