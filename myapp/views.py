@@ -328,10 +328,16 @@ def register_view(request):
         return redirect(next_url)
         
     courses_list = [
-        "SSC CGL Coaching Program",
-        "Bank PO Prep Course",
-        "RRB NTPC Coaching",
-        "NDA / CDS Exam Prep"
+        "SSC GD (₹ 3100)",
+        "AIRFORCE / NAVY (X & Y GROUP) (₹ 3100)",
+        "ARMY GD (₹ 3100)",
+        "UP POLICE / DELHI POLICE (₹ 2999)",
+        "UPSSSC / LEKHPAL / VDO / PET (₹ 2999)",
+        "TEACHERS PACK ( SUPER TET / CTET / TET ) (₹ 2999)",
+        "RAILWAY NTPC / ALP / GROUP D (₹ 3100)",
+        "NDA / CDS (Defence) (₹ 6100)",
+        "COMPUTER PACK (₹ 6500)",
+        "SPOKEN ENGLISH PROGRAM (₹ 2500)",
     ]
     
     if request.method == "POST":
