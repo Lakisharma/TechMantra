@@ -567,19 +567,35 @@
             </span>
           </div>
         {% endif %}
-        <button class="btn-quiz-nav btn-quiz-prev" onclick="toggleReviewSection()" style="background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); color: white; border: none;">
+
+        <button id="btnReviewUnlocked" class="btn-quiz-nav btn-quiz-prev" onclick="toggleReviewSection()" style="display: none; background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); color: white; border: none;">
           <i class="fa-solid fa-list-check"></i> Review All Solutions & Answers
         </button>
+
+        <button id="btnReviewLocked" class="btn-quiz-nav" disabled style="display: none; background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.35); cursor: not-allowed;">
+          <i class="fa-solid fa-lock"></i> Solutions Unlock Tomorrow (कल उपलब्ध होगा)
+        </button>
+
         <a href="{% url 'tests_list' %}" class="btn-quiz-nav btn-quiz-next">
           <i class="fa-solid fa-laptop-file"></i> More Mock Tests
         </a>
         <a href="{% url 'profile' %}" class="btn-quiz-nav btn-quiz-prev">
           <i class="fa-solid fa-gauge"></i> My Dashboard
         </a>
+
+        <!-- Lock Notice Banner for Same Day -->
+        <div id="reviewLockedNotice" style="display: none; width: 100%; margin-top: 1.5rem; padding: 1.15rem 1.35rem; border-radius: 12px; background: rgba(56, 189, 248, 0.07); border: 1px solid rgba(56, 189, 248, 0.25); text-align: center;">
+          <div style="font-weight: 700; color: #38bdf8; font-size: 0.98rem; margin-bottom: 0.3rem;">
+            <i class="fa-solid fa-clock-rotate-left"></i> सभी प्रश्नों के सही उत्तर एवं विस्तृत व्याख्या कल अनलॉक होगी
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.5;">
+            परीक्षा की निष्पक्षता बनाए रखने के लिए विस्तृत समाधान <strong><span id="unlockDateSpan">{{ unlock_date_text|default:"कल (Tomorrow)" }}</span></strong> को अनलॉक होंगे। आपका स्कोर और परिणाम सुरक्षित रूप से दर्ज कर लिया गया है।
+          </p>
+        </div>
       </div>
 
-      <!-- Detailed Review of Answers -->
-      <div id="reviewContainer" style="display: block; margin-top: 3rem; text-align: left;">
+      <!-- Detailed Review of Answers (Hidden until unlocked) -->
+      <div id="reviewContainer" style="display: none; margin-top: 3rem; text-align: left;">
         <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
           <i class="fa-solid fa-book-open-reader" style="color: var(--primary);"></i> Detailed Question-by-Question Solutions
         </h3>
@@ -599,6 +615,8 @@
   const testDurationMinutes = {{ test.duration_minutes }};
   const passPercentage = {{ test.pass_percentage }};
   const isAlreadyAttempted = {% if already_attempted %}true{% else %}false{% endif %};
+  const isReviewUnlocked = {% if review_unlocked %}true{% else %}false{% endif %};
+  const serverUnlockDateText = "{{ unlock_date_text|escapejs }}";
   const existingReviewData = {{ existing_review_json|safe }};
 
   let currentIndex = 0;
@@ -617,6 +635,8 @@
         percentage: {{ existing_sub.percentage|default:0 }},
         passed: {% if existing_sub.passed %}true{% else %}false{% endif %},
         pass_percentage: {{ test.pass_percentage }},
+        review_unlocked: isReviewUnlocked,
+        unlock_date_text: serverUnlockDateText,
         review: existingReviewData
       });
       return;
@@ -835,11 +855,34 @@
       document.getElementById('resTitle').innerText = "Test Completed (Needs Improvement)";
     }
 
-    // Build Detailed Review
+    const isUnlocked = Boolean(data.review_unlocked);
+    const btnUnlocked = document.getElementById('btnReviewUnlocked');
+    const btnLocked = document.getElementById('btnReviewLocked');
+    const lockNotice = document.getElementById('reviewLockedNotice');
+    const unlockSpan = document.getElementById('unlockDateSpan');
+    const reviewContainer = document.getElementById('reviewContainer');
+
+    if (data.unlock_date_text && unlockSpan) {
+      unlockSpan.innerText = data.unlock_date_text;
+    }
+
+    if (isUnlocked && data.review && data.review.length > 0) {
+      if (btnUnlocked) btnUnlocked.style.display = 'inline-flex';
+      if (btnLocked) btnLocked.style.display = 'none';
+      if (lockNotice) lockNotice.style.display = 'none';
+      if (reviewContainer) reviewContainer.style.display = 'block';
+    } else {
+      if (btnUnlocked) btnUnlocked.style.display = 'none';
+      if (btnLocked) btnLocked.style.display = 'inline-flex';
+      if (lockNotice) lockNotice.style.display = 'block';
+      if (reviewContainer) reviewContainer.style.display = 'none';
+    }
+
+    // Build Detailed Review (if unlocked)
     const reviewList = document.getElementById('reviewList');
     reviewList.innerHTML = '';
 
-    if (data.review && data.review.length > 0) {
+    if (isUnlocked && data.review && data.review.length > 0) {
       data.review.forEach(item => {
         const div = document.createElement('div');
         div.className = `review-item ${item.is_correct ? 'is-correct' : 'is-wrong'}`;

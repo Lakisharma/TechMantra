@@ -11,6 +11,8 @@ from .models import (
 )
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta, date
 from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
 
@@ -2156,28 +2158,41 @@ def take_test_view(request, test_id):
         })
 
     review_list = []
+    review_unlocked = False
+    unlock_date_text = ""
+
     if existing_sub:
-        saved_ans = {}
-        try:
-            saved_ans = json.loads(existing_sub.answers_json) if existing_sub.answers_json else {}
-        except Exception:
+        sub_date = timezone.localtime(existing_sub.submitted_at).date() if existing_sub.submitted_at else timezone.now().date()
+        today_date = timezone.localtime(timezone.now()).date()
+
+        # Solutions & Answer Review unlocks on the next day onwards, or immediately for staff/admin
+        if today_date > sub_date or request.user.is_staff:
+            review_unlocked = True
             saved_ans = {}
-            
-        for idx, q in enumerate(questions, start=1):
-            ans = saved_ans.get(str(q.id)) or saved_ans.get(q.id) or None
-            is_correct = (ans == q.correct_option)
-            review_list.append({
-                "number": idx,
-                "question_text": q.question_text,
-                "option_a": q.option_a,
-                "option_b": q.option_b,
-                "option_c": q.option_c,
-                "option_d": q.option_d,
-                "user_answer": ans,
-                "correct_answer": q.correct_option,
-                "is_correct": is_correct,
-                "explanation": q.explanation or ""
-            })
+            try:
+                saved_ans = json.loads(existing_sub.answers_json) if existing_sub.answers_json else {}
+            except Exception:
+                saved_ans = {}
+                
+            for idx, q in enumerate(questions, start=1):
+                ans = saved_ans.get(str(q.id)) or saved_ans.get(q.id) or None
+                is_correct = (ans == q.correct_option)
+                review_list.append({
+                    "number": idx,
+                    "question_text": q.question_text,
+                    "option_a": q.option_a,
+                    "option_b": q.option_b,
+                    "option_c": q.option_c,
+                    "option_d": q.option_d,
+                    "user_answer": ans,
+                    "correct_answer": q.correct_option,
+                    "is_correct": is_correct,
+                    "explanation": q.explanation or ""
+                })
+        else:
+            review_unlocked = False
+            unlock_date = sub_date + timedelta(days=1)
+            unlock_date_text = unlock_date.strftime("%d %b, %Y (Next Day / कल)")
 
     return render(request, 'quiz.html', {
         "test": test,
@@ -2185,7 +2200,9 @@ def take_test_view(request, test_id):
         "questions_json": json.dumps(questions_list, ensure_ascii=False),
         "already_attempted": bool(existing_sub),
         "existing_sub": existing_sub,
-        "existing_review_json": json.dumps(review_list, ensure_ascii=False) if review_list else "[]"
+        "review_unlocked": review_unlocked,
+        "unlock_date_text": unlock_date_text,
+        "existing_review_json": json.dumps(review_list, ensure_ascii=False) if (review_unlocked and review_list) else "[]"
     })
 
 
@@ -2194,7 +2211,7 @@ def take_test_view(request, test_id):
 def submit_test_view(request, test_id):
     """
     Processes quiz answers submitted via AJAX, evaluates score, records submission,
-    and returns detailed scorecard with explanations.
+    and returns scorecard. Solutions & answers review unlocks the next day.
     Enforces 1-attempt per student per test.
     """
     if request.method != "POST":
@@ -2211,6 +2228,11 @@ def submit_test_view(request, test_id):
     ).first()
     
     if existing_sub:
+        sub_date = timezone.localtime(existing_sub.submitted_at).date() if existing_sub.submitted_at else timezone.now().date()
+        today_date = timezone.localtime(timezone.now()).date()
+        review_unlocked = (today_date > sub_date) or request.user.is_staff
+        unlock_date = sub_date + timedelta(days=1)
+
         return JsonResponse({
             "status": "already_attempted",
             "message": "Aap ye test pehle hi de chuke hain! Ek student sirf ek baar hi test attempt kar sakta hai.",
@@ -2219,7 +2241,9 @@ def submit_test_view(request, test_id):
             "unanswered_count": existing_sub.unanswered_count,
             "total_questions": existing_sub.total_questions,
             "percentage": existing_sub.percentage,
-            "passed": existing_sub.passed
+            "passed": existing_sub.passed,
+            "review_unlocked": review_unlocked,
+            "unlock_date_text": unlock_date.strftime("%d %b, %Y (कल / Next Day)")
         })
     
     try:
@@ -2242,7 +2266,6 @@ def submit_test_view(request, test_id):
     review_list = []
 
     for idx, q in enumerate(questions, start=1):
-        # Answers dict keys might be string or int
         ans = user_answers.get(str(q.id)) or user_answers.get(q.id) or None
         if ans is None or ans == "":
             unanswered_count += 1
@@ -2285,6 +2308,11 @@ def submit_test_view(request, test_id):
         answers_json=json.dumps(user_answers)
     )
 
+    # On submission day, solutions review remains locked for students (unlocks next day)
+    review_unlocked = bool(request.user.is_staff)
+    tomorrow_date = timezone.localtime(timezone.now()).date() + timedelta(days=1)
+    unlock_date_text = tomorrow_date.strftime("%d %b, %Y (कल / Next Day)")
+
     return JsonResponse({
         "status": "success",
         "student_name": student_name,
@@ -2295,7 +2323,9 @@ def submit_test_view(request, test_id):
         "percentage": percentage,
         "passed": passed,
         "pass_percentage": test.pass_percentage,
-        "review": review_list
+        "review_unlocked": review_unlocked,
+        "unlock_date_text": unlock_date_text,
+        "review": review_list if review_unlocked else []
     })
 
 
