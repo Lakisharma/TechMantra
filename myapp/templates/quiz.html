@@ -560,21 +560,28 @@
       </div>
 
       <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
-        <button class="btn-quiz-nav btn-quiz-next" onclick="restartQuiz()">
-          <i class="fa-solid fa-rotate-right"></i> Retake Test
+        {% if already_attempted %}
+          <div style="width: 100%; text-align: center; margin-bottom: 0.5rem;">
+            <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;">
+              <i class="fa-solid fa-lock"></i> Single Attempt Only — You have already submitted this test on {{ existing_sub.submitted_at|date:"M d, Y h:i A" }}
+            </span>
+          </div>
+        {% endif %}
+        <button class="btn-quiz-nav btn-quiz-prev" onclick="toggleReviewSection()" style="background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); color: white; border: none;">
+          <i class="fa-solid fa-list-check"></i> Review All Solutions & Answers
         </button>
-        <button class="btn-quiz-nav btn-quiz-prev" onclick="toggleReviewSection()">
-          <i class="fa-solid fa-list-check"></i> Review Solutions
-        </button>
-        <a href="{% url 'home' %}" class="btn-quiz-nav btn-quiz-prev">
-          <i class="fa-solid fa-house"></i> Home Page
+        <a href="{% url 'tests_list' %}" class="btn-quiz-nav btn-quiz-next">
+          <i class="fa-solid fa-laptop-file"></i> More Mock Tests
+        </a>
+        <a href="{% url 'profile' %}" class="btn-quiz-nav btn-quiz-prev">
+          <i class="fa-solid fa-gauge"></i> My Dashboard
         </a>
       </div>
 
       <!-- Detailed Review of Answers -->
-      <div id="reviewContainer" style="display: none; margin-top: 3rem; text-align: left;">
+      <div id="reviewContainer" style="display: block; margin-top: 3rem; text-align: left;">
         <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-book-open-reader" style="color: var(--primary);"></i> Detailed Solution & Answers
+          <i class="fa-solid fa-book-open-reader" style="color: var(--primary);"></i> Detailed Question-by-Question Solutions
         </h3>
         <div id="reviewList"></div>
       </div>
@@ -591,6 +598,8 @@
   const testId = {{ test.id }};
   const testDurationMinutes = {{ test.duration_minutes }};
   const passPercentage = {{ test.pass_percentage }};
+  const isAlreadyAttempted = {% if already_attempted %}true{% else %}false{% endif %};
+  const existingReviewData = {{ existing_review_json|safe }};
 
   let currentIndex = 0;
   let userAnswers = {}; // { questionId: 'A' }
@@ -599,6 +608,20 @@
 
   // Initialize
   document.addEventListener('DOMContentLoaded', function() {
+    if (isAlreadyAttempted) {
+      showResults({
+        score: {{ existing_sub.score|default:0 }},
+        wrong_count: {{ existing_sub.wrong_count|default:0 }},
+        unanswered_count: {{ existing_sub.unanswered_count|default:0 }},
+        total_questions: {{ existing_sub.total_questions|default:test.questions_count }},
+        percentage: {{ existing_sub.percentage|default:0 }},
+        passed: {% if existing_sub.passed %}true{% else %}false{% endif %},
+        pass_percentage: {{ test.pass_percentage }},
+        review: existingReviewData
+      });
+      return;
+    }
+
     if (!rawQuestions || rawQuestions.length === 0) {
       document.getElementById('questionText').innerHTML = "No questions have been added to this test yet. Please check back shortly!";
       return;
@@ -738,9 +761,9 @@
     const total = rawQuestions.length;
     const unattempted = total - answered;
 
-    let msg = `Are you sure you want to submit your test?`;
+    let msg = `Are you sure you want to submit your test? Note: You can only attempt this test once.`;
     if (unattempted > 0) {
-      msg = `You have ${unattempted} unanswered question(s). Do you still want to submit?`;
+      msg = `You have ${unattempted} unanswered question(s). Are you sure you want to submit? Note: Retakes are not permitted.`;
     }
 
     if (confirm(msg)) {
@@ -769,6 +792,9 @@
     .then(data => {
       if (data.status === 'success') {
         showResults(data);
+      } else if (data.status === 'already_attempted') {
+        alert(data.message);
+        window.location.reload();
       } else {
         alert(data.message || "Failed to submit test.");
         document.getElementById('btnSubmit').disabled = false;
@@ -787,11 +813,15 @@
     document.getElementById('quizTimerBox').style.display = 'none';
     document.getElementById('quizResultView').style.display = 'block';
 
-    document.getElementById('resScore').innerText = data.score;
-    document.getElementById('resTotal').innerText = `/ ${data.total_questions} Marks`;
-    document.getElementById('resTotalQ').innerText = data.total_questions;
-    document.getElementById('resCorrectQ').innerText = data.score;
-    document.getElementById('resWrongQ').innerText = data.total_questions - data.score;
+    const totalQ = data.total_questions || 0;
+    const correctQ = data.score || 0;
+    const wrongQ = (data.wrong_count !== undefined) ? data.wrong_count : (totalQ - correctQ);
+
+    document.getElementById('resScore').innerText = correctQ;
+    document.getElementById('resTotal').innerText = `/ ${totalQ} Marks`;
+    document.getElementById('resTotalQ').innerText = totalQ;
+    document.getElementById('resCorrectQ').innerText = correctQ;
+    document.getElementById('resWrongQ').innerText = wrongQ;
     document.getElementById('resPercentage').innerText = `${data.percentage}%`;
 
     const statusBadge = document.getElementById('resStatusBadge');
@@ -801,36 +831,38 @@
       document.getElementById('resTitle').innerText = "🎉 Congratulations, You Passed!";
     } else {
       statusBadge.className = "result-status-badge badge-fail";
-      statusBadge.innerText = `NEEDS PRACTICE (< ${data.pass_percentage}%)`;
-      document.getElementById('resTitle').innerText = "Test Completed";
+      statusBadge.innerText = `FAILED (< ${data.pass_percentage}%)`;
+      document.getElementById('resTitle').innerText = "Test Completed (Needs Improvement)";
     }
 
     // Build Detailed Review
     const reviewList = document.getElementById('reviewList');
     reviewList.innerHTML = '';
 
-    data.review.forEach(item => {
-      const div = document.createElement('div');
-      div.className = `review-item ${item.is_correct ? 'is-correct' : 'is-wrong'}`;
-      
-      div.innerHTML = `
-        <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.75rem;">
-          ${item.number}. ${item.question_text}
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.95rem; margin-bottom: 0.75rem;">
-          <div style="${item.user_answer === 'A' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'A' ? 'color: #10b981;' : ''}"><strong>A.</strong> ${item.option_a}</div>
-          <div style="${item.user_answer === 'B' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'B' ? 'color: #10b981;' : ''}"><strong>B.</strong> ${item.option_b}</div>
-          <div style="${item.user_answer === 'C' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'C' ? 'color: #10b981;' : ''}"><strong>C.</strong> ${item.option_c}</div>
-          <div style="${item.user_answer === 'D' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'D' ? 'color: #10b981;' : ''}"><strong>D.</strong> ${item.option_d}</div>
-        </div>
-        <div style="display: flex; gap: 1rem; font-size: 0.9rem; flex-wrap: wrap;">
-          <span>Your Answer: <strong style="color: ${item.is_correct ? '#10b981' : '#ef4444'};">${item.user_answer || 'Not Attempted'}</strong></span>
-          <span>Correct Answer: <strong style="color: #10b981;">${item.correct_answer}</strong></span>
-        </div>
-        ${item.explanation ? `<div class="review-explanation"><strong><i class="fa-solid fa-lightbulb"></i> Explanation:</strong> ${item.explanation}</div>` : ''}
-      `;
-      reviewList.appendChild(div);
-    });
+    if (data.review && data.review.length > 0) {
+      data.review.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `review-item ${item.is_correct ? 'is-correct' : 'is-wrong'}`;
+        
+        div.innerHTML = `
+          <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.75rem;">
+            ${item.number}. ${item.question_text}
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.95rem; margin-bottom: 0.75rem;">
+            <div style="${item.user_answer === 'A' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'A' ? 'color: #10b981;' : ''}"><strong>A.</strong> ${item.option_a}</div>
+            <div style="${item.user_answer === 'B' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'B' ? 'color: #10b981;' : ''}"><strong>B.</strong> ${item.option_b}</div>
+            <div style="${item.user_answer === 'C' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'C' ? 'color: #10b981;' : ''}"><strong>C.</strong> ${item.option_c}</div>
+            <div style="${item.user_answer === 'D' ? 'font-weight: 700;' : ''} ${item.correct_answer === 'D' ? 'color: #10b981;' : ''}"><strong>D.</strong> ${item.option_d}</div>
+          </div>
+          <div style="display: flex; gap: 1rem; font-size: 0.9rem; flex-wrap: wrap;">
+            <span>Your Selected Answer: <strong style="color: ${item.is_correct ? '#10b981' : '#ef4444'};">${item.user_answer || 'Not Attempted'}</strong></span>
+            <span>Correct Answer: <strong style="color: #10b981;">${item.correct_answer}</strong></span>
+          </div>
+          ${item.explanation ? `<div class="review-explanation"><strong><i class="fa-solid fa-lightbulb"></i> Explanation:</strong> ${item.explanation}</div>` : ''}
+        `;
+        reviewList.appendChild(div);
+      });
+    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -843,20 +875,6 @@
     } else {
       rev.style.display = 'none';
     }
-  }
-
-  function restartQuiz() {
-    userAnswers = {};
-    timeRemaining = testDurationMinutes * 60;
-    document.getElementById('quizResultView').style.display = 'none';
-    document.getElementById('quizPlayView').style.display = 'block';
-    document.getElementById('quizTimerBox').style.display = 'inline-flex';
-    document.getElementById('btnSubmit').disabled = false;
-    document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-circle-check"></i> Submit Test`;
-    initPalette();
-    renderQuestion(0);
-    startTimer();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function getCookie(name) {

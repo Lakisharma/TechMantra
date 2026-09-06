@@ -2791,6 +2791,7 @@ Agli class nirdharit samay par shuru hogi.
                     <th>Date & Time</th>
                     <th>Student Name</th>
                     <th>Test Name</th>
+                    <th style="text-align: center;">Sahi / Galt (Analysis)</th>
                     <th style="text-align: center;">Score</th>
                     <th style="text-align: center;">Percentage</th>
                     <th style="text-align: center;">Result</th>
@@ -2811,6 +2812,21 @@ Agli class nirdharit samay par shuru hogi.
                       <td style="color: var(--primary); font-weight: 600;">
                         {{ s.test.title }}
                       </td>
+                      <td style="text-align: center;">
+                        <div style="display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center;">
+                          <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 700; font-size: 0.78rem;" title="Correct Answers">
+                            <i class="fa-solid fa-circle-check"></i> {{ s.score }} Sahi
+                          </span>
+                          <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 700; font-size: 0.78rem;" title="Wrong Answers">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ s.wrong_count }} Galt
+                          </span>
+                          {% if s.unanswered_count > 0 %}
+                            <span style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 600; font-size: 0.78rem;" title="Unanswered">
+                              {{ s.unanswered_count }} Chhode
+                            </span>
+                          {% endif %}
+                        </div>
+                      </td>
                       <td style="text-align: center; font-weight: 800; color: var(--text-main);">
                         {{ s.score }} / {{ s.total_questions }}
                       </td>
@@ -2827,7 +2843,7 @@ Agli class nirdharit samay par shuru hogi.
                     </tr>
                   {% empty %}
                     <tr>
-                      <td colspan="6" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                      <td colspan="7" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
                         <i class="fa-solid fa-graduation-cap" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; color: var(--border-color);"></i>
                         No student test submissions recorded yet.
                       </td>
@@ -3600,22 +3616,42 @@ Agli class nirdharit samay par shuru hogi.
        MODAL: ADD NEW ONLINE TEST FORM
        ========================================== -->
   <div class="modal-overlay" id="addTestModal">
-    <div class="modal-container" style="max-width: 580px;">
+    <div class="modal-container" style="max-width: 650px;">
       <button class="modal-close" onclick="closeModal('addTestModal')"><i class="fa-solid fa-xmark"></i></button>
       <div class="modal-header">
-        <h3><i class="fa-solid fa-laptop-file" style="color: #38bdf8;"></i> Create New Online Mock Test</h3>
+        <h3><i class="fa-solid fa-laptop-file" style="color: #38bdf8;"></i> Create / Import Online Mock Test</h3>
       </div>
-      <form id="addTestForm" onsubmit="submitAddTest(event)">
+      <form id="addTestForm" onsubmit="submitAddTest(event)" enctype="multipart/form-data">
         {% csrf_token %}
+
+        <!-- Quick Import Box from HTML / JSON File -->
+        <div style="background: rgba(56, 189, 248, 0.08); border: 1px dashed rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-file-import" style="color: #38bdf8; font-size: 1.1rem;"></i>
+            <strong style="color: #38bdf8; font-size: 0.95rem;">Quick Import Quiz File (Optional)</strong>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.75rem 0;">
+            Upload your HTML Quiz file (e.g., Day 07 GS Quiz) or paste its code. Questions, options & answer key will be extracted automatically!
+          </p>
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label" for="test-add-file" style="font-size: 0.82rem;">Upload Quiz File (.html / .htm / .json / .txt)</label>
+            <input type="file" id="test-add-file" name="quiz_file" accept=".html,.htm,.json,.txt" class="form-control" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="test-add-rawcode" style="font-size: 0.82rem;">Or Paste Quiz HTML / JSON Code</label>
+            <textarea id="test-add-rawcode" name="raw_quiz_code" rows="3" class="form-control" placeholder="Paste full HTML file content or const DATA = [...] array here..." style="font-size: 0.82rem; font-family: monospace;"></textarea>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="form-label" for="test-add-title">Test / Quiz Title *</label>
-          <input type="text" id="test-add-title" name="title" class="form-control" required placeholder="e.g. GS MIX — Online Quiz">
+          <label class="form-label" for="test-add-title">Test / Quiz Title</label>
+          <input type="text" id="test-add-title" name="title" class="form-control" placeholder="e.g. GS MIX — Online Quiz (Auto-detected if file uploaded)">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label class="form-label" for="test-add-category">Category / Stream *</label>
-            <input type="text" id="test-add-category" name="category" class="form-control" required placeholder="e.g. Mixed General Studies / SSC CGL">
+            <label class="form-label" for="test-add-category">Category / Stream</label>
+            <input type="text" id="test-add-category" name="category" class="form-control" placeholder="e.g. Mixed General Studies / SSC CGL">
           </div>
           <div class="form-group">
             <label class="form-label" for="test-add-subtitle">Subtitle Badge Info</label>
@@ -3659,7 +3695,7 @@ Agli class nirdharit samay par shuru hogi.
         </div>
 
         <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); margin-top: 1rem;">
-          <i class="fa-solid fa-circle-plus"></i> Create Online Test
+          <i class="fa-solid fa-circle-plus"></i> Create / Import Online Test
         </button>
       </form>
     </div>

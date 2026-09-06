@@ -184,122 +184,94 @@ def populate_default_certificates():
             defaults=d
         )
 
+def parse_quiz_html(html_content):
+    """
+    Parses an HTML quiz file or raw content containing JS DATA array
+    or HTML questions, returns (title, category, questions_list).
+    """
+    import re, json
+    
+    title = None
+    category = "Mixed General Studies"
+    
+    # 1. Try finding title from <title> or <h1>
+    title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
+    if title_match:
+        raw_t = title_match.group(1).replace('TeachMANTRA', '').replace('|', '').replace('—', '-').strip()
+        if raw_t:
+            title = raw_t
+    if not title:
+        h1_match = re.search(r'<h1>(.*?)</h1>', html_content, re.IGNORECASE)
+        if h1_match:
+            title = h1_match.group(1).replace('—', '-').strip()
+            
+    # Try finding category from header text
+    cat_match = re.search(r'<p[^>]*>(.*?)</p>', html_content, re.IGNORECASE)
+    if cat_match:
+        p_text = re.sub(r'<[^>]+>', '', cat_match.group(1)).replace('⚡️', '').replace('|', '').strip()
+        if p_text:
+            category = p_text
+            
+    # 2. Extract DATA array
+    data_match = re.search(r'(?:const|let|var)\s+DATA\s*=\s*(\[\s*\{.*?\}\s*\])\s*;', html_content, re.DOTALL)
+    if not data_match:
+        data_match = re.search(r'DATA\s*=\s*(\[.*?\])\s*;', html_content, re.DOTALL)
+        
+    questions = []
+    
+    if data_match:
+        json_str = data_match.group(1)
+        try:
+            raw_data = json.loads(json_str)
+            for idx, item in enumerate(raw_data, start=1):
+                q_text = item.get("q", "").strip()
+                opts = item.get("o", [])
+                ans_idx = item.get("a", 0)
+                
+                opt_a = opts[0] if len(opts) > 0 else ""
+                opt_b = opts[1] if len(opts) > 1 else ""
+                opt_c = opts[2] if len(opts) > 2 else ""
+                opt_d = opts[3] if len(opts) > 3 else ""
+                
+                correct_map = ["A", "B", "C", "D"]
+                correct_opt = correct_map[ans_idx] if isinstance(ans_idx, int) and 0 <= ans_idx < 4 else "A"
+                
+                if q_text and opt_a:
+                    questions.append({
+                        "question_text": q_text,
+                        "option_a": opt_a,
+                        "option_b": opt_b,
+                        "option_c": opt_c,
+                        "option_d": opt_d,
+                        "correct_option": correct_opt,
+                        "explanation": item.get("explanation", ""),
+                        "order": idx
+                    })
+        except Exception:
+            pass
+            
+    return title, category, questions
+
+
 def populate_default_online_tests():
-    if not OnlineTest.objects.exists():
-        test = OnlineTest.objects.create(
-            title="GS MIX — Online Quiz",
-            category="Mixed General Studies",
-            subtitle="50 Questions • Mixed General Studies • परीक्षा अभ्यास",
-            description="TeachMANTRA Academy All India Level Practice Mock Test Series for SSC CGL, Railway NTPC, Banking, State PCS & Competitive Exams.",
-            duration_minutes=30,
-            total_questions=10,
-            pass_percentage=40,
-            is_active=True
-        )
-        sample_questions = [
-            {
-                "question_text": "भारत में हरित क्रांति के जनक के रूप में किसे जाना जाता है?",
-                "option_a": "एम. एस. स्वामीनाथन",
-                "option_b": "नॉर्मन बोरलॉग",
-                "option_c": "वर्गीज कुरियन",
-                "option_d": "होमी भाभा",
-                "correct_option": "A",
-                "explanation": "डॉ. एम. एस. स्वामीनाथन को भारत में हरित क्रांति (Green Revolution) का जनक माना जाता है।",
-                "order": 1
-            },
-            {
-                "question_text": "भारतीय संविधान के किस अनुच्छेद के तहत वित्तीय आपातकाल की घोषणा की जाती है?",
-                "option_a": "अनुच्छेद 352",
-                "option_b": "अनुच्छेद 356",
-                "option_c": "अनुच्छेद 360",
-                "option_d": "अनुच्छेद 368",
-                "correct_option": "C",
-                "explanation": "अनुच्छेद 360 के तहत भारत के राष्ट्रपति को वित्तीय आपातकाल लगाने का अधिकार है।",
-                "order": 2
-            },
-            {
-                "question_text": "विश्व का सबसे बड़ा डेल्टा कौन सा है?",
-                "option_a": "सुंदरवन डेल्टा",
-                "option_b": "अमेज़ॅन डेल्टा",
-                "option_c": "नील नदी डेल्टा",
-                "option_d": "मिसिसिपी डेल्टा",
-                "correct_option": "A",
-                "explanation": "गंगा और ब्रह्मपुत्र नदियों द्वारा निर्मित सुंदरवन डेल्टा विश्व का सबसे बड़ा डेल्टा है।",
-                "order": 3
-            },
-            {
-                "question_text": "मानव शरीर में रक्त का शुद्धिकरण किस अंग में होता है?",
-                "option_a": "हृदय (Heart)",
-                "option_b": "वृक्क / गुर्दा (Kidney)",
-                "option_c": "फेफड़े (Lungs)",
-                "option_d": "यकृत (Liver)",
-                "correct_option": "B",
-                "explanation": "किडनी (Kidney) रक्त को छानकर अपशिष्ट पदार्थों को अलग करती है।",
-                "order": 4
-            },
-            {
-                "question_text": "Who is known as the 'Father of the Indian Constitution'?",
-                "option_a": "Mahatma Gandhi",
-                "option_b": "Dr. B. R. Ambedkar",
-                "option_c": "Jawaharlal Nehru",
-                "option_d": "Dr. Rajendra Prasad",
-                "correct_option": "B",
-                "explanation": "Dr. B. R. Ambedkar was the Chairman of the Drafting Committee of the Constitution of India.",
-                "order": 5
-            },
-            {
-                "question_text": "प्रकाश वर्ष (Light Year) किसकी इकाई है?",
-                "option_a": "समय (Time)",
-                "option_b": "दूरी (Distance)",
-                "option_c": "प्रकाश की तीव्रता (Intensity of Light)",
-                "option_d": "द्रव्यमान (Mass)",
-                "correct_option": "B",
-                "explanation": "प्रकाश वर्ष खगोलीय दूरी (Astronomical Distance) मापने की इकाई है।",
-                "order": 6
-            },
-            {
-                "question_text": "कर्क रेखा भारत के कितने राज्यों से होकर गुजरती है?",
-                "option_a": "6 राज्य",
-                "option_b": "7 राज्य",
-                "option_c": "8 राज्य",
-                "option_d": "9 राज्य",
-                "correct_option": "C",
-                "explanation": "कर्क रेखा भारत के 8 राज्यों (गुजरात, राजस्थान, मध्य प्रदेश, छत्तीसगढ़, झारखंड, पश्चिम बंगाल, त्रिपुरा, मिजोरम) से गुजरती है।",
-                "order": 7
-            },
-            {
-                "question_text": "Which gas is used in the manufacturing of Vanaspati Ghee from vegetable oil?",
-                "option_a": "Oxygen",
-                "option_b": "Nitrogen",
-                "option_c": "Hydrogen",
-                "option_d": "Carbon Dioxide",
-                "correct_option": "C",
-                "explanation": "Hydrogenation process using Nickel catalyst and Hydrogen gas converts vegetable oil to ghee.",
-                "order": 8
-            },
-            {
-                "question_text": "भारतीय रिजर्व बैंक (RBI) की स्थापना किस वर्ष हुई थी?",
-                "option_a": "1935",
-                "option_b": "1947",
-                "option_c": "1950",
-                "option_d": "1969",
-                "correct_option": "A",
-                "explanation": "भारतीय रिजर्व बैंक की स्थापना 1 अप्रैल 1935 को RBI अधिनियम 1934 के तहत की गई थी।",
-                "order": 9
-            },
-            {
-                "question_text": "पानीपत का प्रथम युद्ध (First Battle of Panipat) किस वर्ष लड़ा गया था?",
-                "option_a": "1526",
-                "option_b": "1556",
-                "option_c": "1761",
-                "option_d": "1576",
-                "correct_option": "A",
-                "explanation": "21 अप्रैल 1526 को बाबर और इब्राहिम लोदी के बीच पानीपत की पहली लड़ाई लड़ी गई थी।",
-                "order": 10
-            }
-        ]
-        for q in sample_questions:
-            QuizQuestion.objects.create(test=test, **q)
+    if not OnlineTest.objects.filter(title__icontains="DAY 07").exists():
+        day7_html = """
+        const DATA=[{"q": "वैदिक काल में ‘सभा’ और ‘समिति’ मुख्यतः किससे संबंधित थीं?", "o": ["धार्मिक अनुष्ठान", "प्रशासनिक एवं राजनीतिक संस्थाएँ", "व्यापारिक संगठन", "सैन्य छावनियाँ"], "a": 1}, {"q": "भारत में ‘काली मिट्टी’ का सर्वाधिक संबंध किस फसल से माना जाता है?", "o": ["चाय", "कपास", "जूट", "गेहूँ"], "a": 1}, {"q": "निम्नलिखित में से किस ग्रह का घूर्णन अपनी धुरी पर अन्य अधिकांश ग्रहों की तुलना में विपरीत दिशा में है?", "o": ["मंगल", "बृहस्पति", "शुक्र", "बुध"], "a": 2}, {"q": "भारतीय संविधान का कौन-सा अनुच्छेद ‘कानून के समक्ष समानता’ से संबंधित है?", "o": ["अनुच्छेद 14", "अनुच्छेद 16", "अनुच्छेद 18", "अनुच्छेद 21"], "a": 0}, {"q": "‘संगम साहित्य’ मुख्यतः किस क्षेत्र की प्राचीन संस्कृति से संबंधित है?", "o": ["बंगाल", "तमिल क्षेत्र", "पंजाब", "कश्मीर"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा भारत का प्रमुख लौह-अयस्क क्षेत्र है?", "o": ["सिंहभूम", "कच्छ", "मालवा", "कोंकण"], "a": 0}, {"q": "भारत में ‘राष्ट्रीय आपातकाल’ की घोषणा किन परिस्थितियों में की जा सकती है?", "o": ["केवल वित्तीय संकट में", "युद्ध, बाहरी आक्रमण या सशस्त्र विद्रोह में", "केवल राज्य सरकार की विफलता में", "केवल महामारी के समय"], "a": 1}, {"q": "मानव शरीर में पित्त का निर्माण मुख्यतः कहाँ होता है?", "o": ["अग्न्याशय", "यकृत", "आमाशय", "छोटी आंत"], "a": 1}, {"q": "‘भारत का मैनचेस्टर’ किस शहर को कहा जाता है?", "o": ["कानपुर", "अहमदाबाद", "सूरत", "मुंबई"], "a": 1}, {"q": "‘हरित क्रांति’ के प्रारंभिक चरण में भारत में मुख्यतः किन फसलों के उत्पादन पर जोर दिया गया?", "o": ["चाय और कॉफी", "गेहूँ और चावल", "कपास और जूट", "गन्ना और तंबाकू"], "a": 1}, {"q": "निम्नलिखित में से किस भक्ति संत ने ‘निर्गुण भक्ति’ की धारा को मजबूत किया?", "o": ["सूरदास", "तुलसीदास", "कबीर", "मीराबाई"], "a": 2}, {"q": "‘दीन-ए-इलाही’ की स्थापना किस मुगल शासक से संबंधित है?", "o": ["बाबर", "हुमायूँ", "अकबर", "औरंगजेब"], "a": 2}, {"q": "निम्नलिखित कथनों पर विचार कीजिए—\\n1. लोकसभा का कार्यकाल सामान्यतः पाँच वर्ष होता है।\\n2. राष्ट्रीय आपातकाल के दौरान लोकसभा का कार्यकाल बढ़ाया जा सकता है।\\n3. लोकसभा का कार्यकाल एक बार में अधिकतम दो वर्ष बढ़ाया जा सकता है।", "o": ["केवल 1", "केवल 1 और 2", "केवल 2 और 3", "1, 2 और 3"], "a": 1}, {"q": "‘मुद्रा’ के निम्नलिखित कार्यों में कौन-सा प्राथमिक कार्य नहीं है?", "o": ["विनिमय का माध्यम", "मूल्य मापने का साधन", "मूल्य संचय", "जनसंख्या नियंत्रण"], "a": 3}, {"q": "‘प्रायद्वीपीय भारत’ की अधिकांश नदियों की एक प्रमुख विशेषता क्या है?", "o": ["वे सदैव हिमनदों से पोषित होती हैं", "उनमें वर्षा पर निर्भरता अधिक होती है", "वे केवल उत्तर दिशा में बहती हैं", "वे सभी बारहमासी हैं"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा विटामिन दृष्टि से संबंधित है?", "o": ["विटामिन A", "विटामिन B12", "विटामिन K", "विटामिन D"], "a": 0}, {"q": "‘इलाहाबाद प्रशस्ति’ किस शासक की उपलब्धियों की जानकारी देती है?", "o": ["चंद्रगुप्त मौर्य", "समुद्रगुप्त", "स्कंदगुप्त", "हर्षवर्धन"], "a": 1}, {"q": "भारत में ‘सहकारी समितियों’ को संवैधानिक महत्व किस संविधान संशोधन से मिला?", "o": ["86वाँ", "91वाँ", "97वाँ", "101वाँ"], "a": 2}, {"q": "निम्नलिखित में से कौन-सा युग्म सही सुमेलित है?", "o": ["नीलगिरि — हिमालय", "अरावली — प्राचीन वलित पर्वत", "सतपुड़ा — नवीन वलित पर्वत", "शिवालिक — दक्कन का पठार"], "a": 1}, {"q": "‘राष्ट्रीय मानवाधिकार आयोग’ भारत में किस वर्ष स्थापित किया गया था?", "o": ["1989", "1993", "1998", "2001"], "a": 1}, {"q": "‘इक्ता प्रणाली’ का व्यापक प्रयोग दिल्ली सल्तनत में किस उद्देश्य से किया जाता था?", "o": ["धार्मिक शिक्षा", "राजस्व एवं प्रशासनिक व्यवस्था", "समुद्री व्यापार", "मुद्रा निर्माण"], "a": 1}, {"q": "निम्नलिखित में से कौन-सी गैस ‘अम्ल वर्षा’ के निर्माण में महत्वपूर्ण भूमिका निभाती है?", "o": ["सल्फर डाइऑक्साइड", "ऑक्सीजन", "हाइड्रोजन", "हीलियम"], "a": 0}, {"q": "निम्नलिखित कथनों पर विचार कीजिए—\\n1. लोकसभा अध्यक्ष लोकसभा का पीठासीन अधिकारी होता है।\\n2. अध्यक्ष के निर्वाचन में लोकसभा के सदस्य भाग लेते हैं।\\n3. अध्यक्ष अपने पद से हटने के बाद भी लोकसभा का सदस्य रहना आवश्यक है।", "o": ["केवल 1", "केवल 1 और 2", "केवल 2 और 3", "1, 2 और 3"], "a": 1}, {"q": "‘बैंकों का बैंक’ किसे कहा जाता है?", "o": ["भारतीय स्टेट बैंक", "भारतीय रिजर्व बैंक", "नाबार्ड", "भारतीय स्टॉक एक्सचेंज"], "a": 1}, {"q": "‘पवनों का मौसमी उलटाव’ किस घटना की प्रमुख विशेषता है?", "o": ["ज्वार-भाटा", "मानसून", "भूकंप", "चक्रवात"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा रोग वायरस के कारण होता है?", "o": ["टिटनेस", "पोलियो", "मलेरिया", "हैजा"], "a": 1}, {"q": "‘स्वराज मेरा जन्मसिद्ध अधिकार है’ कथन किससे संबंधित है?", "o": ["गोपाल कृष्ण गोखले", "बाल गंगाधर तिलक", "लाला लाजपत राय", "बिपिन चंद्र पाल"], "a": 1}, {"q": "‘राजकोषीय नीति’ मुख्यतः किससे संबंधित है?", "o": ["मुद्रा आपूर्ति और ब्याज दर", "सरकारी आय और व्यय", "केवल विदेशी मुद्रा", "केवल बैंक ऋण"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा दर्रा भारत और तिब्बत के बीच ऐतिहासिक व्यापार मार्गों में महत्वपूर्ण रहा है?", "o": ["नाथू ला", "पालघाट", "भोर घाट", "थाल घाट"], "a": 0}, {"q": "‘जैव विविधता हॉटस्पॉट’ घोषित किए जाने के लिए किसी क्षेत्र में क्या विशेष महत्व होना चाहिए?", "o": ["केवल अधिक जनसंख्या", "उच्च स्थानिकता और गंभीर आवास क्षति", "केवल अधिक वर्षा", "केवल अधिक खनिज"], "a": 1}, {"q": "निम्नलिखित कथनों पर विचार कीजिए—\\n1. भारत में राष्ट्रपति शासन अनुच्छेद 356 से संबंधित है।\\n2. राष्ट्रपति शासन लगाए जाने पर राज्य विधानसभा को निलंबित या भंग किया जा सकता है।\\n3. राष्ट्रपति शासन को प्रत्येक छह महीने में संसद की स्वीकृति आवश्यक होती है।", "o": ["केवल 1", "केवल 1 और 2", "केवल 2 और 3", "1, 2 और 3"], "a": 3}, {"q": "‘मौद्रिक आधार’ में सामान्यतः क्या शामिल होता है?", "o": ["केवल जनता की बचत", "प्रचलन में मुद्रा और बैंकों के केंद्रीय बैंक में भंडार", "केवल सरकारी कर", "केवल विदेशी मुद्रा भंडार"], "a": 1}, {"q": "निम्नलिखित में से किस प्रक्रिया में पौधों में जल का ऊपर की ओर परिवहन मुख्यतः पत्तियों से होने वाले जल-वाष्पोत्सर्जन से जुड़ा है?", "o": ["परासरण", "वाष्पोत्सर्जन खिंचाव", "प्रकाश संश्लेषण", "किण्वन"], "a": 1}, {"q": "‘स्थलमंडल’ और ‘अस्थेनोस्फीयर’ के संबंध में कौन-सा कथन सही है?", "o": ["दोनों पृथ्वी के वायुमंडलीय स्तर हैं", "स्थलमंडल कठोर बाहरी परत है और उसके नीचे अपेक्षाकृत कमजोर/लचीली अस्थेनोस्फीयर होती है", "अस्थेनोस्फीयर केवल महासागरों में होती है", "स्थलमंडल केवल कोर का भाग है"], "a": 1}, {"q": "निम्नलिखित में से किसे ‘लोक कल्याणकारी राज्य’ की अवधारणा से सबसे अधिक जोड़ा जाता है?", "o": ["राज्य की पूर्ण निष्क्रियता", "नागरिकों के सामाजिक एवं आर्थिक कल्याण में राज्य की सक्रिय भूमिका", "केवल सैन्य विस्तार", "केवल मुक्त व्यापार"], "a": 1}, {"q": "‘कार्बन मोनोऑक्साइड’ मानव शरीर में मुख्यतः किस प्रकार हानिकारक है?", "o": ["रक्त के हीमोग्लोबिन से जुड़कर ऑक्सीजन वहन क्षमता घटाती है", "हड्डियों को सीधे घोल देती है", "पाचन एंजाइम बढ़ाती है", "रक्त में कैल्शियम बढ़ाती है"], "a": 0}, {"q": "निम्नलिखित कथनों पर विचार कीजिए—\\n1. राज्यपाल की नियुक्ति राष्ट्रपति करता है।\\n2. राज्यपाल का सामान्य कार्यकाल पाँच वर्ष होता है।\\n3. राज्यपाल को केवल राज्य विधानसभा ही पद से हटा सकती है।", "o": ["केवल 1", "केवल 1 और 2", "केवल 2 और 3", "1, 2 और 3"], "a": 1}, {"q": "‘वास्तविक सकल घरेलू उत्पाद’ और ‘नाममात्र सकल घरेलू उत्पाद’ में मुख्य अंतर किससे संबंधित है?", "o": ["जनसंख्या", "कीमतों के प्रभाव का समायोजन", "भौगोलिक सीमा", "केवल निर्यात"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा ‘अपक्षय’ का उदाहरण है?", "o": ["चट्टानों का अपने स्थान पर टूटना/क्षरण", "नदी द्वारा मिट्टी को दूर ले जाना", "समुद्र द्वारा बालू का निक्षेप", "हवा द्वारा रेत का स्थानांतरण"], "a": 0}, {"q": "‘भारतीय अंतरिक्ष अनुसंधान संगठन’ की स्थापना किस वर्ष हुई थी?", "o": ["1962", "1969", "1975", "1980"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा कथन ‘मांग की लोच’ के संदर्भ में सही है?", "o": ["कीमत में परिवर्तन से मांग में कोई परिवर्तन नहीं होता", "कीमत में परिवर्तन के प्रति मांग की मात्रा की संवेदनशीलता को मांग की कीमत लोच कहा जाता है", "यह केवल सरकारी वस्तुओं पर लागू होती है", "इसका आय से कोई संबंध नहीं"], "a": 1}, {"q": "निम्नलिखित कथनों पर विचार कीजिए—\\n1. भारत में नियंत्रक एवं महालेखा परीक्षक की रिपोर्ट संसद के समक्ष रखी जाती है।\\n2. CAG संघ और राज्यों के खातों से संबंधित संवैधानिक दायित्व निभाता है।\\n3. CAG की नियुक्ति प्रधानमंत्री करता है।", "o": ["केवल 1", "केवल 1 और 2", "केवल 2 और 3", "1, 2 और 3"], "a": 1}, {"q": "‘समुद्री धाराएँ’ जलवायु को प्रभावित करने में महत्वपूर्ण क्यों हैं?", "o": ["वे केवल समुद्र की गहराई बदलती हैं", "वे ऊष्मा के पुनर्वितरण में सहायता करती हैं", "वे पृथ्वी का घूर्णन रोकती हैं", "वे केवल ज्वार पैदा करती हैं"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा जैव-प्रौद्योगिकी का अनुप्रयोग है?", "o": ["ऊतक संवर्धन", "ज्वार-भाटा", "अपक्षय", "भूकंपीय तरंग"], "a": 0}, {"q": "निम्नलिखित कथनों पर विचार कीजिए—\\n1. संविधान की प्रस्तावना में ‘समाजवादी’ शब्द मूल संविधान में था।\\n2. ‘समाजवादी’ और ‘पंथनिरपेक्ष’ शब्द 42वें संशोधन द्वारा जोड़े गए।\\n3. ‘अखंडता’ शब्द भी 42वें संशोधन द्वारा जोड़ा गया।", "o": ["केवल 1", "केवल 2", "केवल 2 और 3", "1, 2 और 3"], "a": 2}, {"q": "‘जनगणना’ के संदर्भ में निम्नलिखित में से कौन-सा कथन सही है?", "o": ["भारत में जनगणना प्रत्येक पाँच वर्ष में होती है", "भारत में जनगणना सामान्यतः दस वर्ष के अंतराल पर होती है", "जनगणना केवल ग्रामीण क्षेत्रों में होती है", "जनगणना केवल जन्म-मृत्यु का रिकॉर्ड है"], "a": 1}, {"q": "निम्नलिखित में से कौन-सा पदार्थ सामान्यतः ‘अर्धचालक’ के रूप में प्रयुक्त होता है?", "o": ["सिलिकॉन", "तांबा", "चांदी", "एल्युमिनियम"], "a": 0}, {"q": "‘सार्वजनिक वस्तु’ की अर्थशास्त्रीय अवधारणा में कौन-सी विशेषता महत्वपूर्ण है?", "o": ["केवल निजी उपभोग", "गैर-बहिष्करण और गैर-प्रतिस्पर्धी उपभोग की विशेषता", "केवल अधिक कीमत", "केवल सरकारी स्वामित्व"], "a": 1}, {"q": "निम्नलिखित कथनों पर विचार कीजिए—\\n1. भारत में राष्ट्रीय आय के आधिकारिक अनुमानों से संबंधित प्रमुख सांख्यिकीय कार्य राष्ट्रीय सांख्यिकी कार्यालय करता है।\\n2. सकल घरेलू उत्पाद देश की भौगोलिक सीमा के भीतर उत्पादन को मापता है।\\n3. सकल राष्ट्रीय आय में विदेश से प्राप्त शुद्ध कारक आय का महत्व होता है।", "o": ["केवल 1", "केवल 1 और 2", "केवल 2 और 3", "1, 2 और 3"], "a": 3}, {"q": "निम्नलिखित में से कौन-सा कथन ‘प्लेट विवर्तनिकी’ सिद्धांत को सबसे बेहतर स्पष्ट करता है?", "o": ["पृथ्वी की सभी चट्टानें स्थिर हैं", "स्थलमंडलीय प्लेटें गतिशील हैं और उनकी परस्पर क्रियाओं से भूकंप, ज्वालामुखी एवं पर्वतनिर्माण जैसी घटनाएँ जुड़ी हैं", "केवल महासागर गतिशील हैं", "पृथ्वी का कोर ही सभी भौगोलिक घटनाओं का प्रत्यक्ष कारण है"], "a": 1}];
+        """
+        _, _, q_list = parse_quiz_html(day7_html)
+        if q_list:
+            test = OnlineTest.objects.create(
+                title="DAY 07 — GS ONLINE QUIZ",
+                category="Mixed General Studies",
+                subtitle="50 Questions • Mixed General Studies • GS BY VINUS SIR",
+                description="TeachMANTRA Academy Daily Practice Online Mock Test with live timer, instant grading, and detailed explanations.",
+                duration_minutes=30,
+                total_questions=len(q_list),
+                pass_percentage=40,
+                is_active=True
+            )
+            for q in q_list:
+                QuizQuestion.objects.create(test=test, **q)
 
 
 def populate_default_courses():
@@ -773,10 +745,12 @@ def profile_view(request):
     total_tests_attempted = my_submissions.count()
     tests_passed = my_submissions.filter(passed=True).count()
     tests_failed = total_tests_attempted - tests_passed
-    
     # Calculate average score percentage
     avg_score_raw = my_submissions.aggregate(models.Avg('percentage'))['percentage__avg']
     avg_score = round(avg_score_raw, 1) if avg_score_raw is not None else 0
+
+    # Map of test_id -> submission for single-attempt button rendering
+    attempted_test_map = {s.test_id: s for s in my_submissions}
             
     return render(request, 'profile.html', {
         "profile": profile,
@@ -784,6 +758,7 @@ def profile_view(request):
         "my_admissions": my_admissions,
         "matching_cert": matching_cert,
         "available_tests": available_tests,
+        "attempted_test_map": attempted_test_map,
         "my_submissions": my_submissions,
         "total_tests_attempted": total_tests_attempted,
         "tests_passed": tests_passed,
@@ -2126,8 +2101,20 @@ def tests_list_view(request):
     """
     populate_default_online_tests()
     tests = OnlineTest.objects.filter(is_active=True).prefetch_related('questions').order_by('-created_at')
+    
+    attempted_test_map = {}
+    if request.user.is_authenticated:
+        user_fullname = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+        submissions = TestSubmission.objects.filter(
+            models.Q(user=request.user) |
+            models.Q(student_email=request.user.email) |
+            models.Q(student_name__iexact=user_fullname)
+        )
+        attempted_test_map = {s.test_id: s for s in submissions}
+
     return render(request, 'tests_list.html', {
-        "tests": tests
+        "tests": tests,
+        "attempted_test_map": attempted_test_map
     })
 
 
@@ -2135,7 +2122,7 @@ def tests_list_view(request):
 def take_test_view(request, test_id):
     """
     Interactive test/quiz page matching the modern exam interface.
-    Requires student authentication to start.
+    Requires student authentication. Strictly enforces 1-attempt rule.
     """
     populate_default_online_tests()
     test = get_object_or_404(OnlineTest, id=test_id)
@@ -2145,6 +2132,14 @@ def take_test_view(request, test_id):
         return redirect(test.external_link)
 
     questions = test.questions.all().order_by('order', 'id')
+    user_fullname = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+    
+    # Check if student has already submitted this test
+    existing_sub = TestSubmission.objects.filter(
+        models.Q(user=request.user, test=test) |
+        models.Q(student_email=request.user.email, test=test) |
+        models.Q(student_name__iexact=user_fullname, test=test)
+    ).order_by('-submitted_at').first()
     
     # Serialize questions for client-side instant navigation
     questions_list = []
@@ -2160,10 +2155,37 @@ def take_test_view(request, test_id):
             "order": q.order
         })
 
+    review_list = []
+    if existing_sub:
+        saved_ans = {}
+        try:
+            saved_ans = json.loads(existing_sub.answers_json) if existing_sub.answers_json else {}
+        except Exception:
+            saved_ans = {}
+            
+        for idx, q in enumerate(questions, start=1):
+            ans = saved_ans.get(str(q.id)) or saved_ans.get(q.id) or None
+            is_correct = (ans == q.correct_option)
+            review_list.append({
+                "number": idx,
+                "question_text": q.question_text,
+                "option_a": q.option_a,
+                "option_b": q.option_b,
+                "option_c": q.option_c,
+                "option_d": q.option_d,
+                "user_answer": ans,
+                "correct_answer": q.correct_option,
+                "is_correct": is_correct,
+                "explanation": q.explanation or ""
+            })
+
     return render(request, 'quiz.html', {
         "test": test,
         "questions_count": questions.count(),
-        "questions_json": json.dumps(questions_list, ensure_ascii=False)
+        "questions_json": json.dumps(questions_list, ensure_ascii=False),
+        "already_attempted": bool(existing_sub),
+        "existing_sub": existing_sub,
+        "existing_review_json": json.dumps(review_list, ensure_ascii=False) if review_list else "[]"
     })
 
 
@@ -2173,18 +2195,39 @@ def submit_test_view(request, test_id):
     """
     Processes quiz answers submitted via AJAX, evaluates score, records submission,
     and returns detailed scorecard with explanations.
+    Enforces 1-attempt per student per test.
     """
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Invalid method."})
 
     test = get_object_or_404(OnlineTest, id=test_id)
+    user_fullname = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+    
+    # Strictly block duplicate attempts
+    existing_sub = TestSubmission.objects.filter(
+        models.Q(user=request.user, test=test) |
+        models.Q(student_email=request.user.email, test=test) |
+        models.Q(student_name__iexact=user_fullname, test=test)
+    ).first()
+    
+    if existing_sub:
+        return JsonResponse({
+            "status": "already_attempted",
+            "message": "Aap ye test pehle hi de chuke hain! Ek student sirf ek baar hi test attempt kar sakta hai.",
+            "score": existing_sub.score,
+            "wrong_count": existing_sub.wrong_count,
+            "unanswered_count": existing_sub.unanswered_count,
+            "total_questions": existing_sub.total_questions,
+            "percentage": existing_sub.percentage,
+            "passed": existing_sub.passed
+        })
     
     try:
         data = json.loads(request.body.decode('utf-8'))
     except Exception:
         data = request.POST
 
-    student_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+    student_name = user_fullname
     student_email = request.user.email or f"{request.user.username}@techmantra.com"
     user_answers = data.get("answers", {})  # e.g. {"1": "A", "2": "C"}
 
@@ -2194,14 +2237,22 @@ def submit_test_view(request, test_id):
         return JsonResponse({"status": "error", "message": "No questions available in this test."})
 
     score = 0
+    wrong_count = 0
+    unanswered_count = 0
     review_list = []
 
     for idx, q in enumerate(questions, start=1):
         # Answers dict keys might be string or int
         ans = user_answers.get(str(q.id)) or user_answers.get(q.id) or None
-        is_correct = (ans == q.correct_option)
-        if is_correct:
+        if ans is None or ans == "":
+            unanswered_count += 1
+            is_correct = False
+        elif ans == q.correct_option:
             score += 1
+            is_correct = True
+        else:
+            wrong_count += 1
+            is_correct = False
             
         review_list.append({
             "number": idx,
@@ -2226,6 +2277,8 @@ def submit_test_view(request, test_id):
         student_name=student_name,
         student_email=student_email,
         score=score,
+        wrong_count=wrong_count,
+        unanswered_count=unanswered_count,
         total_questions=total_q,
         percentage=percentage,
         passed=passed,
@@ -2236,6 +2289,8 @@ def submit_test_view(request, test_id):
         "status": "success",
         "student_name": student_name,
         "score": score,
+        "wrong_count": wrong_count,
+        "unanswered_count": unanswered_count,
         "total_questions": total_q,
         "percentage": percentage,
         "passed": passed,
@@ -2248,25 +2303,57 @@ def submit_test_view(request, test_id):
 def admin_add_test_view(request):
     """
     Creates a new Online Test from Admin Dashboard.
+    Supports auto-import from uploaded HTML Quiz file or pasted questions code.
     """
     if not request.user.is_staff:
         return JsonResponse({"status": "error", "message": "Access denied."})
 
     if request.method == "POST":
         title = request.POST.get("title", "").strip()
-        category = request.POST.get("category", "").strip() or "General Studies"
-        subtitle = request.POST.get("subtitle", "").strip() or "परीक्षा अभ्यास • Mock Test Series"
+        category = request.POST.get("category", "").strip() or "Mixed General Studies"
+        subtitle = request.POST.get("subtitle", "").strip()
         description = request.POST.get("description", "").strip()
         
+        parsed_questions = []
+        
+        # 1. Check if an HTML quiz file was uploaded
+        if 'quiz_file' in request.FILES:
+            file_obj = request.FILES['quiz_file']
+            try:
+                file_content = file_obj.read().decode('utf-8', errors='ignore')
+                f_title, f_cat, f_questions = parse_quiz_html(file_content)
+                if f_questions:
+                    parsed_questions = f_questions
+                if f_title and not title:
+                    title = f_title
+                if f_cat and category == "Mixed General Studies":
+                    category = f_cat
+            except Exception:
+                pass
+                
+        # 2. Check if raw HTML or questions code was pasted
+        raw_code = request.POST.get("raw_quiz_code", "").strip()
+        if raw_code and not parsed_questions:
+            try:
+                f_title, f_cat, f_questions = parse_quiz_html(raw_code)
+                if f_questions:
+                    parsed_questions = f_questions
+                if f_title and not title:
+                    title = f_title
+                if f_cat and category == "Mixed General Studies":
+                    category = f_cat
+            except Exception:
+                pass
+
+        if not title:
+            title = "TeachMANTRA Practice Mock Test"
+
         try:
             duration_minutes = int(request.POST.get("duration_minutes") or 30)
         except (ValueError, TypeError):
             duration_minutes = 30
             
-        try:
-            total_questions = int(request.POST.get("total_questions") or 50)
-        except (ValueError, TypeError):
-            total_questions = 50
+        total_q_count = len(parsed_questions) if parsed_questions else int(request.POST.get("total_questions") or 50)
             
         try:
             pass_percentage = int(request.POST.get("pass_percentage") or 40)
@@ -2275,26 +2362,34 @@ def admin_add_test_view(request):
             
         external_link = request.POST.get("external_link", "").strip()
         is_active = request.POST.get("is_active") in ["on", "true", "1", True]
-
-        if not title:
-            return JsonResponse({"status": "error", "message": "Test title is required."})
+        
+        if not subtitle:
+            subtitle = f"{total_q_count} Questions • {category} • परीक्षा अभ्यास"
 
         test = OnlineTest.objects.create(
             title=title,
             category=category,
             subtitle=subtitle,
-            description=description,
+            description=description or "Practice online mock tests designed by TeachMANTRA expert faculty.",
             duration_minutes=duration_minutes,
-            total_questions=total_questions,
+            total_questions=total_q_count,
             pass_percentage=pass_percentage,
             external_link=external_link,
             is_active=is_active
         )
+        
+        # Attach all parsed MCQs to the test
+        for q in parsed_questions:
+            QuizQuestion.objects.create(test=test, **q)
+
+        msg = f"Test '{test.title}' created successfully!"
+        if parsed_questions:
+            msg = f"Test '{test.title}' with {len(parsed_questions)} MCQs imported and created successfully!"
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
             return JsonResponse({
                 "status": "success",
-                "message": f"Test '{test.title}' created successfully!",
+                "message": msg,
                 "test_id": test.id
             })
         return redirect('/admin-dashboard/')

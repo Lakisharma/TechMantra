@@ -259,6 +259,10 @@
                     <a href="{{ test.external_link }}" target="_blank" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.88rem; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
                       <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Test Link
                     </a>
+                  {% elif test.id in attempted_test_map %}
+                    <a href="{% url 'take_test' test.id %}" class="btn-outline" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.88rem; border-color: rgba(16, 185, 129, 0.5); color: #10b981; background: rgba(16, 185, 129, 0.08); font-weight: 700;">
+                      <i class="fa-solid fa-square-poll-vertical"></i> Attempted (View Result & Review)
+                    </a>
                   {% else %}
                     <a href="{% url 'take_test' test.id %}" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.65rem 1rem; font-size: 0.88rem; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
                       <i class="fa-solid fa-bolt"></i> Start Mock Test
@@ -284,7 +288,7 @@
           <h3 style="font-size: 1.35rem; margin: 0; display: flex; align-items: center; gap: 0.6rem; color: #10b981;">
             <i class="fa-solid fa-chart-simple"></i> My Mock Test Submission History
           </h3>
-          <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 0 0;">View your past test scores, percentages, and re-attempt exams to improve performance.</p>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 0 0;">View your past test scores, percentages, and completed exam reviews.</p>
         </div>
 
         {% if my_submissions %}
@@ -329,7 +333,7 @@
                     </td>
                     <td style="padding: 0.85rem 1rem; text-align: right; white-space: nowrap;">
                       <a href="{% url 'take_test' sub.test.id %}" class="btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
-                        <i class="fa-solid fa-rotate-right"></i> Re-take
+                        <i class="fa-solid fa-square-poll-vertical"></i> View Review
                       </a>
                     </td>
                   </tr>

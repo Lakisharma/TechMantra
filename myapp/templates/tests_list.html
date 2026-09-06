@@ -63,6 +63,10 @@
                   <a href="{{ t.external_link }}" target="_blank" class="btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.85rem;">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Test Portal
                   </a>
+                {% elif t.id in attempted_test_map %}
+                  <a href="{% url 'take_test' t.id %}" class="btn-outline" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.8rem; border-color: #10b981; color: #10b981; font-weight: 700;">
+                    <i class="fa-solid fa-square-check"></i> Attempted (View Score & Review)
+                  </a>
                 {% else %}
                   <a href="{% url 'take_test' t.id %}" class="btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.85rem; background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);">
                     <i class="fa-solid fa-play"></i> Start Test Now
