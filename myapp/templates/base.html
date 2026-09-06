@@ -223,14 +223,14 @@
       left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      background: rgba(0, 0, 0, 0.75) !important;
+      background: rgba(0, 0, 0, 0.8) !important;
       backdrop-filter: blur(8px) !important;
       -webkit-backdrop-filter: blur(8px) !important;
       z-index: 999999 !important;
       display: none;
       align-items: center !important;
       justify-content: center !important;
-      padding: 1rem !important;
+      padding: 0.75rem !important;
       box-sizing: border-box !important;
     }
 
@@ -250,20 +250,23 @@
     }
 
     .entrance-popup-card {
-      max-width: 490px !important;
+      max-width: 480px !important;
       width: 100% !important;
+      max-height: 92vh !important;
       background: #ffffff !important;
       border-radius: 18px !important;
-      overflow: hidden !important;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
       position: relative !important;
       box-sizing: border-box !important;
       animation: popupScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      scrollbar-width: thin;
     }
 
     @keyframes popupScaleIn {
       from {
-        transform: scale(0.85) translateY(20px);
+        transform: scale(0.88) translateY(18px);
         opacity: 0;
       }
 
@@ -275,8 +278,8 @@
 
     .entrance-popup-close {
       position: absolute !important;
-      top: 12px !important;
-      right: 12px !important;
+      top: 10px !important;
+      right: 10px !important;
       width: 34px !important;
       height: 34px !important;
       background: #ffffff !important;
@@ -286,10 +289,10 @@
       align-items: center !important;
       justify-content: center !important;
       font-size: 1rem !important;
-      color: #475569 !important;
+      color: #334155 !important;
       cursor: pointer !important;
-      z-index: 50 !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+      z-index: 99 !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
       transition: all 0.2s ease !important;
       padding: 0 !important;
       line-height: 1 !important;
@@ -303,10 +306,29 @@
     }
 
     .entrance-popup-body {
-      padding: 1.25rem 1.25rem 1.5rem !important;
+      padding: 1rem 1.15rem 1.25rem !important;
       color: #1e293b !important;
       text-align: center !important;
       box-sizing: border-box !important;
+    }
+
+    .entrance-popup-poster-wrap {
+      border-radius: 12px !important;
+      overflow: hidden !important;
+      margin-bottom: 0.65rem !important;
+      background: #090d1a !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .entrance-popup-poster-wrap img {
+      width: 100% !important;
+      height: auto !important;
+      max-height: 52vh !important;
+      object-fit: contain !important;
+      display: block !important;
     }
 
     .dynamic-poster-box {
@@ -420,8 +442,8 @@
     }
 
     .entrance-popup-phone {
-      margin: 0.85rem 0 0.4rem !important;
-      font-size: 0.75rem !important;
+      margin: 0.5rem 0 0.3rem !important;
+      font-size: 0.72rem !important;
       color: #64748b !important;
       font-weight: 700 !important;
       letter-spacing: 0.5px !important;
@@ -430,11 +452,11 @@
 
     .entrance-popup-phone strong {
       display: block !important;
-      font-size: 1.25rem !important;
+      font-size: 1.15rem !important;
       font-weight: 900 !important;
       color: #0f172a !important;
       letter-spacing: 0.5px !important;
-      margin-top: 0.2rem !important;
+      margin-top: 0.15rem !important;
     }
 
     .entrance-popup-phone strong i {
@@ -443,16 +465,16 @@
     }
 
     .entrance-popup-desc {
-      font-size: 0.85rem !important;
+      font-size: 0.82rem !important;
       color: #475569 !important;
-      line-height: 1.5 !important;
-      margin: 0.5rem 0 1.15rem !important;
+      line-height: 1.45 !important;
+      margin: 0.35rem 0 0.85rem !important;
     }
 
     .entrance-popup-actions {
       display: grid !important;
-      grid-template-columns: 1fr 1.25fr !important;
-      gap: 0.75rem !important;
+      grid-template-columns: 1fr 1.2fr !important;
+      gap: 0.65rem !important;
     }
 
     .popup-btn-dark {
@@ -460,8 +482,8 @@
       color: #ffffff !important;
       text-decoration: none !important;
       font-weight: 700 !important;
-      font-size: 0.9rem !important;
-      padding: 0.75rem 1rem !important;
+      font-size: 0.88rem !important;
+      padding: 0.65rem 0.85rem !important;
       border-radius: 8px !important;
       display: flex !important;
       align-items: center !important;
@@ -480,8 +502,8 @@
       color: #ffffff !important;
       text-decoration: none !important;
       font-weight: 800 !important;
-      font-size: 0.92rem !important;
-      padding: 0.75rem 1rem !important;
+      font-size: 0.9rem !important;
+      padding: 0.65rem 0.85rem !important;
       border-radius: 8px !important;
       display: flex !important;
       align-items: center !important;
@@ -495,6 +517,34 @@
       background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
       transform: translateY(-2px) !important;
     }
+
+    @media (max-width: 480px) {
+      .entrance-popup-card {
+        max-width: 95vw !important;
+        border-radius: 14px !important;
+      }
+
+      .entrance-popup-body {
+        padding: 0.85rem 0.85rem 1rem !important;
+      }
+
+      .entrance-popup-poster-wrap img {
+        max-height: 44vh !important;
+      }
+
+      .entrance-popup-phone strong {
+        font-size: 1rem !important;
+      }
+
+      .entrance-popup-desc {
+        font-size: 0.78rem !important;
+      }
+
+      .popup-btn-dark, .popup-btn-cta {
+        padding: 0.6rem 0.5rem !important;
+        font-size: 0.82rem !important;
+      }
+    }
   </style>
 
   <div id="siteEntrancePopup">
@@ -506,13 +556,12 @@
       <div class="entrance-popup-body">
 
         <!-- Poster Section -->
-        <div style="border-radius: 12px; overflow: hidden; margin-bottom: 0.5rem;">
+        <div class="entrance-popup-poster-wrap">
           {% if site_settings.popup_image %}
-          <img src="{{ site_settings.popup_image.url }}" alt="{{ site_settings.popup_title }}"
-            style="width: 100%; max-height: 320px; object-fit: cover; display: block;" />
+          <img src="{{ site_settings.popup_image.url }}" alt="{{ site_settings.popup_title|default:'Announcement' }}" />
           {% else %}
           <!-- Built-in High Impact Dynamic Poster matching DigiCoders -->
-          <div class="dynamic-poster-box">
+          <div class="dynamic-poster-box" style="width: 100%;">
             <div class="dynamic-poster-top">
               <div class="dynamic-poster-brand">
                 {% if site_settings.site_logo %}
@@ -551,15 +600,19 @@
         </div>
 
         <!-- Helpline Contact Section -->
+        {% if site_settings.popup_phone or site_settings.contact_phone %}
         <div class="entrance-popup-phone">
           FOR MORE INFORMATION:
           <strong><i class="fa-solid fa-phone-volume"></i> {{ site_settings.popup_phone|default:site_settings.contact_phone }}</strong>
         </div>
+        {% endif %}
 
         <!-- Subtitle / Short Description -->
+        {% if site_settings.popup_subtitle %}
         <p class="entrance-popup-desc">
           {{ site_settings.popup_subtitle }}
         </p>
+        {% endif %}
 
         <!-- Call to Action Buttons -->
         <div class="entrance-popup-actions">
