@@ -685,9 +685,22 @@
       border-radius: var(--border-radius-lg);
       width: 100%;
       max-width: 550px;
-      padding: 2.5rem;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem 2.25rem;
       position: relative;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) transparent;
+    }
+
+    .modal-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .modal-container::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 6px;
     }
 
     .modal-close {
@@ -700,6 +713,7 @@
       font-size: 1.25rem;
       cursor: pointer;
       transition: var(--transition-fast);
+      z-index: 10;
     }
 
     .modal-close:hover {
@@ -3616,86 +3630,106 @@ Agli class nirdharit samay par shuru hogi.
        MODAL: ADD NEW ONLINE TEST FORM
        ========================================== -->
   <div class="modal-overlay" id="addTestModal">
-    <div class="modal-container" style="max-width: 650px;">
+    <div class="modal-container" style="max-width: 620px; max-height: 86vh; padding: 1.5rem 1.75rem; border-radius: 16px; display: flex; flex-direction: column;">
       <button class="modal-close" onclick="closeModal('addTestModal')"><i class="fa-solid fa-xmark"></i></button>
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-laptop-file" style="color: #38bdf8;"></i> Create / Import Online Mock Test</h3>
+      
+      <!-- Modal Header (Compact) -->
+      <div class="modal-header" style="margin-bottom: 1rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main);">
+          <i class="fa-solid fa-laptop-file" style="color: #38bdf8;"></i> Create / Import Online Mock Test
+        </h3>
       </div>
-      <form id="addTestForm" onsubmit="submitAddTest(event)" enctype="multipart/form-data">
+
+      <!-- Scrollable Form Body -->
+      <form id="addTestForm" onsubmit="submitAddTest(event)" enctype="multipart/form-data" style="overflow-y: auto; padding-right: 0.25rem; flex: 1;">
         {% csrf_token %}
 
         <!-- Quick Import Box from HTML / JSON File -->
-        <div style="background: rgba(56, 189, 248, 0.08); border: 1px dashed rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-            <i class="fa-solid fa-file-import" style="color: #38bdf8; font-size: 1.1rem;"></i>
-            <strong style="color: #38bdf8; font-size: 0.95rem;">Quick Import Quiz File (Optional)</strong>
+        <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%); border: 1px dashed rgba(56, 189, 248, 0.4); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+            <div style="display: flex; align-items: center; gap: 0.45rem;">
+              <i class="fa-solid fa-bolt" style="color: #38bdf8; font-size: 0.95rem;"></i>
+              <strong style="color: #38bdf8; font-size: 0.88rem;">Auto-Import Quiz Questions (HTML / JSON)</strong>
+            </div>
+            <span id="importStatusBadge" style="font-size: 0.72rem; color: #10b981; font-weight: 700; display: none;">
+              <i class="fa-solid fa-circle-check"></i> Questions Detected!
+            </span>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.75rem 0;">
-            Upload your HTML Quiz file (e.g., Day 07 GS Quiz) or paste its code. Questions, options & answer key will be extracted automatically!
+          <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0 0 0.6rem 0; line-height: 1.4;">
+            Upload your quiz HTML file (e.g. Day 07 GS quiz) or paste code. All questions, options & answers will be extracted automatically.
           </p>
-          <div class="form-group" style="margin-bottom: 0.75rem;">
-            <label class="form-label" for="test-add-file" style="font-size: 0.82rem;">Upload Quiz File (.html / .htm / .json / .txt)</label>
-            <input type="file" id="test-add-file" name="quiz_file" accept=".html,.htm,.json,.txt" class="form-control" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+          
+          <div style="display: grid; grid-template-columns: 1fr; gap: 0.6rem;">
+            <div>
+              <label class="form-label" for="test-add-file" style="font-size: 0.78rem; margin-bottom: 0.25rem;">
+                <i class="fa-solid fa-file-arrow-up"></i> Choose HTML/JSON Quiz File:
+              </label>
+              <input type="file" id="test-add-file" name="quiz_file" accept=".html,.htm,.json,.txt" class="form-control" onchange="handleQuizFileSelect(this)" style="padding: 0.35rem 0.65rem; font-size: 0.82rem; background: rgba(0,0,0,0.2);">
+            </div>
+            <div>
+              <label class="form-label" for="test-add-rawcode" style="font-size: 0.78rem; margin-bottom: 0.25rem;">
+                <i class="fa-solid fa-code"></i> Or Paste Quiz HTML / const DATA = [...] code:
+              </label>
+              <textarea id="test-add-rawcode" name="raw_quiz_code" rows="2" class="form-control" oninput="handleQuizCodePaste(this)" placeholder="Paste full HTML file content or questions array here..." style="font-size: 0.78rem; font-family: monospace; padding: 0.4rem 0.65rem; background: rgba(0,0,0,0.2);"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Test Basic Info -->
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" for="test-add-title" style="font-size: 0.82rem; margin-bottom: 0.25rem;">Test / Quiz Title *</label>
+          <input type="text" id="test-add-title" name="title" class="form-control" placeholder="e.g. DAY 07 — TeachMANTRA GS Online Quiz" style="padding: 0.55rem 0.85rem; font-size: 0.88rem;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="test-add-category" style="font-size: 0.82rem; margin-bottom: 0.25rem;">Category / Stream</label>
+            <input type="text" id="test-add-category" name="category" class="form-control" placeholder="e.g. Mixed General Studies / SSC" style="padding: 0.55rem 0.85rem; font-size: 0.85rem;">
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="test-add-rawcode" style="font-size: 0.82rem;">Or Paste Quiz HTML / JSON Code</label>
-            <textarea id="test-add-rawcode" name="raw_quiz_code" rows="3" class="form-control" placeholder="Paste full HTML file content or const DATA = [...] array here..." style="font-size: 0.82rem; font-family: monospace;"></textarea>
+            <label class="form-label" for="test-add-subtitle" style="font-size: 0.82rem; margin-bottom: 0.25rem;">Subtitle / Badge Info</label>
+            <input type="text" id="test-add-subtitle" name="subtitle" class="form-control" placeholder="e.g. 50 Questions • परीक्षा अभ्यास" style="padding: 0.55rem 0.85rem; font-size: 0.85rem;">
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="test-add-title">Test / Quiz Title</label>
-          <input type="text" id="test-add-title" name="title" class="form-control" placeholder="e.g. GS MIX — Online Quiz (Auto-detected if file uploaded)">
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" for="test-add-description" style="font-size: 0.82rem; margin-bottom: 0.25rem;">Test Description</label>
+          <input type="text" id="test-add-description" name="description" class="form-control" placeholder="Practice GS, GK & subject-wise mock exam questions..." style="padding: 0.55rem 0.85rem; font-size: 0.85rem;">
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-          <div class="form-group">
-            <label class="form-label" for="test-add-category">Category / Stream</label>
-            <input type="text" id="test-add-category" name="category" class="form-control" placeholder="e.g. Mixed General Studies / SSC CGL">
+        <!-- 3-Pillar Numbers Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.85rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="test-add-duration" style="font-size: 0.82rem; margin-bottom: 0.25rem;">Duration (Mins)</label>
+            <input type="number" id="test-add-duration" name="duration_minutes" class="form-control" value="30" min="1" required style="padding: 0.5rem 0.75rem; font-size: 0.88rem; font-weight: 700;">
           </div>
-          <div class="form-group">
-            <label class="form-label" for="test-add-subtitle">Subtitle Badge Info</label>
-            <input type="text" id="test-add-subtitle" name="subtitle" class="form-control" placeholder="e.g. 50 Questions • परीक्षा अभ्यास">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="test-add-totalq" style="font-size: 0.82rem; margin-bottom: 0.25rem;">Total Questions</label>
+            <input type="number" id="test-add-totalq" name="total_questions" class="form-control" value="50" min="1" required style="padding: 0.5rem 0.75rem; font-size: 0.88rem; font-weight: 700;">
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="test-add-description">Test Description</label>
-          <textarea id="test-add-description" name="description" rows="2" class="form-control" placeholder="Practice general knowledge, mock exam questions..."></textarea>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-          <div class="form-group">
-            <label class="form-label" for="test-add-duration">Duration (mins)</label>
-            <input type="number" id="test-add-duration" name="duration_minutes" class="form-control" value="30" min="1" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="test-add-totalq">Total Questions</label>
-            <input type="number" id="test-add-totalq" name="total_questions" class="form-control" value="50" min="1" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="test-add-passpct">Pass % Target</label>
-            <input type="number" id="test-add-passpct" name="pass_percentage" class="form-control" value="40" min="1" max="100" required>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="test-add-passpct" style="font-size: 0.82rem; margin-bottom: 0.25rem;">Pass Target %</label>
+            <input type="number" id="test-add-passpct" name="pass_percentage" class="form-control" value="40" min="1" max="100" required style="padding: 0.5rem 0.75rem; font-size: 0.88rem; font-weight: 700;">
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="test-add-link">
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label" for="test-add-link" style="font-size: 0.82rem; margin-bottom: 0.25rem;">
             External Test Link (Optional)
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Leave empty to use website's built-in interactive exam portal)</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">(Leave empty for built-in portal)</span>
           </label>
-          <input type="url" id="test-add-link" name="external_link" class="form-control" placeholder="https://forms.gle/... or test portal link">
+          <input type="url" id="test-add-link" name="external_link" class="form-control" placeholder="https://forms.gle/... or external URL" style="padding: 0.5rem 0.85rem; font-size: 0.85rem;">
         </div>
 
-        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
-          <input type="checkbox" id="test-add-active" name="is_active" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
-          <label for="test-add-active" style="font-size: 0.9rem; color: var(--text-main); font-weight: 600; cursor: pointer;">
-            Publish Immediately (Active on Home Page & Online Test portal)
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+          <input type="checkbox" id="test-add-active" name="is_active" checked style="width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer;">
+          <label for="test-add-active" style="font-size: 0.84rem; color: var(--text-main); font-weight: 600; cursor: pointer;">
+            Publish Immediately (Active on Student Portal)
           </label>
         </div>
 
-        <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); margin-top: 1rem;">
-          <i class="fa-solid fa-circle-plus"></i> Create / Import Online Test
+        <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 700; width: 100%; border-radius: 10px;">
+          <i class="fa-solid fa-circle-plus"></i> Create & Publish Online Test
         </button>
       </form>
     </div>
@@ -5125,6 +5159,70 @@ Agli class nirdharit samay par shuru hogi.
     // ============================================================
     // ONLINE TESTS & QUIZ SYSTEM CONTROLLERS
     // ============================================================
+
+    // Client-side auto-extraction from selected file
+    function handleQuizFileSelect(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        parseAndPopulateQuizText(e.target.result);
+      };
+      reader.readAsText(file);
+    }
+
+    // Client-side auto-extraction from pasted code
+    function handleQuizCodePaste(textarea) {
+      const val = textarea.value.trim();
+      if (val.length > 50) {
+        parseAndPopulateQuizText(val);
+      }
+    }
+
+    function parseAndPopulateQuizText(text) {
+      const badge = document.getElementById('importStatusBadge');
+      let foundTitle = '';
+      let qCount = 0;
+
+      // Extract Title
+      const titleMatch = text.match(/<title[^>]*>(.*?)<\/title>/i) || text.match(/<h1[^>]*>(.*?)<\/h1>/i);
+      if (titleMatch && titleMatch[1]) {
+        foundTitle = titleMatch[1].replace(/— TeachMANTRA.*/i, '').trim();
+      }
+
+      // Extract Questions Count from DATA = [...]
+      const dataMatch = text.match(/const\s+DATA\s*=\s*(\[[\s\S]*?\]);/) || text.match(/(\[\s*\{\s*"q":[\s\S]*\}\s*\])/);
+      if (dataMatch) {
+        try {
+          const arr = JSON.parse(dataMatch[1]);
+          qCount = arr.length;
+        } catch(e) {
+          // fallback count
+          const matches = text.match(/"q"\s*:\s*"/g);
+          if (matches) qCount = matches.length;
+        }
+      }
+
+      if (foundTitle && !document.getElementById('test-add-title').value) {
+        document.getElementById('test-add-title').value = foundTitle;
+      }
+      if (qCount > 0) {
+        document.getElementById('test-add-totalq').value = qCount;
+        if (!document.getElementById('test-add-subtitle').value) {
+          document.getElementById('test-add-subtitle').value = `${qCount} Questions • परीक्षा अभ्यास`;
+        }
+      }
+      if (text.includes('GS') || text.includes('सामान्य अध्ययन')) {
+        if (!document.getElementById('test-add-category').value) {
+          document.getElementById('test-add-category').value = 'General Studies / GS Mixed';
+        }
+      }
+
+      if (badge) {
+        badge.style.display = 'inline-flex';
+        badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${qCount ? qCount + ' MCQs Extracted' : 'File Loaded'}`;
+      }
+    }
 
     // Form Submission: Add New Online Test
     async function submitAddTest(event) {
