@@ -565,6 +565,70 @@ button, input, select, textarea {
   }
 }
 
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+  }
+  .logo-link {
+    margin-right: 0;
+    font-size: 1.2rem;
+    gap: 0.45rem;
+  }
+  .site-logo-img {
+    height: 32px;
+    max-width: 120px;
+  }
+  .navbar-actions {
+    margin-left: auto;
+    gap: 0.4rem;
+  }
+  .theme-toggle-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+  .btn-login {
+    padding: 0.38rem 0.85rem;
+    font-size: 0.78rem;
+    gap: 0.35rem;
+    border-radius: 9999px;
+  }
+  .btn-login-avatar {
+    width: 18px;
+    height: 18px;
+  }
+  .menu-toggle {
+    padding: 0.35rem;
+    margin-left: 0.15rem;
+  }
+  .menu-toggle span {
+    width: 20px;
+    height: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    padding: 0.45rem 0.65rem;
+  }
+  .logo-link {
+    font-size: 1.05rem;
+    gap: 0.35rem;
+  }
+  .site-logo-img {
+    height: 28px;
+    max-width: 85px;
+  }
+  .navbar-actions {
+    gap: 0.3rem;
+  }
+  .btn-login {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.74rem;
+  }
+}
+
 
 /* Buttons System */
 .btn-primary {
@@ -2158,10 +2222,6 @@ textarea.form-control {
 
   .menu-toggle {
     display: flex;
-  }
-
-  .navbar-container > .btn-login {
-    display: none !important;
   }
 
   .footer-nav {
