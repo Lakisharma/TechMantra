@@ -72,16 +72,28 @@ def admissions(request):
                 return JsonResponse({"status": "error", "message": msg})
             return render(request, 'admissions.html', {"success_msg": f"Error: {msg}"})
             
-        Admission.objects.create(
+        adm = Admission.objects.create(
             name=name,
             email=email,
             phone=clean_phone,
             course=course,
             message=message
         )
+        
+        # If student is logged in, link course to profile
+        if request.user.is_authenticated:
+            try:
+                profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+                profile.course = course
+                if clean_phone and (profile.phone == "N/A" or not profile.phone):
+                    profile.phone = clean_phone
+                profile.save()
+            except Exception:
+                pass
+                
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-            return JsonResponse({"status": "success", "message": "Admission request submitted successfully!"})
-        success_msg = "Admission request submitted successfully!"
+            return JsonResponse({"status": "success", "message": f"Admission registration submitted successfully for {course}!"})
+        success_msg = f"Admission registration submitted successfully for {course}!"
             
     return render(request, 'admissions.html', {"success_msg": success_msg})
 
@@ -617,6 +629,72 @@ def temp_create_admin(request):
 
 
 
+def parse_course_info(raw_course_str):
+    """Parse course name, fee and enrollment details from course string."""
+    if not raw_course_str or raw_course_str.strip() in ["N/A", "", "None"]:
+        return {
+            "title": "General Student",
+            "raw": "N/A",
+            "fee": "₹ 2,999",
+            "duration": "6 Months Classroom + Mock Tests",
+            "is_enrolled": False
+        }
+    
+    import re
+    raw = raw_course_str.strip()
+    title = raw
+    fee = None
+    
+    fee_match = re.search(r'\((?:₹|Rs\.?|INR)?\s*([0-9,]+)\)', raw, re.IGNORECASE)
+    if fee_match:
+        fee_digits = fee_match.group(1).replace(',', '')
+        fee = f"₹ {int(fee_digits):,}"
+        title = re.sub(r'\s*\((?:₹|Rs\.?|INR)?\s*[0-9,]+\)', '', raw).strip()
+    else:
+        c_obj = Course.objects.filter(models.Q(title__iexact=raw) | models.Q(title__icontains=raw)).first()
+        if c_obj:
+            title = c_obj.title
+            fee = f"₹ {c_obj.fee:,}"
+        else:
+            known_fees = {
+                "SSC GD": "₹ 3,100",
+                "AIRFORCE": "₹ 3,100",
+                "NAVY": "₹ 3,100",
+                "ARMY GD": "₹ 3,100",
+                "UP POLICE": "₹ 2,999",
+                "DELHI POLICE": "₹ 2,999",
+                "UPSSSC": "₹ 2,999",
+                "LEKHPAL": "₹ 2,999",
+                "VDO": "₹ 2,999",
+                "PET": "₹ 2,999",
+                "TEACHERS PACK": "₹ 2,999",
+                "SUPER TET": "₹ 2,999",
+                "CTET": "₹ 2,999",
+                "TET": "₹ 2,999",
+                "RAILWAY NTPC": "₹ 3,100",
+                "ALP": "₹ 3,100",
+                "GROUP D": "₹ 3,100",
+                "NDA": "₹ 6,100",
+                "CDS": "₹ 6,100",
+                "COMPUTER PACK": "₹ 6,500",
+                "SPOKEN ENGLISH": "₹ 2,500",
+            }
+            for k, v in known_fees.items():
+                if k.lower() in raw.lower():
+                    fee = v
+                    break
+            if not fee:
+                fee = "₹ 2,999"
+                
+    return {
+        "title": title,
+        "raw": raw,
+        "fee": fee,
+        "duration": "6 Months Classroom + Online Tests",
+        "is_enrolled": True
+    }
+
+
 @login_required(login_url='login')
 def profile_view(request):
     populate_default_online_tests()
@@ -642,6 +720,27 @@ def profile_view(request):
             return redirect('profile')
             
     user_fullname = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+    
+    # Auto-link admission record if profile course is unassigned
+    if profile.course in ["N/A", "", None]:
+        user_adm = Admission.objects.filter(
+            models.Q(email__iexact=request.user.email) | 
+            models.Q(phone=profile.phone) |
+            models.Q(name__iexact=user_fullname)
+        ).order_by('-created_at').first()
+        if user_adm and user_adm.course:
+            profile.course = user_adm.course
+            profile.save()
+            
+    course_info = parse_course_info(profile.course)
+    
+    # User's recent admission application requests (if any)
+    my_admissions = Admission.objects.filter(
+        models.Q(email__iexact=request.user.email) | 
+        models.Q(phone=profile.phone) |
+        models.Q(name__iexact=user_fullname)
+    ).order_by('-created_at')
+    
     matching_cert = None
     
     # Query database dynamically
@@ -681,6 +780,8 @@ def profile_view(request):
             
     return render(request, 'profile.html', {
         "profile": profile,
+        "course_info": course_info,
+        "my_admissions": my_admissions,
         "matching_cert": matching_cert,
         "available_tests": available_tests,
         "my_submissions": my_submissions,
