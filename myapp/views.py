@@ -1870,10 +1870,10 @@ def admin_send_broadcast_mail_view(request):
         # Get website configuration branding
         site_settings = WebsiteSettings.objects.first()
         site_name = site_settings.site_name if site_settings else "TeachMANTRA Academy"
-        site_email = site_settings.contact_email if site_settings else "support@teachmantra.com"
+        site_email = site_settings.contact_email if site_settings else "support@theteachmantra.com"
         site_phone = site_settings.contact_phone if site_settings else "+91 98765 43210"
         site_address = site_settings.contact_address if site_settings else "Academy Campus, Delhi, India"
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', f"{site_name} <noreply@teachmantra.com>")
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', f"{site_name} <noreply@theteachmantra.com>")
 
         # Create beautiful responsive HTML email
         formatted_message_html = message_body.replace("\n", "<br>")

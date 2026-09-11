@@ -97,7 +97,7 @@ class TeamMember(models.Model):
 class WebsiteSettings(models.Model):
     site_name = models.CharField(max_length=100, default="TeachMANTRA")
     site_logo = models.ImageField(upload_to='site_logos/', blank=True, null=True)
-    contact_email = models.CharField(max_length=100, default="info@teachmantra.com")
+    contact_email = models.CharField(max_length=100, default="info@theteachmantra.com")
     contact_phone = models.CharField(max_length=50, default="+91 98765 43210")
     contact_address = models.TextField(default="Academy Address, Delhi, India")
 

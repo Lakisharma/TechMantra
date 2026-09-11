@@ -5,7 +5,7 @@ def site_settings(request):
         id=1,
         defaults={
             "site_name": "TeachMANTRA",
-            "contact_email": "info@teachmantra.com",
+            "contact_email": "info@theteachmantra.com",
             "contact_phone": "+91 98765 43210",
             "contact_address": "Academy Address, Delhi, India"
         }

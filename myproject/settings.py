@@ -25,7 +25,15 @@ SECRET_KEY = 'django-insecure-^(+u6118=(3ad&)b9)5+xf4fp9p=_6$w)+s9fmpxmjde35$ryx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.vercel.app', 'now.sh', 'localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = ['.vercel.app', 'now.sh', 'localhost', '127.0.0.1', 'theteachmantra.com', '.theteachmantra.com', '*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://theteachmantra.com',
+    'https://www.theteachmantra.com',
+    'https://*.vercel.app',
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+]
 
 
 # Application definition
@@ -207,5 +215,5 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1',
 EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 't', 'yes')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'TeachMANTRA Academy <noreply@teachmantra.com>')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'TeachMANTRA Academy <noreply@theteachmantra.com>')
 EMAIL_TIMEOUT = 15

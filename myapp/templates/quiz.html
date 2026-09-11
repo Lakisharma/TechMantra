@@ -135,8 +135,15 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .question-statement {
@@ -458,7 +465,7 @@
 {% block content %}
 <div class="quiz-page-wrapper">
   <div class="quiz-card-container">
-    
+
     <!-- Test Info & Timer Header -->
     <div class="quiz-header-top">
       <div>
@@ -467,14 +474,15 @@
         </div>
         <h1 class="quiz-main-title">{{ test.title }}</h1>
         <div class="quiz-sub-info">
-          <span><i class="fa-solid fa-list-check" style="color: var(--primary);"></i> {{ test.questions_count }} Questions</span>
+          <span><i class="fa-solid fa-list-check" style="color: var(--primary);"></i> {{ test.questions_count }}
+            Questions</span>
           <span>•</span>
           <span><i class="fa-solid fa-tags" style="color: var(--secondary);"></i> {{ test.category }}</span>
           <span>•</span>
           <span style="color: #10b981;"><i class="fa-solid fa-book-open"></i> {{ test.subtitle }}</span>
         </div>
       </div>
-      
+
       <div class="quiz-timer-pill" id="quizTimerBox">
         <i class="fa-solid fa-clock"></i>
         <span id="quizTimer">30:00</span>
@@ -483,7 +491,7 @@
 
     <!-- Active Quiz Playing Screen -->
     <div id="quizPlayView">
-      
+
       <!-- Progress Bar & Question Step Counter -->
       <div class="quiz-progress-section">
         <div class="quiz-progress-track">
@@ -498,7 +506,7 @@
       <!-- Question Statement & Interactive Options -->
       <div class="question-container" id="questionBox">
         <div class="question-statement" id="questionText">Loading question statement...</div>
-        
+
         <div class="options-grid" id="optionsList">
           <!-- Options rendered via JS -->
         </div>
@@ -509,13 +517,14 @@
         <button class="btn-quiz-nav btn-quiz-prev" id="btnPrev" onclick="prevQuestion()" disabled>
           <i class="fa-solid fa-arrow-left"></i> Previous
         </button>
-        
+
         <div style="display: flex; gap: 0.75rem;">
           <button class="btn-quiz-nav btn-quiz-next" id="btnNext" onclick="nextQuestion()">
             Next Question <i class="fa-solid fa-arrow-right"></i>
           </button>
-          
-          <button class="btn-quiz-nav btn-quiz-submit" id="btnSubmit" onclick="confirmSubmitQuiz()" style="display: none;">
+
+          <button class="btn-quiz-nav btn-quiz-submit" id="btnSubmit" onclick="confirmSubmitQuiz()"
+            style="display: none;">
             <i class="fa-solid fa-circle-check"></i> Submit Test
           </button>
         </div>
@@ -533,8 +542,9 @@
         <div class="result-score-num" id="resScore">0</div>
         <div class="result-score-total" id="resTotal">/ 0 Marks</div>
       </div>
-      
-      <h2 id="resTitle" style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">Test Completed!</h2>
+
+      <h2 id="resTitle" style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+        Test Completed!</h2>
       <div id="resStatusBadge" class="result-status-badge badge-pass">PASSED</div>
       <p id="resMsg" style="color: var(--text-muted); max-width: 500px; margin: 0 auto; line-height: 1.6;">
         Great job! Your mock test result has been evaluated successfully.
@@ -561,18 +571,22 @@
 
       <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
         {% if already_attempted %}
-          <div style="width: 100%; text-align: center; margin-bottom: 0.5rem;">
-            <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;">
-              <i class="fa-solid fa-lock"></i> Single Attempt Only — You have already submitted this test on {{ existing_sub.submitted_at|date:"M d, Y h:i A" }}
-            </span>
-          </div>
+        <div style="width: 100%; text-align: center; margin-bottom: 0.5rem;">
+          <span
+            style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.85rem;">
+            <i class="fa-solid fa-lock"></i> Single Attempt Only — You have already submitted this test on {{
+            existing_sub.submitted_at|date:"M d, Y h:i A" }}
+          </span>
+        </div>
         {% endif %}
 
-        <button id="btnReviewUnlocked" class="btn-quiz-nav btn-quiz-prev" onclick="toggleReviewSection()" style="display: none; background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); color: white; border: none;">
+        <button id="btnReviewUnlocked" class="btn-quiz-nav btn-quiz-prev" onclick="toggleReviewSection()"
+          style="display: none; background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); color: white; border: none;">
           <i class="fa-solid fa-list-check"></i> Review All Solutions & Answers
         </button>
 
-        <button id="btnReviewLocked" class="btn-quiz-nav" disabled style="display: none; background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.35); cursor: not-allowed;">
+        <button id="btnReviewLocked" class="btn-quiz-nav" disabled
+          style="display: none; background: rgba(148, 163, 184, 0.12); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.35); cursor: not-allowed;">
           <i class="fa-solid fa-lock"></i> Solutions Unlock Tomorrow (कल उपलब्ध होगा)
         </button>
 
@@ -584,20 +598,25 @@
         </a>
 
         <!-- Lock Notice Banner for Same Day -->
-        <div id="reviewLockedNotice" style="display: none; width: 100%; margin-top: 1.5rem; padding: 1.15rem 1.35rem; border-radius: 12px; background: rgba(56, 189, 248, 0.07); border: 1px solid rgba(56, 189, 248, 0.25); text-align: center;">
+        <div id="reviewLockedNotice"
+          style="display: none; width: 100%; margin-top: 1.5rem; padding: 1.15rem 1.35rem; border-radius: 12px; background: rgba(56, 189, 248, 0.07); border: 1px solid rgba(56, 189, 248, 0.25); text-align: center;">
           <div style="font-weight: 700; color: #38bdf8; font-size: 0.98rem; margin-bottom: 0.3rem;">
             <i class="fa-solid fa-clock-rotate-left"></i> सभी प्रश्नों के सही उत्तर एवं विस्तृत व्याख्या कल अनलॉक होगी
           </div>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.5;">
-            परीक्षा की निष्पक्षता बनाए रखने के लिए विस्तृत समाधान <strong><span id="unlockDateSpan">{{ unlock_date_text|default:"कल (Tomorrow)" }}</span></strong> को अनलॉक होंगे। आपका स्कोर और परिणाम सुरक्षित रूप से दर्ज कर लिया गया है।
+            परीक्षा की निष्पक्षता बनाए रखने के लिए विस्तृत समाधान <strong><span id="unlockDateSpan">{{
+                unlock_date_text|default:"कल (Tomorrow)" }}</span></strong> को अनलॉक होंगे। आपका स्कोर और परिणाम
+            सुरक्षित रूप से दर्ज कर लिया गया है।
           </p>
         </div>
       </div>
 
       <!-- Detailed Review of Answers (Hidden until unlocked) -->
       <div id="reviewContainer" style="display: none; margin-top: 3rem; text-align: left;">
-        <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-book-open-reader" style="color: var(--primary);"></i> Detailed Question-by-Question Solutions
+        <h3
+          style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-book-open-reader" style="color: var(--primary);"></i> Detailed Question-by-Question
+          Solutions
         </h3>
         <div id="reviewList"></div>
       </div>
@@ -610,14 +629,14 @@
 {% block extra_js %}
 <script>
   // Questions Data Passed Securely From Server
-  const rawQuestions = {{ questions_json|safe }};
+  const rawQuestions = {{ questions_json| safe }};
   const testId = {{ test.id }};
   const testDurationMinutes = {{ test.duration_minutes }};
   const passPercentage = {{ test.pass_percentage }};
-  const isAlreadyAttempted = {% if already_attempted %}true{% else %}false{% endif %};
-  const isReviewUnlocked = {% if review_unlocked %}true{% else %}false{% endif %};
+  const isAlreadyAttempted = {% if already_attempted %}true{% else %} false{% endif %};
+  const isReviewUnlocked = {% if review_unlocked %}true{% else %} false{% endif %};
   const serverUnlockDateText = "{{ unlock_date_text|escapejs }}";
-  const existingReviewData = {{ existing_review_json|safe }};
+  const existingReviewData = {{ existing_review_json| safe }};
 
   let currentIndex = 0;
   let userAnswers = {}; // { questionId: 'A' }
@@ -625,36 +644,36 @@
   let timeRemaining = testDurationMinutes * 60;
 
   // Initialize
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     if (isAlreadyAttempted) {
       showResults({
-        score: {{ existing_sub.score|default:0 }},
-        wrong_count: {{ existing_sub.wrong_count|default:0 }},
-        unanswered_count: {{ existing_sub.unanswered_count|default:0 }},
-        total_questions: {{ existing_sub.total_questions|default:test.questions_count }},
-        percentage: {{ existing_sub.percentage|default:0 }},
-        passed: {% if existing_sub.passed %}true{% else %}false{% endif %},
-        pass_percentage: {{ test.pass_percentage }},
-        review_unlocked: isReviewUnlocked,
-        unlock_date_text: serverUnlockDateText,
+        score: {{ existing_sub.score |default: 0 }},
+    wrong_count: { { existing_sub.wrong_count |default: 0 } },
+    unanswered_count: { { existing_sub.unanswered_count |default: 0 } },
+    total_questions: { { existing_sub.total_questions |default: test.questions_count } },
+    percentage: { { existing_sub.percentage |default: 0 } },
+    passed: {% if existing_sub.passed %} true{% else %} false{% endif %},
+    pass_percentage: { { test.pass_percentage } },
+    review_unlocked: isReviewUnlocked,
+      unlock_date_text: serverUnlockDateText,
         review: existingReviewData
-      });
-      return;
+  });
+  return;
     }
 
-    if (!rawQuestions || rawQuestions.length === 0) {
-      document.getElementById('questionText').innerHTML = "No questions have been added to this test yet. Please check back shortly!";
-      return;
-    }
-    initPalette();
-    renderQuestion(0);
-    startTimer();
+  if (!rawQuestions || rawQuestions.length === 0) {
+    document.getElementById('questionText').innerHTML = "No questions have been added to this test yet. Please check back shortly!";
+    return;
+  }
+  initPalette();
+  renderQuestion(0);
+  startTimer();
   });
 
   function startTimer() {
     const timerElem = document.getElementById('quizTimer');
     clearInterval(timerInterval);
-    
+
     timerInterval = setInterval(() => {
       if (timeRemaining <= 0) {
         clearInterval(timerInterval);
@@ -663,7 +682,7 @@
         submitQuiz();
         return;
       }
-      
+
       timeRemaining--;
       const minutes = Math.floor(timeRemaining / 60);
       const seconds = timeRemaining % 60;
@@ -693,7 +712,7 @@
     const pct = Math.round(((idx + 1) / total) * 100);
     document.getElementById('progressBar').style.width = `${pct}%`;
     document.getElementById('questionStepLabel').innerText = `Question ${idx + 1} / ${total}`;
-    
+
     const answeredCount = Object.keys(userAnswers).length;
     document.getElementById('answeredCountLabel').innerText = `${answeredCount} of ${total} Answered`;
 
@@ -727,7 +746,7 @@
 
     // Update Nav Buttons
     document.getElementById('btnPrev').disabled = (idx === 0);
-    
+
     if (idx === total - 1) {
       document.getElementById('btnNext').style.display = 'none';
       document.getElementById('btnSubmit').style.display = 'inline-flex';
@@ -808,24 +827,24 @@
         answers: userAnswers
       })
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === 'success') {
-        showResults(data);
-      } else if (data.status === 'already_attempted') {
-        alert(data.message);
-        window.location.reload();
-      } else {
-        alert(data.message || "Failed to submit test.");
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          showResults(data);
+        } else if (data.status === 'already_attempted') {
+          alert(data.message);
+          window.location.reload();
+        } else {
+          alert(data.message || "Failed to submit test.");
+          document.getElementById('btnSubmit').disabled = false;
+          document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-circle-check"></i> Submit Test`;
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("An error occurred during submission. Please try again.");
         document.getElementById('btnSubmit').disabled = false;
-        document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-circle-check"></i> Submit Test`;
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      alert("An error occurred during submission. Please try again.");
-      document.getElementById('btnSubmit').disabled = false;
-    });
+      });
   }
 
   function showResults(data) {
@@ -886,7 +905,7 @@
       data.review.forEach(item => {
         const div = document.createElement('div');
         div.className = `review-item ${item.is_correct ? 'is-correct' : 'is-wrong'}`;
-        
+
         div.innerHTML = `
           <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.75rem;">
             ${item.number}. ${item.question_text}
