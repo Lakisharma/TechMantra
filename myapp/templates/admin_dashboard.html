@@ -3894,18 +3894,7 @@ Agli class nirdharit samay par shuru hogi.
 
   <!-- Raw Student JSON Data for Live JS Count & Filter -->
   <script id="students-json" type="application/json">
-  [
-    {% for s in students %}
-      {% if not s.user.is_staff and s.user.email %}
-        {
-          "name": "{{ s.user.first_name|default:s.user.username|escapejs }}",
-          "username": "{{ s.user.username|escapejs }}",
-          "email": "{{ s.user.email|escapejs }}",
-          "course": "{{ s.course|escapejs }}"
-        }{% if not forloop.last %},{% endif %}
-      {% endif %}
-    {% endfor %}
-  ]
+  {{ students_broadcast_json|safe }}
   </script>
 
   <!-- Toast Container -->
@@ -4968,23 +4957,28 @@ Agli class nirdharit samay par shuru hogi.
     try {
       const dataEl = document.getElementById('students-json');
       if (dataEl) {
-        studentsDataset = JSON.parse(dataEl.textContent);
+        const rawText = (dataEl.textContent || '').trim();
+        studentsDataset = rawText ? JSON.parse(rawText) : [];
       }
     } catch (e) {
       console.warn("Could not parse student dataset:", e);
+      studentsDataset = [];
     }
 
     // Dynamic Recipient Count & Info Preview
     function updateRecipientCountPreview() {
       const select = document.getElementById('broadcastAudience');
       if (!select) return;
-      const selectedValue = select.value;
+      const selectedValue = (select.value || 'all').trim().toLowerCase();
 
       let matchedStudents = [];
       if (selectedValue === 'all') {
         matchedStudents = studentsDataset;
       } else {
-        matchedStudents = studentsDataset.filter(s => s.course === selectedValue);
+        matchedStudents = studentsDataset.filter(s => {
+          const c = (s.course || '').trim().toLowerCase();
+          return c === selectedValue || c.includes(selectedValue) || selectedValue.includes(c);
+        });
       }
 
       const count = matchedStudents.length;

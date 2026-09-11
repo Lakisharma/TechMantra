@@ -855,10 +855,24 @@ def admin_dashboard_view(request):
     total_admins = admins.count()
     total_certificates = certificates_list.count()
     total_broadcasts = broadcast_emails.count()
-    total_online_tests = online_tests.count()
+    # Build safe student broadcast JSON
+    students_broadcast_data = []
+    for s in students:
+        if s.user and not s.user.is_staff and s.user.email and s.user.email.strip():
+            name_val = f"{s.user.first_name} {s.user.last_name}".strip()
+            if not name_val:
+                name_val = s.user.username
+            students_broadcast_data.append({
+                "name": name_val,
+                "username": s.user.username,
+                "email": s.user.email.strip(),
+                "course": s.course or ""
+            })
+    students_broadcast_json = json.dumps(students_broadcast_data)
 
     return render(request, 'admin_dashboard.html', {
         "students": students,
+        "students_broadcast_json": students_broadcast_json,
         "admissions": admissions,
         "contacts": contacts,
         "courses": courses_list,
@@ -1851,7 +1865,7 @@ def admin_send_broadcast_mail_view(request):
         ).exclude(user__is_staff=True)
 
         if audience and audience != 'all':
-            students_qs = students_qs.filter(course=audience)
+            students_qs = students_qs.filter(Q(course__icontains=audience) | Q(course__iexact=audience))
 
         # Collect distinct student emails
         recipient_emails = []
@@ -1870,10 +1884,10 @@ def admin_send_broadcast_mail_view(request):
         # Get website configuration branding
         site_settings = WebsiteSettings.objects.first()
         site_name = site_settings.site_name if site_settings else "TeachMANTRA Academy"
-        site_email = site_settings.contact_email if site_settings else "support@theteachmantra.com"
+        site_email = site_settings.contact_email if site_settings else "theteachmantra@gmail.com"
         site_phone = site_settings.contact_phone if site_settings else "+91 98765 43210"
         site_address = site_settings.contact_address if site_settings else "Academy Campus, Delhi, India"
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', f"{site_name} <noreply@theteachmantra.com>")
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', f"{site_name} <theteachmantra@gmail.com>")
 
         # Create beautiful responsive HTML email
         formatted_message_html = message_body.replace("\n", "<br>")
