@@ -25,15 +25,24 @@ SECRET_KEY = 'django-insecure-^(+u6118=(3ad&)b9)5+xf4fp9p=_6$w)+s9fmpxmjde35$ryx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.vercel.app', 'now.sh', 'localhost', '127.0.0.1', 'theteachmantra.com', '.theteachmantra.com', '*']
+ALLOWED_HOSTS = ['theteachmantra.com', 'www.theteachmantra.com', '.theteachmantra.com', '103.210.29.175', '192.168.1.37', '127.0.0.1', 'localhost', '.vercel.app', '*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://theteachmantra.com',
     'https://www.theteachmantra.com',
+    'http://theteachmantra.com',
+    'http://www.theteachmantra.com',
+    'http://103.210.29.175',
+    'http://103.210.29.175:8088',
+    'http://127.0.0.1:8001',
     'https://*.vercel.app',
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 
 
 # Application definition
