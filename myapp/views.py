@@ -855,6 +855,7 @@ def admin_dashboard_view(request):
     total_admins = admins.count()
     total_certificates = certificates_list.count()
     total_broadcasts = broadcast_emails.count()
+    total_online_tests = online_tests.count()
     # Build safe student broadcast JSON
     students_broadcast_data = []
     for s in students:
