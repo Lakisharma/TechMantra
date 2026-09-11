@@ -542,12 +542,14 @@ def register_view(request):
 def login_view(request):
     next_url = request.GET.get('next') or request.POST.get('next') or '/profile/'
     if request.user.is_authenticated:
+        if request.user.is_staff and next_url == '/profile/':
+            return redirect('admin_dashboard')
         return redirect(next_url)
         
     if request.method == "POST":
         next_url = request.POST.get('next') or request.GET.get('next') or '/profile/'
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
         
         if not username or not password:
             msg = "Please provide both username and password."
@@ -555,12 +557,19 @@ def login_view(request):
                 return JsonResponse({"status": "error", "message": msg})
             return render(request, 'login.html', {"error_msg": msg, "next": next_url})
             
-        user = authenticate(username=username, password=password)
+        # Support login via both username and email (case-insensitive)
+        user_obj = User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).first()
+        auth_username = user_obj.username if user_obj else username
+
+        user = authenticate(username=auth_username, password=password)
         if user is not None:
             login(request, user)
+            target_url = next_url
+            if user.is_staff and (not next_url or next_url == '/profile/'):
+                target_url = '/admin-dashboard/'
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "success", "message": "Login successful!", "redirect_url": next_url})
-            return redirect(next_url)
+                return JsonResponse({"status": "success", "message": "Login successful!", "redirect_url": target_url})
+            return redirect(target_url)
         else:
             msg = "Invalid username or password."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
