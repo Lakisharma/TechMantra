@@ -12,7 +12,7 @@ def site_settings(request):
     )
     if not created:
         needs_save = False
-        if settings.site_name == "TechMantra":
+        if settings.site_name != "TeachMANTRA":
             settings.site_name = "TeachMANTRA"
             needs_save = True
         if settings.contact_email in ["info@teachmantra.com", "info@theteachmantra.com", "support@teachmantra.com"]:
