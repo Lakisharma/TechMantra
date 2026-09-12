@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Syllabus & Daily Study Material PDF Downloads | {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+  <!-- Breadcrumb Header Banner -->
+  <div class="breadcrumb-banner">
+    <div class="container">
+      <div class="hero-badge" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #38bdf8;">
+        <i class="fa-solid fa-file-pdf"></i> Daily E-Library &amp; Study Material
+      </div>
+      <h1 class="breadcrumb-title">Syllabus &amp; Daily Study Material PDFs</h1>
+      <p class="breadcrumb-subtitle">
+        Download daily class notes, subject-wise official syllabus, practice sheets (DPP), and previous year question banks curated by expert faculties.
+      </p>
+
+      <!-- Live Search & Filter Bar inside Hero Banner -->
+      <div style="max-width: 850px; margin: 2rem auto 0 auto; background: var(--bg-secondary); border: 1px solid var(--border-glass); padding: 1.25rem; border-radius: 1.25rem; box-shadow: 0 15px 35px rgba(0,0,0,0.25);">
+        <form method="GET" action="{% url 'syllabus_list' %}" style="display: grid; grid-template-columns: 2fr 1.3fr 1.2fr auto; gap: 0.75rem; align-items: center;" class="syllabus-search-form">
+          
+          <!-- Search input -->
+          <div style="position: relative;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by topic, chapter, or subject..." 
+                   class="form-control" style="padding-left: 2.75rem; width: 100%; border-radius: 0.75rem;">
+          </div>
+
+          <!-- Course Filter -->
+          <div>
+            <select name="course" class="form-control" style="width: 100%; border-radius: 0.75rem;" onchange="this.form.submit()">
+              <option value="all">All Courses (सभी कोर्स)</option>
+              {% for c in courses_choices %}
+                <option value="{{ c }}" {% if selected_course == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Date Filter -->
+          <div>
+            <input type="date" name="date" value="{{ selected_date }}" class="form-control" style="width: 100%; border-radius: 0.75rem;" title="Filter by date" onchange="this.form.submit()">
+          </div>
+
+          <!-- Submit Button -->
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn-primary" style="padding: 0.8rem 1.25rem; border-radius: 0.75rem; font-weight: 700; white-space: nowrap;">
+              <i class="fa-solid fa-filter"></i> Filter
+            </button>
+            {% if query or selected_category != 'all' or selected_course != 'all' or selected_date %}
+              <a href="{% url 'syllabus_list' %}" class="btn-outline" style="padding: 0.8rem 1rem; border-radius: 0.75rem; text-decoration: none; color: var(--text-muted);" title="Reset Filters">
+                <i class="fa-solid fa-rotate-left"></i>
+              </a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Section -->
+  <section class="section-padding" style="background: var(--bg-primary);">
+    <div class="container">
+
+      <!-- Category Filter Pills -->
+      <div style="display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 2.5rem; justify-content: flex-start; scrollbar-width: thin;" class="category-pills-wrap">
+        {% for cat_key, cat_label in categories %}
+          <a href="?category={{ cat_key }}{% if selected_course != 'all' %}&course={{ selected_course }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if query %}&q={{ query }}{% endif %}" 
+             style="text-decoration: none; padding: 0.6rem 1.25rem; border-radius: 50px; font-size: 0.88rem; font-weight: 700; white-space: nowrap; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid {% if selected_category == cat_key %}var(--primary){% else %}var(--border-glass){% endif %}; background: {% if selected_category == cat_key %}var(--primary){% else %}var(--bg-secondary){% endif %}; color: {% if selected_category == cat_key %}#ffffff{% else %}var(--text-muted){% endif %};">
+            {% if cat_key == 'all' %}<i class="fa-solid fa-layer-group"></i>
+            {% elif cat_key == 'Syllabus' %}<i class="fa-solid fa-graduation-cap"></i>
+            {% elif cat_key == 'Daily Notes' %}<i class="fa-solid fa-book-open"></i>
+            {% elif cat_key == 'Practice Sheet' %}<i class="fa-solid fa-file-pen"></i>
+            {% elif cat_key == 'Previous Papers' %}<i class="fa-solid fa-clock-rotate-left"></i>
+            {% elif cat_key == 'Current Affairs' %}<i class="fa-solid fa-newspaper"></i>
+            {% else %}<i class="fa-solid fa-file-lines"></i>
+            {% endif %}
+            {{ cat_label }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <!-- Result Counter Banner -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="font-size: 0.95rem; color: var(--text-muted);">
+          Showing <strong>{{ documents.count }}</strong> of <strong>{{ total_docs_count }}</strong> PDF study materials
+          {% if selected_date %}
+            for date <span style="color: var(--accent); font-weight: 700;">{{ selected_date }}</span>
+          {% endif %}
+        </div>
+
+        {% if user.is_staff %}
+          <a href="{% url 'admin_dashboard' %}#syllabus" class="btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem; border-radius: 0.5rem; text-decoration: none; border-color: rgba(99,102,241,0.4); color: var(--primary);">
+            <i class="fa-solid fa-plus-circle"></i> Upload New PDF (Admin)
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Documents Grid -->
+      {% if documents %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.75rem;">
+          {% for doc in documents %}
+            <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.75rem; border-radius: 1.25rem; border: 1px solid var(--border-glass); transition: all 0.3s ease; position: relative;"
+                 onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary)';"
+                 onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-glass)';">
+              
+              <div>
+                <!-- Card Header Badges -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem;">
+                  <!-- Category Badge -->
+                  <span style="font-size: 0.78rem; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 6px; text-transform: uppercase;
+                    {% if doc.category == 'Syllabus' %}
+                      background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);
+                    {% elif doc.category == 'Daily Notes' %}
+                      background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);
+                    {% elif doc.category == 'Practice Sheet' %}
+                      background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);
+                    {% elif doc.category == 'Current Affairs' %}
+                      background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);
+                    {% else %}
+                      background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);
+                    {% endif %}">
+                    <i class="fa-solid fa-file-pdf"></i> {{ doc.category }}
+                  </span>
+
+                  <!-- Date Released Badge -->
+                  <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 0.35rem; background: rgba(255,255,255,0.03); padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid var(--border-glass);">
+                    <i class="fa-solid fa-calendar-day" style="color: var(--accent);"></i> {{ doc.document_date|date:"d M Y" }}
+                  </span>
+                </div>
+
+                <!-- Course Tag -->
+                <div style="margin-bottom: 0.75rem;">
+                  <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); background: rgba(148, 163, 184, 0.1); padding: 0.2rem 0.6rem; border-radius: 4px;">
+                    <i class="fa-solid fa-graduation-cap"></i> {{ doc.course }}
+                  </span>
+                </div>
+
+                <!-- Title -->
+                <h3 style="font-size: 1.18rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.65rem; line-height: 1.4;">
+                  {{ doc.title }}
+                </h3>
+
+                <!-- Description -->
+                {% if doc.description %}
+                  <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1.25rem;">
+                    {{ doc.description|truncatewords:24 }}
+                  </p>
+                {% endif %}
+              </div>
+
+              <!-- Card Footer & Actions -->
+              <div style="border-top: 1px solid var(--border-glass); padding-top: 1.25rem; margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                  <span><i class="fa-solid fa-download" style="color: #10b981;"></i> <strong>{{ doc.downloads_count }}</strong> Downloads</span>
+                  <span><i class="fa-solid fa-shield-halved" style="color: #38bdf8;"></i> Verified Material</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.6rem;">
+                  {% if doc.pdf_file %}
+                    <a href="{% url 'download_syllabus_pdf' doc.id %}" download target="_blank" class="btn-primary" 
+                       style="padding: 0.65rem 0.9rem; font-size: 0.88rem; font-weight: 700; border-radius: 0.6rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 15px var(--primary-glow);">
+                      <i class="fa-solid fa-download"></i> Download PDF
+                    </a>
+                    <a href="{{ doc.pdf_file.url }}" target="_blank" class="btn-outline" 
+                       style="padding: 0.65rem 0.9rem; font-size: 0.88rem; font-weight: 600; border-radius: 0.6rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                      <i class="fa-solid fa-eye"></i> Preview
+                    </a>
+                  {% else %}
+                    <button disabled class="btn-outline" style="grid-column: 1 / -1; opacity: 0.5;">
+                      PDF File Not Available
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- Empty State -->
+        <div style="text-align: center; padding: 4.5rem 1.5rem; background: var(--bg-secondary); border-radius: 1.5rem; border: 1px dashed var(--border-glass);">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(56, 189, 248, 0.1); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #38bdf8; margin: 0 auto 1.25rem auto;">
+            <i class="fa-solid fa-file-circle-question"></i>
+          </div>
+          <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+            No Syllabus or Study Material Found
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto 1.5rem auto;">
+            {% if query or selected_category != 'all' or selected_course != 'all' or selected_date %}
+              No PDF files matched your current search filters. Please try searching with different keywords or clear your filters.
+            {% else %}
+              Daily syllabus notes and practice sheets will be uploaded shortly by TeachMANTRA faculties.
+            {% endif %}
+          </p>
+          <a href="{% url 'syllabus_list' %}" class="btn-primary" style="padding: 0.65rem 1.75rem; text-decoration: none; border-radius: 0.5rem;">
+            <i class="fa-solid fa-rotate-left"></i> View All Available Materials
+          </a>
+        </div>
+      {% endif %}
+
+    </div>
+  </section>
+
+  <style>
+    @media (max-width: 768px) {
+      .syllabus-search-form {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+{% endblock %}

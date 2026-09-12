@@ -647,18 +647,18 @@
   document.addEventListener('DOMContentLoaded', function () {
     if (isAlreadyAttempted) {
       showResults({
-        score: {{ existing_sub.score |default: 0 }},
-    wrong_count: { { existing_sub.wrong_count |default: 0 } },
-    unanswered_count: { { existing_sub.unanswered_count |default: 0 } },
-    total_questions: { { existing_sub.total_questions |default: test.questions_count } },
-    percentage: { { existing_sub.percentage |default: 0 } },
-    passed: {% if existing_sub.passed %} true{% else %} false{% endif %},
-    pass_percentage: { { test.pass_percentage } },
-    review_unlocked: isReviewUnlocked,
-      unlock_date_text: serverUnlockDateText,
+        score: {{ existing_sub.score|default:0 }},
+        wrong_count: {{ existing_sub.wrong_count|default:0 }},
+        unanswered_count: {{ existing_sub.unanswered_count|default:0 }},
+        total_questions: {{ existing_sub.total_questions|default:test.questions_count|default:0 }},
+        percentage: {{ existing_sub.percentage|default:0 }},
+        passed: {% if existing_sub.passed %}true{% else %}false{% endif %},
+        pass_percentage: {{ test.pass_percentage|default:0 }},
+        review_unlocked: isReviewUnlocked,
+        unlock_date_text: serverUnlockDateText,
         review: existingReviewData
-  });
-  return;
+      });
+      return;
     }
 
   if (!rawQuestions || rawQuestions.length === 0) {

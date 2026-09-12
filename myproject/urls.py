@@ -81,6 +81,12 @@ urlpatterns = [
     path('admin-dashboard/tests/<int:test_id>/questions/', views.admin_get_test_questions_view, name='admin_get_test_questions'),
     path('admin-dashboard/tests/<int:test_id>/questions/add/', views.admin_add_question_view, name='admin_add_question'),
     path('admin-dashboard/tests/questions/delete/<int:question_id>/', views.admin_delete_question_view, name='admin_delete_question'),
+    # Syllabus & Daily Study Material PDF Portal Routes
+    path('syllabus/', views.syllabus_list_view, name='syllabus_list'),
+    path('syllabus/download/<int:doc_id>/', views.download_syllabus_pdf_view, name='download_syllabus_pdf'),
+    path('admin-dashboard/syllabus/add/', views.admin_add_syllabus_view, name='admin_add_syllabus'),
+    path('admin-dashboard/syllabus/update/<int:doc_id>/', views.admin_update_syllabus_view, name='admin_update_syllabus'),
+    path('admin-dashboard/syllabus/delete/<int:doc_id>/', views.admin_delete_syllabus_view, name='admin_delete_syllabus'),
 ]
 
 if settings.DEBUG:

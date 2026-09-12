@@ -7,8 +7,10 @@ from django.http import JsonResponse, HttpResponse
 from .models import (
     Services, Admission, ContactMessage, StudentProfile, Course, 
     GalleryImage, TeamMember, WebsiteSettings, AdminProfile, Certificate, 
-    BroadcastEmail, OnlineTest, QuizQuestion, TestSubmission, TopperResult
+    BroadcastEmail, OnlineTest, QuizQuestion, TestSubmission, TopperResult,
+    SyllabusDocument
 )
+from django.core.files.base import ContentFile
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
@@ -466,6 +468,12 @@ def register_view(request):
         "NDA / CDS (Defence) (₹ 6100)",
         "COMPUTER PACK (₹ 6500)",
         "SPOKEN ENGLISH PROGRAM (₹ 2500)",
+        "Monthly Class (₹ 700)",
+        "Monthly Computer (₹ 500)",
+        "Monthly Library (₹ 500)",
+        "Package: All (Class + Computer + Library) (₹ 1200)",
+        "Only Class + Library (₹ 800)",
+        "Only Computer + Library (₹ 700)",
     ]
     
     if request.method == "POST":
@@ -824,6 +832,7 @@ def admin_dashboard_view(request):
     populate_default_online_tests()
     populate_default_courses()
     populate_default_toppers()
+    populate_default_syllabus_documents()
 
     students = StudentProfile.objects.select_related('user').all()
     admissions = Admission.objects.all().order_by('-created_at')
@@ -837,6 +846,7 @@ def admin_dashboard_view(request):
     broadcast_emails = BroadcastEmail.objects.all().order_by('-created_at')
     online_tests = OnlineTest.objects.all().prefetch_related('questions', 'submissions').order_by('-created_at')
     test_submissions = TestSubmission.objects.all().select_related('test').order_by('-submitted_at')[:50]
+    syllabus_documents = SyllabusDocument.objects.all().order_by('-document_date', '-uploaded_at')
 
     # Fetch and ensure profiles for admins
     admins = User.objects.filter(is_staff=True).order_by('date_joined')
@@ -865,6 +875,7 @@ def admin_dashboard_view(request):
     total_certificates = certificates_list.count()
     total_broadcasts = broadcast_emails.count()
     total_online_tests = online_tests.count()
+    total_syllabus = syllabus_documents.count()
     # Build safe student broadcast JSON
     students_broadcast_data = []
     for s in students:
@@ -895,6 +906,7 @@ def admin_dashboard_view(request):
         "broadcast_emails": broadcast_emails,
         "online_tests": online_tests,
         "test_submissions": test_submissions,
+        "syllabus_documents": syllabus_documents,
         "debug_info": debug_info,
         "stats": {
             "total_students": total_students,
@@ -907,7 +919,8 @@ def admin_dashboard_view(request):
             "total_admins": total_admins,
             "total_certificates": total_certificates,
             "total_broadcasts": total_broadcasts,
-            "total_online_tests": total_online_tests
+            "total_online_tests": total_online_tests,
+            "total_syllabus": total_syllabus
         }
     })
 
@@ -1147,8 +1160,14 @@ def admin_update_settings_view(request):
             if 'popup_image' in request.FILES:
                 settings.popup_image = request.FILES['popup_image']
 
+            # Downloadable Academic PDFs
+            if 'syllabus_pdf' in request.FILES:
+                settings.syllabus_pdf = request.FILES['syllabus_pdf']
+            if 'brochure_pdf' in request.FILES:
+                settings.brochure_pdf = request.FILES['brochure_pdf']
+
             settings.save()
-            return JsonResponse({"status": "success", "message": "Website settings and popup banner updated successfully!"})
+            return JsonResponse({"status": "success", "message": "Website settings updated successfully!"})
         except Exception as e:
             return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
@@ -2657,5 +2676,299 @@ def admin_get_test_questions_view(request, test_id):
         "test_id": test.id,
         "questions": data
     })
+
+
+# ============================================================
+# SYLLABUS & DAILY STUDY MATERIAL PDF CONTROLLERS
+# ============================================================
+
+def create_sample_pdf_bytes(title, subtitle, subject):
+    safe_title = title.replace('(', '[').replace(')', ']')
+    safe_sub = subtitle.replace('(', '[').replace(')', ']')
+    header = "%PDF-1.4\n"
+    body = (
+        "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+        "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+        "3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R/Resources<<>>/Contents 4 0 R>>endobj\n"
+        f"4 0 obj<</Length {len(safe_title) + len(safe_sub) + 220}>>stream\n"
+        f"BT /F1 16 Tf 50 780 Td ({safe_title[:60]}) Tj ET\n"
+        f"BT /F1 12 Tf 50 750 Td ({safe_sub[:80]}) Tj ET\n"
+        "BT /F1 10 Tf 50 710 Td (Official Study Material & Syllabus - TeachMANTRA Academy) Tj ET\n"
+        "endstream\nendobj\n"
+        "xref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000216 00000 n \n"
+        "trailer<</Size 5/Root 1 0 R>>\nstartxref\n380\n%%EOF\n"
+    )
+    return (header + body).encode('latin-1', errors='replace')
+
+
+def populate_default_syllabus_documents():
+    if not SyllabusDocument.objects.exists():
+        defaults = [
+            {
+                "title": "SSC GD 2026 Complete Official Syllabus & Subject-wise Marks Distribution",
+                "course": "SSC GD (₹ 3100)",
+                "category": "Syllabus",
+                "description": "Complete syllabus breakdown for General Intelligence & Reasoning, General Knowledge, Elementary Mathematics, and English/Hindi.",
+                "document_date": timezone.now().date(),
+                "file_name": "SSC_GD_2026_Official_Syllabus.pdf"
+            },
+            {
+                "title": "UP Police Constable & SI Detailed General Hindi & Samanya Gyan Syllabus",
+                "course": "UP POLICE / DELHI POLICE (₹ 2999)",
+                "category": "Syllabus",
+                "description": "Topic-wise complete syllabus for UP Police Constable recruitment examination with physical standards and exam structure.",
+                "document_date": timezone.now().date() - timedelta(days=1),
+                "file_name": "UP_Police_Exam_Complete_Syllabus.pdf"
+            },
+            {
+                "title": "Daily Practice Sheet (DPP-12): Quantitative Aptitude & Speed Math Shortcuts",
+                "course": "All Courses",
+                "category": "Practice Sheet",
+                "description": "50 high-frequency practice questions on Percentage, Profit & Loss, Time & Work with stepwise explanation sheet.",
+                "document_date": timezone.now().date(),
+                "file_name": "Math_Daily_Practice_Sheet_Day12.pdf"
+            },
+            {
+                "title": "Daily Static GK & Current Affairs Capsule (National & International)",
+                "course": "All Courses",
+                "category": "Current Affairs",
+                "description": "Daily curated exam-focused current affairs bullet points, government schemes, appointments, and awards for revision.",
+                "document_date": timezone.now().date(),
+                "file_name": "Daily_Current_Affairs_Capsule.pdf"
+            },
+            {
+                "title": "RRB NTPC & Group D General Science & Reasoning Topic Notes",
+                "course": "RAILWAY NTPC / ALP / GROUP D (₹ 3100)",
+                "category": "Daily Notes",
+                "description": "Important Physics, Chemistry, and Biology concept sheets with previous years repeated question bank.",
+                "document_date": timezone.now().date() - timedelta(days=2),
+                "file_name": "Railway_NTPC_General_Science_Notes.pdf"
+            },
+            {
+                "title": "Spoken English & Grammar Foundation Day-by-Day Learning Roadmap",
+                "course": "SPOKEN ENGLISH PROGRAM (₹ 2500)",
+                "category": "Syllabus",
+                "description": "60-day structured syllabus covering Tenses, Vocabulary, Daily Conversation Drills, and Interview Etiquette.",
+                "document_date": timezone.now().date() - timedelta(days=3),
+                "file_name": "Spoken_English_Roadmap_Syllabus.pdf"
+            },
+        ]
+        for d in defaults:
+            try:
+                pdf_bytes = create_sample_pdf_bytes(d["title"], d["description"], d["course"])
+                doc = SyllabusDocument(
+                    title=d["title"],
+                    course=d["course"],
+                    category=d["category"],
+                    description=d["description"],
+                    document_date=d["document_date"],
+                    downloads_count=18
+                )
+                doc.pdf_file.save(d["file_name"], ContentFile(pdf_bytes), save=True)
+            except Exception as e:
+                print(f"Error seeding syllabus doc {d['title']}: {e}")
+
+
+def syllabus_list_view(request):
+    """
+    Dedicated public & student portal for downloading daily syllabus, class notes, DPP, and study materials.
+    """
+    populate_default_syllabus_documents()
+    
+    query = request.GET.get('q', '').strip()
+    category_filter = request.GET.get('category', '').strip()
+    course_filter = request.GET.get('course', '').strip()
+    date_filter = request.GET.get('date', '').strip()
+
+    docs = SyllabusDocument.objects.all().order_by('-document_date', '-uploaded_at')
+
+    if query:
+        docs = docs.filter(
+            Q(title__icontains=query) | 
+            Q(description__icontains=query) | 
+            Q(course__icontains=query)
+        )
+
+    if category_filter and category_filter != 'all':
+        docs = docs.filter(category=category_filter)
+
+    if course_filter and course_filter != 'all':
+        docs = docs.filter(Q(course=course_filter) | Q(course='All Courses'))
+
+    if date_filter:
+        try:
+            docs = docs.filter(document_date=date_filter)
+        except Exception:
+            pass
+
+    categories = [
+        ('all', 'All Documents (सभी दस्तावेज़)'),
+        ('Syllabus', 'Official Syllabus (पाठ्यक्रम)'),
+        ('Daily Notes', 'Daily Class Notes (दैनिक नोट्स)'),
+        ('Practice Sheet', 'Practice Sheet / DPP (अभ्यास पत्र)'),
+        ('Previous Papers', 'Previous Year Papers (पुराने प्रश्नपत्र)'),
+        ('Current Affairs', 'Current Affairs (समसामयिकी)'),
+        ('Other', 'Other Study Material (अन्य सामग्री)'),
+    ]
+
+    # Available Courses for filter
+    courses_choices = [
+        "All Courses",
+        "SSC GD",
+        "UP POLICE / DELHI POLICE",
+        "ARMY GD",
+        "AIRFORCE / NAVY (X & Y GROUP)",
+        "UPSSSC / LEKHPAL / VDO / PET",
+        "TEACHERS PACK ( SUPER TET / CTET / TET )",
+        "RAILWAY NTPC / ALP / GROUP D",
+        "NDA / CDS (Defence)",
+        "COMPUTER PACK",
+        "SPOKEN ENGLISH PROGRAM",
+        "Monthly Class",
+        "Monthly Library",
+        "Monthly Computer",
+    ]
+
+    total_docs_count = SyllabusDocument.objects.count()
+
+    return render(request, 'syllabus_list.html', {
+        'documents': docs,
+        'categories': categories,
+        'courses_choices': courses_choices,
+        'selected_category': category_filter or 'all',
+        'selected_course': course_filter or 'all',
+        'selected_date': date_filter,
+        'query': query,
+        'total_docs_count': total_docs_count,
+    })
+
+
+def download_syllabus_pdf_view(request, doc_id):
+    """
+    Increments the download counter and securely redirects to the PDF file.
+    """
+    doc = get_object_or_404(SyllabusDocument, id=doc_id)
+    doc.downloads_count += 1
+    doc.save(update_fields=['downloads_count'])
+    
+    if doc.pdf_file:
+        return redirect(doc.pdf_file.url)
+    return redirect('syllabus_list')
+
+
+@login_required(login_url='login')
+def admin_add_syllabus_view(request):
+    """
+    AJAX handler to upload a new Syllabus or Daily Study Material PDF.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        course = request.POST.get("course", "All Courses").strip() or "All Courses"
+        category = request.POST.get("category", "Syllabus").strip() or "Syllabus"
+        description = request.POST.get("description", "").strip()
+        doc_date_str = request.POST.get("document_date", "").strip()
+        pdf_file = request.FILES.get("pdf_file")
+
+        if not title:
+            return JsonResponse({"status": "error", "message": "Document title is required."})
+        if not pdf_file:
+            return JsonResponse({"status": "error", "message": "Please select a PDF file to upload."})
+
+        doc_date = timezone.now().date()
+        if doc_date_str:
+            try:
+                from datetime import datetime
+                doc_date = datetime.strptime(doc_date_str, '%Y-%m-%d').date()
+            except Exception:
+                pass
+
+        doc = SyllabusDocument.objects.create(
+            title=title,
+            course=course,
+            category=category,
+            description=description,
+            document_date=doc_date,
+            pdf_file=pdf_file
+        )
+        return JsonResponse({
+            "status": "success", 
+            "message": f"'{doc.title}' uploaded successfully!"
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_update_syllabus_view(request, doc_id):
+    """
+    AJAX handler to update Syllabus or Daily PDF metadata or replace file.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    doc = get_object_or_404(SyllabusDocument, id=doc_id)
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        course = request.POST.get("course", "All Courses").strip() or "All Courses"
+        category = request.POST.get("category", "Syllabus").strip() or "Syllabus"
+        description = request.POST.get("description", "").strip()
+        doc_date_str = request.POST.get("document_date", "").strip()
+
+        if not title:
+            return JsonResponse({"status": "error", "message": "Document title is required."})
+
+        doc.title = title
+        doc.course = course
+        doc.category = category
+        doc.description = description
+
+        if doc_date_str:
+            try:
+                from datetime import datetime
+                doc.document_date = datetime.strptime(doc_date_str, '%Y-%m-%d').date()
+            except Exception:
+                pass
+
+        if 'pdf_file' in request.FILES:
+            doc.pdf_file = request.FILES['pdf_file']
+
+        doc.save()
+        return JsonResponse({
+            "status": "success", 
+            "message": f"'{doc.title}' updated successfully!"
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
+
+@login_required(login_url='login')
+def admin_delete_syllabus_view(request, doc_id):
+    """
+    AJAX handler to permanently delete a Syllabus/Daily PDF.
+    """
+    if not request.user.is_staff:
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    doc = get_object_or_404(SyllabusDocument, id=doc_id)
+
+    if request.method == "POST":
+        title = doc.title
+        try:
+            if doc.pdf_file:
+                doc.pdf_file.delete(save=False)
+        except Exception:
+            pass
+        doc.delete()
+        return JsonResponse({
+            "status": "success", 
+            "message": f"'{title}' deleted successfully!"
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
+
 
 

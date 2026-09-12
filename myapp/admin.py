@@ -105,3 +105,13 @@ class BroadcastEmailAdmin(admin.ModelAdmin):
     def get_sender(self, obj):
         return obj.sent_by.username if obj.sent_by else 'System Admin'
     get_sender.short_description = 'Sent By'
+
+
+from .models import SyllabusDocument
+
+@admin.register(SyllabusDocument)
+class SyllabusDocumentAdmin(admin.ModelAdmin):
+    list_display = ('title', 'course', 'category', 'document_date', 'downloads_count', 'uploaded_at')
+    search_fields = ('title', 'course', 'description')
+    list_filter = ('category', 'course', 'document_date', 'uploaded_at')
+

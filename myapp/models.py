@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 # Create your models here.
 
@@ -111,6 +112,10 @@ class WebsiteSettings(models.Model):
     popup_btn1_link = models.CharField(max_length=150, default="/register/")
     popup_btn2_text = models.CharField(max_length=50, default="Explore Courses")
     popup_btn2_link = models.CharField(max_length=150, default="/courses/")
+
+    # Downloadable PDF Documents (Syllabus & Training Brochure)
+    syllabus_pdf = models.FileField(upload_to='documents/', blank=True, null=True, help_text="Official Academy Syllabus PDF for students to download")
+    brochure_pdf = models.FileField(upload_to='documents/', blank=True, null=True, help_text="Training & Courses Brochure PDF")
 
     def __str__(self):
         return self.site_name
@@ -242,6 +247,33 @@ class TopperResult(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.exam_name}" + (f" ({self.rank})" if self.rank else "")
+
+
+class SyllabusDocument(models.Model):
+    CATEGORY_CHOICES = [
+        ('Syllabus', 'Official Syllabus (पाठ्यक्रम)'),
+        ('Daily Notes', 'Daily Class Notes (दैनिक नोट्स)'),
+        ('Practice Sheet', 'Practice Sheet / DPP (अभ्यास पत्र)'),
+        ('Previous Papers', 'Previous Year Papers (पुराने प्रश्नपत्र)'),
+        ('Current Affairs', 'Current Affairs (समसामयिकी)'),
+        ('Other', 'Other Study Material (अन्य सामग्री)'),
+    ]
+
+    title = models.CharField(max_length=250, help_text="e.g. SSC GD Complete Math & Reasoning Syllabus 2026")
+    course = models.CharField(max_length=150, default="All Courses", help_text="e.g. SSC GD, UP Police, Railway, Computer, All Courses")
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Syllabus')
+    description = models.TextField(blank=True, null=True, help_text="Brief details or chapter outline")
+    pdf_file = models.FileField(upload_to='syllabus_documents/')
+    document_date = models.DateField(default=timezone.now, help_text="Date of syllabus or daily note release")
+    downloads_count = models.PositiveIntegerField(default=0)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-document_date', '-uploaded_at']
+
+    def __str__(self):
+        return f"[{self.category}] {self.title} ({self.course})"
+
 
 
 
