@@ -176,7 +176,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = Path(os.environ.get('DJANGO_STATIC_ROOT', BASE_DIR / 'staticfiles'))
 STATICFILES_DIRS = [
     BASE_DIR / 'myapp' / 'static',
 ]
@@ -187,7 +187,7 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(os.environ.get('DJANGO_MEDIA_ROOT', BASE_DIR / 'media'))
 
 # Cloudinary Storage for Media Files (User Uploaded Images) - Trigger Build final
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
