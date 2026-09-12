@@ -184,7 +184,11 @@ class OnlineTest(models.Model):
     @property
     def questions_count(self):
         count = self.questions.count()
-        return count if count > 0 else self.total_questions
+        if count > 0:
+            return count
+        if self.external_link:
+            return self.total_questions
+        return self.total_questions if self.total_questions > 0 else 0
 
 
 class QuizQuestion(models.Model):

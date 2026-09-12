@@ -298,18 +298,20 @@
 
     /* Top Header Bar */
     .admin-header {
-      height: 75px;
+      min-height: 75px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 2.5rem;
+      padding: 0.75rem 2rem;
       background: rgba(15, 14, 32, 0.8);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 90;
+      gap: 1.25rem;
+      flex-wrap: wrap;
     }
 
     .header-title h1 {
@@ -321,7 +323,61 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .theme-toggle-btn {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.15rem;
+      transition: var(--transition-normal);
+      outline: none;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle-btn:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+      transform: scale(1.06);
+    }
+
+    .theme-icon-sun {
+      display: none !important;
+      color: #f59e0b;
+    }
+
+    .theme-icon-moon {
+      display: inline-block !important;
+      color: #a5b4fc;
+    }
+
+    [data-theme="light"] .theme-toggle-btn {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    [data-theme="light"] .theme-toggle-btn:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+    }
+
+    [data-theme="light"] .theme-icon-sun {
+      display: inline-block !important;
+    }
+
+    [data-theme="light"] .theme-icon-moon {
+      display: none !important;
     }
 
     .header-date {
@@ -331,6 +387,8 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .header-date i {
@@ -1372,7 +1430,7 @@
         </div>
 
         <div class="header-actions">
-          <button id="adminThemeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle Theme (Dark / Light)" style="border-radius: 8px; width: 40px; height: 40px;">
+          <button id="adminThemeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle Theme (Dark / Light)">
             <i class="fa-solid fa-moon theme-icon-moon"></i>
             <i class="fa-solid fa-sun theme-icon-sun"></i>
           </button>
@@ -5469,6 +5527,13 @@ Agli class nirdharit samay par shuru hogi.
     // ONLINE TESTS & QUIZ SYSTEM CONTROLLERS
     // ============================================================
 
+    function getCSRFToken() {
+      const match = document.cookie.match(/csrftoken=([^;]+)/);
+      if (match) return decodeURIComponent(match[1]);
+      const input = document.querySelector('[name=csrfmiddlewaretoken]');
+      return input ? input.value : '{{ csrf_token }}';
+    }
+
     // Client-side auto-extraction from selected file
     function handleQuizFileSelect(input) {
       if (!input.files || !input.files[0]) return;
@@ -5483,7 +5548,7 @@ Agli class nirdharit samay par shuru hogi.
     // Client-side auto-extraction from pasted code
     function handleQuizCodePaste(textarea) {
       const val = textarea.value.trim();
-      if (val.length > 50) {
+      if (val.length > 30) {
         parseAndPopulateQuizText(val);
       }
     }
@@ -5491,45 +5556,77 @@ Agli class nirdharit samay par shuru hogi.
     function parseAndPopulateQuizText(text) {
       const badge = document.getElementById('importStatusBadge');
       let foundTitle = '';
+      let foundCategory = '';
       let qCount = 0;
 
-      // Extract Title
+      // 1. Extract Title
       const titleMatch = text.match(/<title[^>]*>(.*?)<\/title>/i) || text.match(/<h1[^>]*>(.*?)<\/h1>/i);
       if (titleMatch && titleMatch[1]) {
-        foundTitle = titleMatch[1].replace(/— TeachMANTRA.*/i, '').trim();
-      }
-
-      // Extract Questions Count from DATA = [...]
-      const dataMatch = text.match(/const\s+DATA\s*=\s*(\[[\s\S]*?\]);/) || text.match(/(\[\s*\{\s*"q":[\s\S]*\}\s*\])/);
-      if (dataMatch) {
-        try {
-          const arr = JSON.parse(dataMatch[1]);
-          qCount = arr.length;
-        } catch(e) {
-          // fallback count
-          const matches = text.match(/"q"\s*:\s*"/g);
-          if (matches) qCount = matches.length;
+        let cleanT = titleMatch[1].replace(/— TeachMANTRA.*/i, '').replace(/TeachMANTRA.*/i, '').replace(/—/g, '-').trim();
+        cleanT = cleanT.replace(/['"`<>{}]/g, '').trim();
+        if (cleanT.length > 2 && !cleanT.includes('x.q') && !cleanT.startsWith('+')) {
+          foundTitle = cleanT;
         }
       }
 
+      // 2. Extract Questions Count from various array patterns
+      // Method A: Match JSON/JS array
+      const dataMatch = text.match(/(?:const|var|let)?\s*(?:DATA|questions|quizData|quiz_data|testData|mcqs|items|quiz|data)\s*=\s*(\[[\s\S]*?\]);?/i) || text.match(/(\[\s*\{\s*["']?q(?:uestion)?["']?\s*:[\s\S]*\}\s*\])/i);
+      if (dataMatch) {
+        try {
+          // Normalize unquoted keys for JSON.parse
+          let cleanStr = dataMatch[1].replace(/([{,]\s*)([a-zA-Z_]\w*)\s*:/g, '$1"$2":');
+          cleanStr = cleanStr.replace(/,\s*([\]}])/g, '$1');
+          const arr = JSON.parse(cleanStr);
+          if (Array.isArray(arr) && arr.length > 0) {
+            qCount = arr.length;
+          }
+        } catch(e) {
+          // Fallback regex count
+          const matches = text.match(/["']?q(?:uestion)?(?:_text)?["']?\s*:/gi);
+          if (matches) qCount = matches.length;
+        }
+      } else {
+        // Method B: Regex count of { q: "..." }
+        const objMatches = text.match(/\{[^{}]*?["']?q(?:uestion)?(?:_text)?["']?\s*:[^{}]*?\}/gi);
+        if (objMatches && objMatches.length > 0) {
+          qCount = objMatches.length;
+        } else {
+          // Method C: Text questions count
+          const textMatches = text.match(/(?:^|\n)\s*(?:\d+[\.\)]|\(?\d+\)?)\s+.*?\n\s*[A-Da-d1-4अ-घ]/g);
+          if (textMatches && textMatches.length > 0) {
+            qCount = textMatches.length;
+          }
+        }
+      }
+
+      // 3. Category detection
+      if (text.includes('GS') || text.includes('सामान्य अध्ययन') || text.includes('सामान्य ज्ञान') || text.includes('General Studies')) {
+        foundCategory = 'General Studies / सामान्य ज्ञान';
+      } else if (text.includes('रीजनिंग') || text.includes('दिशा') || text.includes('Reasoning')) {
+        foundCategory = 'Reasoning / तर्कशक्ति';
+      } else if (text.includes('गणित') || text.includes('Math') || text.includes('Aptitude')) {
+        foundCategory = 'Mathematics / गणित';
+      } else if (text.includes('हिंदी') || text.includes('Hindi')) {
+        foundCategory = 'General Hindi / सामान्य हिंदी';
+      }
+
+      // Apply values to inputs
       if (foundTitle && !document.getElementById('test-add-title').value) {
         document.getElementById('test-add-title').value = foundTitle;
       }
+      if (foundCategory && !document.getElementById('test-add-category').value) {
+        document.getElementById('test-add-category').value = foundCategory;
+      }
       if (qCount > 0) {
         document.getElementById('test-add-totalq').value = qCount;
-        if (!document.getElementById('test-add-subtitle').value) {
-          document.getElementById('test-add-subtitle').value = `${qCount} Questions • परीक्षा अभ्यास`;
-        }
-      }
-      if (text.includes('GS') || text.includes('सामान्य अध्ययन')) {
-        if (!document.getElementById('test-add-category').value) {
-          document.getElementById('test-add-category').value = 'General Studies / GS Mixed';
-        }
+        const cat = foundCategory || document.getElementById('test-add-category').value || 'General Studies';
+        document.getElementById('test-add-subtitle').value = `${qCount} Questions • ${cat} • परीक्षा अभ्यास`;
       }
 
       if (badge) {
         badge.style.display = 'inline-flex';
-        badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${qCount ? qCount + ' MCQs Extracted' : 'File Loaded'}`;
+        badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${qCount > 0 ? qCount + ' MCQs Detected' : 'Quiz File Loaded'}`;
       }
     }
 
@@ -5549,7 +5646,10 @@ Agli class nirdharit samay par shuru hogi.
         const response = await fetch('/admin-dashboard/tests/add/', {
           method: 'POST',
           body: formData,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          }
         });
         const data = await response.json();
         if (data.status === 'success') {
@@ -5601,7 +5701,10 @@ Agli class nirdharit samay par shuru hogi.
         const response = await fetch(`/admin-dashboard/tests/update/${testId}/`, {
           method: 'POST',
           body: formData,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          }
         });
         const data = await response.json();
         if (data.status === 'success') {
@@ -5622,14 +5725,17 @@ Agli class nirdharit samay par shuru hogi.
     // Toggle Active/Inactive Status of Test
     async function toggleTestStatus(testId) {
       const form = new FormData();
-      form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      form.append('csrfmiddlewaretoken', getCSRFToken());
       form.append('ajax', 'true');
 
       try {
         const response = await fetch(`/admin-dashboard/tests/toggle-status/${testId}/`, {
           method: 'POST',
           body: form,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          }
         });
         const data = await response.json();
         if (data.status === 'success') {
@@ -5654,28 +5760,45 @@ Agli class nirdharit samay par shuru hogi.
       }
 
       const form = new FormData();
-      form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      form.append('csrfmiddlewaretoken', getCSRFToken());
       form.append('ajax', 'true');
 
       try {
         const response = await fetch(`/admin-dashboard/tests/delete/${testId}/`, {
           method: 'POST',
           body: form,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          }
         });
         const data = await response.json();
         if (data.status === 'success') {
           showToast(data.message, 'success');
           const row = document.getElementById(`row-test-${testId}`);
           if (row) {
+            row.style.transition = 'all 0.3s ease';
             row.style.opacity = '0';
             row.style.transform = 'scale(0.95)';
-            setTimeout(() => row.remove(), 400);
+            setTimeout(() => {
+              row.remove();
+              const tbody = document.getElementById('testsTableBody');
+              if (tbody && tbody.querySelectorAll('tr:not(#emptyTestsRow)').length === 0) {
+                tbody.innerHTML = `
+                  <tr id="emptyTestsRow">
+                    <td colspan="7" style="text-align: center; padding: 3.5rem 1rem; color: var(--text-muted);">
+                      <i class="fa-solid fa-laptop-file" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block; color: var(--border-color);"></i>
+                      No online tests created yet. Click "+ Add New Test" to create your first exam.
+                    </td>
+                  </tr>`;
+              }
+            }, 300);
           }
         } else {
           showToast(data.message || 'Error deleting test', 'error');
         }
       } catch (e) {
+        console.error('Delete test error:', e);
         showToast('Server connection failed', 'error');
       }
     }
@@ -5758,7 +5881,10 @@ Agli class nirdharit samay par shuru hogi.
         const res = await fetch(`/admin-dashboard/tests/${testId}/questions/add/`, {
           method: 'POST',
           body: formData,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          }
         });
         const data = await res.json();
         if (data.status === 'success') {
@@ -5781,14 +5907,17 @@ Agli class nirdharit samay par shuru hogi.
       if (!confirm("Are you sure you want to delete this question?")) return;
 
       const form = new FormData();
-      form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      form.append('csrfmiddlewaretoken', getCSRFToken());
       form.append('ajax', 'true');
 
       try {
         const res = await fetch(`/admin-dashboard/tests/questions/delete/${questionId}/`, {
           method: 'POST',
           body: form,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          }
         });
         const data = await res.json();
         if (data.status === 'success') {

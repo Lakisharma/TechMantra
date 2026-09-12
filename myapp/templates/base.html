@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4.5">
   {% block extra_css %}{% endblock %}
 </head>
+
 <body>
 
   <!-- ==========================================
@@ -38,7 +39,7 @@
     </div>
   </div>
   <script>
-    (function() {
+    (function () {
       function hideLoader() {
         const l = document.getElementById('premium-loader-overlay');
         if (l) {
@@ -69,18 +70,22 @@
         </div>
         <div class="prem-topbar-right">
           <div class="prem-topbar-downloads">
-            <a href="{% url 'syllabus_list' %}" class="brochure-download" title="Browse & Download Daily Syllabus & Notes">
+            <a href="{% url 'syllabus_list' %}" class="brochure-download"
+              title="Browse & Download Daily Syllabus & Notes">
               <i class="fa-solid fa-file-pdf"></i> Syllabus PDF
             </a>
             <span class="prem-sep">|</span>
             {% if site_settings.brochure_pdf %}
-              <a href="{{ site_settings.brochure_pdf.url }}" target="_blank" download class="brochure-download" title="Download Training & Courses Brochure PDF">
-                <i class="fa-solid fa-book-open"></i> Training Brochure
-              </a>
+            <a href="{{ site_settings.brochure_pdf.url }}" target="_blank" download class="brochure-download"
+              title="Download Training & Courses Brochure PDF">
+              <i class="fa-solid fa-book-open"></i> Training Brochure
+            </a>
             {% else %}
-              <a href="javascript:void(0)" onclick="alert('Training Brochure will be uploaded shortly by Academy Administrator.');" class="brochure-download" title="Training Brochure coming soon">
-                <i class="fa-solid fa-book-open"></i> Training Brochure
-              </a>
+            <a href="javascript:void(0)"
+              onclick="alert('Training Brochure will be uploaded shortly by Academy Administrator.');"
+              class="brochure-download" title="Training Brochure coming soon">
+              <i class="fa-solid fa-book-open"></i> Training Brochure
+            </a>
             {% endif %}
           </div>
           <span class="prem-sep-bold">|</span>
@@ -122,22 +127,30 @@
         <li><a href="{% url 'home' %}" class="nav-link">Home</a></li>
         <li><a href="{% url 'about' %}" class="nav-link">About Us</a></li>
         <li><a href="{% url 'courses' %}" class="nav-link">Courses</a></li>
-        <li><a href="{% url 'syllabus_list' %}" class="nav-link"><i class="fa-solid fa-file-pdf" style="color: #38bdf8;"></i> Syllabus PDF</a></li>
-        <li><a href="{% url 'tests_list' %}" class="nav-link"><i class="fa-solid fa-laptop-file" style="color: var(--primary);"></i> Online Tests</a></li>
+        <li><a href="{% url 'syllabus_list' %}" class="nav-link"><i class="fa-solid fa-file-pdf"
+              style="color: #38bdf8;"></i> Syllabus PDF</a></li>
+        <li><a href="{% url 'tests_list' %}" class="nav-link"><i class="fa-solid fa-laptop-file"
+              style="color: var(--primary);"></i> Online Tests</a></li>
         <li><a href="{% url 'faculty' %}" class="nav-link">Faculty</a></li>
         <li><a href="{% url 'admissions' %}" class="nav-link">Admissions</a></li>
         <li><a href="{% url 'gallery' %}" class="nav-link">Gallery</a></li>
         <li><a href="{% url 'results' %}" class="nav-link">Results</a></li>
         <li><a href="{% url 'contact' %}" class="nav-link">Contact Us</a></li>
         {% if user.is_authenticated and user.is_staff %}
-        <li><a href="{% url 'admin_dashboard' %}" class="nav-link nav-link-admin"><i class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
+        <li><a href="{% url 'admin_dashboard' %}" class="nav-link nav-link-admin"><i
+              class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
         {% endif %}
-        <li class="mobile-only"><a href="{% url 'verify_certificate' %}" class="nav-link"><i class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
+        <li class="mobile-only"><a href="{% url 'verify_certificate' %}" class="nav-link"><i
+              class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
         {% if user.is_authenticated %}
-        <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link"><i class="fa-solid fa-user-gear"></i> Student Dashboard</a></li>
-        <li class="mobile-only"><a href="{% url 'logout' %}" style="display: inline-block; margin-top: 1rem; color: #f87171;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link"><i class="fa-solid fa-user-gear"></i>
+            Student Dashboard</a></li>
+        <li class="mobile-only"><a href="{% url 'logout' %}"
+            style="display: inline-block; margin-top: 1rem; color: #f87171;"><i
+              class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
         {% else %}
-        <li class="mobile-only"><a href="{% url 'login' %}" style="display: inline-block; margin-top: 1rem;"><i class="fa-solid fa-lock"></i> Login</a></li>
+        <li class="mobile-only"><a href="{% url 'login' %}" style="display: inline-block; margin-top: 1rem;"><i
+              class="fa-solid fa-lock"></i> Login</a></li>
         {% endif %}
         <li class="mobile-only" style="margin-top: 1rem;">
           <button id="mobileThemeToggleBtn" class="theme-toggle-btn"
@@ -191,29 +204,164 @@
   <!-- ==========================================
        Footer Section
        ========================================== -->
+  <!-- ==========================================
+       Footer Section (Modern Premium Multi-Column)
+       ========================================== -->
   <footer class="footer">
-    <div class="container">
-      <a href="{% url 'home' %}" class="footer-logo">
-        <img src="{% static 'images/teachmantra_logo.png' %}" alt="Logo" class="site-logo-img logo-dark-mode" style="height: 38px; width: auto; object-fit: contain; vertical-align: middle;" />
-        <img src="{% static 'images/teachmantra_logo_light.png' %}" alt="Logo" class="site-logo-img logo-light-mode" style="height: 38px; width: auto; object-fit: contain; vertical-align: middle;" />
-        <span>{{ site_settings.site_name }}</span>
-      </a>
-      <p class="tagline">Providing quality classroom education and specialized mock test series for competitive exams.
-      </p>
+    <!-- Footer CTA Banner -->
+    <div class="footer-cta-banner">
+      <div class="container footer-cta-container">
+        <div class="footer-cta-content">
+          <span class="footer-cta-badge"><i class="fa-solid fa-fire"></i> New Batches Starting</span>
+          <h3 class="footer-cta-title">Ready to Crack Your Dream Competitive Exam?</h3>
+          <p class="footer-cta-desc">Join {{ site_settings.site_name }} Academy for specialized classroom batches, daily
+            mock test series & personalized mentorship.</p>
+        </div>
+        <div class="footer-cta-actions">
+          <a href="{% url 'admissions' %}" class="footer-cta-btn btn-primary-cta">
+            <i class="fa-solid fa-user-plus"></i> Apply for Admission
+          </a>
+          <a href="{% url 'tests_list' %}" class="footer-cta-btn btn-secondary-cta">
+            <i class="fa-solid fa-laptop-code"></i> Free Mock Tests
+          </a>
+        </div>
+      </div>
+    </div>
 
-      <ul class="footer-nav">
-        <li><a href="{% url 'home' %}">Home</a></li>
-        <li><a href="{% url 'about' %}">About Us</a></li>
-        <li><a href="{% url 'courses' %}">Courses</a></li>
-        <li><a href="{% url 'faculty' %}">Faculty</a></li>
-        <li><a href="{% url 'admissions' %}">Admissions</a></li>
-        <li><a href="{% url 'gallery' %}">Gallery</a></li>
-        <li><a href="{% url 'results' %}">Results</a></li>
-        <li><a href="{% url 'contact' %}">Contact Us</a></li>
-      </ul>
+    <!-- Main Footer Grid -->
+    <div class="container footer-main-content">
+      <div class="footer-grid">
 
-      <div class="footer-copyright">
-        &copy; 2026 {{ site_settings.site_name }} Academy. All Rights Reserved. Developed By LakshmanSharma ❤️
+        <!-- Column 1: Brand & Academy Info -->
+        <div class="footer-col footer-col-brand">
+          <a href="{% url 'home' %}" class="footer-brand-logo">
+            <img src="{% static 'images/teachmantra_logo.png' %}" alt="TeachMANTRA Logo"
+              class="site-logo-img logo-dark-mode" />
+            <img src="{% static 'images/teachmantra_logo_light.png' %}" alt="TeachMANTRA Logo"
+              class="site-logo-img logo-light-mode" />
+            <span class="brand-title">{{ site_settings.site_name }}</span>
+          </a>
+          <p class="footer-about-text">
+            Empowering aspirants with comprehensive classroom coaching, advanced test series, and personalized mentor
+            guidance for competitive exams.
+          </p>
+
+          <div class="footer-social-links">
+            <a href="https://wa.me/917408607926" target="_blank" rel="noopener" class="social-icon wa" title="Message Teach Mantra on WhatsApp">
+              <i class="fa-brands fa-whatsapp"></i>
+            </a>
+            <a href="https://www.instagram.com/tm_educationgroup?stkn=MWNwdHE4dmRoNXh2Zw==" target="_blank" rel="noopener" class="social-icon ig" title="Follow us on Instagram">
+              <i class="fa-brands fa-instagram"></i>
+            </a>
+            <a href="https://youtube.com/@teachmantra?si=bJyeSFCFixuuWB36" target="_blank" rel="noopener" class="social-icon yt" title="Subscribe on YouTube">
+              <i class="fa-brands fa-youtube"></i>
+            </a>
+            <a href="https://t.me/teachmantra2025" target="_blank" rel="noopener" class="social-icon tg" title="Join us on Telegram">
+              <i class="fa-brands fa-telegram"></i>
+            </a>
+            <a href="https://www.facebook.com/share/16AcJtpEhHv/" target="_blank" rel="noopener" class="social-icon fb" title="Follow us on Facebook">
+              <i class="fa-brands fa-facebook-f"></i>
+            </a>
+          </div>
+
+          <div class="footer-trust-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Govt. Reg. Premier Educational Academy</span>
+          </div>
+        </div>
+
+        <!-- Column 2: Quick Navigation -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Quick Links</h4>
+          <ul class="footer-links-list">
+            <li><a href="{% url 'home' %}"><i class="fa-solid fa-chevron-right"></i> Home</a></li>
+            <li><a href="{% url 'about' %}"><i class="fa-solid fa-chevron-right"></i> About Us</a></li>
+            <li><a href="{% url 'faculty' %}"><i class="fa-solid fa-chevron-right"></i> Expert Faculty</a></li>
+            <li><a href="{% url 'admissions' %}"><i class="fa-solid fa-chevron-right"></i> Admissions 2026-27</a></li>
+            <li><a href="{% url 'gallery' %}"><i class="fa-solid fa-chevron-right"></i> Campus Gallery</a></li>
+            <li><a href="{% url 'results' %}"><i class="fa-solid fa-chevron-right"></i> Hall of Fame / Results</a></li>
+            <li><a href="{% url 'contact' %}"><i class="fa-solid fa-chevron-right"></i> Contact Us</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Student Zone & Portals -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Student Zone</h4>
+          <ul class="footer-links-list">
+            <li><a href="{% url 'courses' %}"><i class="fa-solid fa-book-open-reader"></i> Explore Courses</a></li>
+            <li><a href="{% url 'tests_list' %}"><i class="fa-solid fa-laptop-file"></i> Online Mock Tests <span
+                  class="footer-badge-pill">Live</span></a></li>
+            <li><a href="{% url 'syllabus_list' %}"><i class="fa-solid fa-file-pdf"></i> Download Syllabus & Notes</a>
+            </li>
+            <li><a href="{% url 'verify_certificate' %}"><i class="fa-solid fa-award"></i> Verify Certificate</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'profile' %}"><i class="fa-solid fa-id-card"></i> Student Dashboard</a></li>
+            {% else %}
+            <li><a href="{% url 'login' %}"><i class="fa-solid fa-right-to-bracket"></i> Student Login</a></li>
+            <li><a href="{% url 'register' %}"><i class="fa-solid fa-user-plus"></i> New Student Sign Up</a></li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <!-- Column 4: Contact & Helpdesk -->
+        <div class="footer-col footer-col-contact">
+          <h4 class="footer-heading">Get in Touch</h4>
+          <div class="footer-contact-items">
+            <div class="footer-contact-item">
+              <div class="contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+              <div class="contact-details">
+                <span class="contact-label">Campus Location:</span>
+                <span class="contact-value">{{ site_settings.contact_address|default:"TeachMANTRA Academy, Main Branch, Delhi, India" }}</span>
+              </div>
+            </div>
+
+            <div class="footer-contact-item">
+              <div class="contact-icon"><i class="fa-solid fa-phone-volume"></i></div>
+              <div class="contact-details">
+                <span class="contact-label">Admission Helpline:</span>
+                <a href="tel:{{ site_settings.contact_phone|default:'+919876543210' }}" class="contact-value contact-link">{{ site_settings.contact_phone|default:"+91 98765 43210" }}</a>
+              </div>
+            </div>
+
+            <div class="footer-contact-item">
+              <div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+              <div class="contact-details">
+                <span class="contact-label">Official Support:</span>
+                <a href="mailto:{{ site_settings.contact_email|default:'theteachmantra@gmail.com' }}" class="contact-value contact-link">{{ site_settings.contact_email|default:"theteachmantra@gmail.com" }}</a>
+              </div>
+            </div>
+
+            <div class="footer-contact-item">
+              <div class="contact-icon"><i class="fa-solid fa-clock"></i></div>
+              <div class="contact-details">
+                <span class="contact-label">Office Hours:</span>
+                <span class="contact-value">Mon - Sat: 8:00 AM - 7:00 PM<br><small style="opacity: 0.75;">Sunday: Mock Test Series Only</small></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="footer-bottom-bar">
+      <div class="container footer-bottom-container">
+        <div class="footer-bottom-stacked">
+          <div class="footer-copy-line">
+            &copy; 2026 <strong style="color: var(--text-main);">{{ site_settings.site_name }} Academy</strong>. All Rights Reserved.
+          </div>
+          <div class="footer-credit-line">
+            Crafted with <i class="fa-solid fa-heart" style="color: #ef4444;"></i> for Students | Developed By <strong style="color: var(--primary);">LakshmanSharma</strong>
+          </div>
+        </div>
+        <div class="footer-bottom-right">
+          <button id="footerBackToTop" class="footer-back-to-top" title="Back to top"
+            onclick="window.scrollTo({top: 0, behavior: 'smooth'});">
+            <span>Back to top</span>
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+        </div>
       </div>
     </div>
   </footer>
@@ -551,7 +699,8 @@
         font-size: 0.78rem !important;
       }
 
-      .popup-btn-dark, .popup-btn-cta {
+      .popup-btn-dark,
+      .popup-btn-cta {
         padding: 0.6rem 0.5rem !important;
         font-size: 0.82rem !important;
       }
@@ -614,7 +763,8 @@
         {% if site_settings.popup_phone or site_settings.contact_phone %}
         <div class="entrance-popup-phone">
           FOR MORE INFORMATION:
-          <strong><i class="fa-solid fa-phone-volume"></i> {{ site_settings.popup_phone|default:site_settings.contact_phone }}</strong>
+          <strong><i class="fa-solid fa-phone-volume"></i> {{
+            site_settings.popup_phone|default:site_settings.contact_phone }}</strong>
         </div>
         {% endif %}
 
@@ -695,7 +845,8 @@
   <!-- Global Image Lightbox Modal -->
   <div id="imageLightboxModal" class="image-lightbox" aria-hidden="true">
     <div class="lightbox-container" onclick="event.stopPropagation();">
-      <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" title="Close (Esc)" aria-label="Close image">
+      <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" title="Close (Esc)"
+        aria-label="Close image">
         <i class="fa-solid fa-xmark"></i>
       </button>
       <img src="" alt="Full view" id="lightboxImage" class="lightbox-img" />

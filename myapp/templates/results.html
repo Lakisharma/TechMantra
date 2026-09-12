@@ -79,10 +79,67 @@
 
         <!-- Elfsight Google Reviews Live Dynamic Widget -->
         <div style="min-height: 250px; margin-top: 1.5rem;">
+          <style>
+            .es-widget-title,
+            [class*="es-widget-title"],
+            [class*="Title__TitleContainer"] {
+              display: none !important;
+            }
+          </style>
           <script src="https://elfsightcdn.com/platform.js" async></script>
           <div class="elfsight-app-3de38149-2e1c-45e0-8f57-1c51959ffcf7" data-elfsight-app-lazy></div>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- Shadow DOM + Light DOM Targeted Heading Hider -->
+  <script>
+    (function() {
+      const hideCss = `
+        .es-widget-title,
+        [class*="es-widget-title"],
+        [class*="Title__TitleContainer"],
+        [class*="TitleContainer"] {
+          display: none !important;
+        }
+      `;
+
+      function cleanRoot(root) {
+        if (!root) return;
+        if (root.shadowRoot) {
+          if (!root.shadowRoot.querySelector('#hide-cust-title-style')) {
+            const st = document.createElement('style');
+            st.id = 'hide-cust-title-style';
+            st.textContent = hideCss;
+            root.shadowRoot.appendChild(st);
+          }
+          cleanRoot(root.shadowRoot);
+        }
+
+        const nodes = root.querySelectorAll ? root.querySelectorAll('*') : [];
+        for (let i = 0; i < nodes.length; i++) {
+          const el = nodes[i];
+          if (el.shadowRoot) {
+            cleanRoot(el);
+          }
+          if (el.children && el.children.length === 0 && el.textContent && el.textContent.trim().toLowerCase() === 'what our customers say') {
+            el.style.setProperty('display', 'none', 'important');
+          }
+          if (el.classList && el.classList.contains('es-widget-title')) {
+            el.style.setProperty('display', 'none', 'important');
+          }
+        }
+      }
+
+      function sweep() {
+        cleanRoot(document.body);
+      }
+
+      sweep();
+      const obs = new MutationObserver(sweep);
+      obs.observe(document.documentElement, { childList: true, subtree: true });
+      setInterval(sweep, 80);
+    })();
+  </script>
 {% endblock %}

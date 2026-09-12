@@ -190,70 +190,243 @@ def populate_default_certificates():
 
 def parse_quiz_html(html_content):
     """
-    Parses an HTML quiz file or raw content containing JS DATA array
-    or HTML questions, returns (title, category, questions_list).
+    Universally parses quiz HTML files, JS scripts, JSON files, or pasted questions.
+    Supports:
+      1. JavaScript arrays: const DATA = [{q: '...', o: ['...'], a: 0}], var questions = [...]
+      2. Single-quoted / unquoted JS object literals with template strings/backticks
+      3. Standard JSON arrays / objects
+      4. Discrete option properties (a, b, c, d, ans)
+      5. Plain text questions (1. Q statement \n A) ... \n B) ... \n Answer: A)
+      6. HTML question blocks
+    Returns: (title, category, questions_list)
     """
-    import re, json
+    import re, json, ast, html
     
     title = None
-    category = "Mixed General Studies"
-    
-    # 1. Try finding title from <title> or <h1>
-    title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
-    if title_match:
-        raw_t = title_match.group(1).replace('TeachMANTRA', '').replace('|', '').replace('—', '-').strip()
-        if raw_t:
-            title = raw_t
-    if not title:
-        h1_match = re.search(r'<h1>(.*?)</h1>', html_content, re.IGNORECASE)
-        if h1_match:
-            title = h1_match.group(1).replace('—', '-').strip()
-            
-    # Try finding category from header text
-    cat_match = re.search(r'<p[^>]*>(.*?)</p>', html_content, re.IGNORECASE)
-    if cat_match:
-        p_text = re.sub(r'<[^>]+>', '', cat_match.group(1)).replace('⚡️', '').replace('|', '').strip()
-        if p_text:
-            category = p_text
-            
-    # 2. Extract DATA array
-    data_match = re.search(r'(?:const|let|var)\s+DATA\s*=\s*(\[\s*\{.*?\}\s*\])\s*;', html_content, re.DOTALL)
-    if not data_match:
-        data_match = re.search(r'DATA\s*=\s*(\[.*?\])\s*;', html_content, re.DOTALL)
-        
+    category = "General Studies / सामान्य ज्ञान"
     questions = []
     
-    if data_match:
-        json_str = data_match.group(1)
-        try:
-            raw_data = json.loads(json_str)
-            for idx, item in enumerate(raw_data, start=1):
-                q_text = item.get("q", "").strip()
-                opts = item.get("o", [])
-                ans_idx = item.get("a", 0)
-                
-                opt_a = opts[0] if len(opts) > 0 else ""
-                opt_b = opts[1] if len(opts) > 1 else ""
-                opt_c = opts[2] if len(opts) > 2 else ""
-                opt_d = opts[3] if len(opts) > 3 else ""
-                
-                correct_map = ["A", "B", "C", "D"]
-                correct_opt = correct_map[ans_idx] if isinstance(ans_idx, int) and 0 <= ans_idx < 4 else "A"
-                
-                if q_text and opt_a:
-                    questions.append({
-                        "question_text": q_text,
-                        "option_a": opt_a,
-                        "option_b": opt_b,
-                        "option_c": opt_c,
-                        "option_d": opt_d,
-                        "correct_option": correct_opt,
-                        "explanation": item.get("explanation", ""),
-                        "order": idx
-                    })
-        except Exception:
-            pass
+    if not html_content:
+        return title, category, questions
+
+    # Unescape HTML entities if present
+    unescaped = html.unescape(html_content)
+
+    # 1. Extract Title
+    title_match = re.search(r'<title[^>]*>(.*?)</title>', unescaped, re.IGNORECASE)
+    if title_match:
+        raw_t = title_match.group(1).replace('TeachMANTRA', '').replace('|', '').replace('—', '-').strip()
+        raw_t = re.sub(r'[\'\"`<>{}]', '', raw_t).strip()
+        if len(raw_t) > 2 and 'x.q' not in raw_t and not raw_t.startswith('+'):
+            title = raw_t
+
+    if not title:
+        h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', unescaped, re.IGNORECASE)
+        if h1_match:
+            raw_t = re.sub(r'<[^>]+>', '', h1_match.group(1)).replace('TeachMANTRA', '').replace('|', '').replace('—', '-').strip()
+            raw_t = re.sub(r'[\'\"`<>{}]', '', raw_t).strip()
+            if len(raw_t) > 2 and 'x.q' not in raw_t and not raw_t.startswith('+'):
+                title = raw_t
+
+    # 2. Extract Category (Filter out JS code / template tags like '+x.q+')
+    cat_match = re.search(r'<meta[^>]+name=["\']category["\'][^>]+content=["\']([^"\']+)["\']', unescaped, re.IGNORECASE)
+    if cat_match:
+        c_val = cat_match.group(1).strip()
+        if len(c_val) > 1 and not any(bad in c_val for bad in ['+', 'x.q', '{', '}', '<', '>', 'function', 'var', ';', '$']):
+            category = c_val
+
+    if category == "General Studies / सामान्य ज्ञान":
+        cat_tag_match = re.search(r'class=["\'][^"\']*(?:category|stream|badge-cat|topic)[^"\']*["\'][^>]*>(.*?)<', unescaped, re.IGNORECASE)
+        if cat_tag_match:
+            c_val = re.sub(r'<[^>]+>', '', cat_tag_match.group(1)).strip()
+            if len(c_val) > 1 and not any(bad in c_val for bad in ['+', 'x.q', '{', '}', '<', '>', 'function', 'var', ';', '$']):
+                category = c_val
+
+    # 3. Extract Questions List
+    raw_items = []
+
+    # Clean comments from JS before searching for arrays
+    clean_js = re.sub(r'//.*', '', unescaped)
+    clean_js = re.sub(r'/\*[\s\S]*?\*/', '', clean_js)
+
+    # Method A: Look for JS arrays (DATA = [...], questions = [...], etc.)
+    array_patterns = [
+        r'(?:const|var|let)?\s*(?:DATA|questions|quizData|quiz_data|testData|mcqs|myQuestions|items|quiz|data|QUESTIONS)\s*=\s*(\[\s*\{[\s\S]*?\}\s*\])',
+        r'(\[\s*\{[\s\S]*?\"q(?:uestion)?\"\s*:[\s\S]*?\}\s*\])',
+        r'(\[\s*\{[\s\S]*?\'q(?:uestion)?\'\s*:[\s\S]*?\}\s*\])',
+        r'(\[\s*\{[\s\S]*?q(?:uestion)?\s*:[\s\S]*?\}\s*\])'
+    ]
+
+    for pat in array_patterns:
+        matches = re.findall(pat, clean_js, re.IGNORECASE)
+        for arr_str in matches:
+            # A1: Try direct JSON parse
+            try:
+                parsed = json.loads(arr_str)
+                if isinstance(parsed, list) and len(parsed) > 0:
+                    raw_items = parsed
+                    break
+            except Exception:
+                pass
+
+            # A2: Python AST literal_eval after normalizing JS syntax
+            if not raw_items:
+                try:
+                    # Convert unquoted JS keys to quoted keys
+                    clean = re.sub(r'([{,]\s*)([a-zA-Z_]\w*)\s*:', r'\1"\2":', arr_str)
+                    # Convert trailing commas in objects and arrays
+                    clean = re.sub(r',\s*([\]}])', r'\1', clean)
+                    # Convert JS booleans & null
+                    clean = re.sub(r'\btrue\b', 'True', clean, flags=re.IGNORECASE)
+                    clean = re.sub(r'\bfalse\b', 'False', clean, flags=re.IGNORECASE)
+                    clean = re.sub(r'\bnull\b', 'None', clean, flags=re.IGNORECASE)
+                    parsed = ast.literal_eval(clean)
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        raw_items = parsed
+                        break
+                except Exception:
+                    pass
+        if raw_items:
+            break
+
+    # Method B: Regex extraction of individual object blocks {...}
+    if not raw_items:
+        # Find every object block that has a question property
+        obj_matches = re.findall(r'\{[^{}]*?(?:["\']?q(?:uestion)?(?:_text)?["\']?\s*:)[^{}]*?\}', clean_js)
+        for obj_str in obj_matches:
+            q_m = re.search(r'["\']?q(?:uestion)?(?:_text)?["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]\s*[,}]', obj_str)
+            o_m = re.search(r'["\']?o(?:ptions)?["\']?\s*:\s*\[([\s\S]*?)\]', obj_str)
+            a_m = re.search(r'["\']?(?:ans(?:wer)?|correct(?:_option)?|a)["\']?\s*:\s*([0-3]|["\'`][^"\'`]+["\'`])', obj_str)
+            exp_m = re.search(r'["\']?(?:exp(?:lanation)?|solution|व्याख्या)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
             
+            # Check for discrete options a, b, c, d
+            opt_a_m = re.search(r'["\']?(?:option_a|opt_a|opt1|option1|a)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
+            opt_b_m = re.search(r'["\']?(?:option_b|opt_b|opt2|option2|b)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
+            opt_c_m = re.search(r'["\']?(?:option_c|opt_c|opt3|option3|c)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
+            opt_d_m = re.search(r'["\']?(?:option_d|opt_d|opt4|option4|d)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
+
+            if q_m:
+                q_text = q_m.group(1).replace(r'\"', '"').replace(r"\'", "'").strip()
+                opts = []
+                if o_m:
+                    raw_opts = re.findall(r'["\'`]([\s\S]*?)["\'`]', o_m.group(1))
+                    if not raw_opts:
+                        raw_opts = [opt.strip().strip('"\'`') for opt in o_m.group(1).split(',') if opt.strip()]
+                    opts = raw_opts
+                elif opt_a_m and opt_b_m:
+                    opts = [
+                        opt_a_m.group(1).strip(),
+                        opt_b_m.group(1).strip(),
+                        opt_c_m.group(1).strip() if opt_c_m else "",
+                        opt_d_m.group(1).strip() if opt_d_m else ""
+                    ]
+
+                ans_raw = a_m.group(1).strip().strip('"\'`') if a_m else "0"
+                exp_val = exp_m.group(1).strip() if exp_m else ""
+
+                if q_text and len(opts) >= 2:
+                    raw_items.append({
+                        "q": q_text,
+                        "o": opts,
+                        "ans": ans_raw,
+                        "explanation": exp_val
+                    })
+
+    # Method C: Text questions parser (e.g. 1. Question \n A) ... \n B) ... \n Answer: A)
+    if not raw_items:
+        text_blocks = re.split(r'(?:^|\n)(?:\d+[\.\)]|\(?\d+\)?)\s*', unescaped)
+        for block in text_blocks:
+            if not block.strip():
+                continue
+            opt_a_m = re.search(r'(?:[A|a|अ|क][\.\)]|\([A|a|अ|क]\))\s*(.*?)(?=(?:[B|b|ब|ख][\.\)]|\([B|b|ब|ख]\))|$)', block, re.DOTALL)
+            opt_b_m = re.search(r'(?:[B|b|ब|ख][\.\)]|\([B|b|ब|ख]\))\s*(.*?)(?=(?:[C|c|स|ग][\.\)]|\([C|c|स|ग]\))|$)', block, re.DOTALL)
+            opt_c_m = re.search(r'(?:[C|c|स|ग][\.\)]|\([C|c|स|ग]\))\s*(.*?)(?=(?:[D|d|द|घ][\.\)]|\([D|d|द|घ]\))|$)', block, re.DOTALL)
+            opt_d_m = re.search(r'(?:[D|d|द|घ][\.\)]|\([D|d|द|घ]\))\s*([\s\S]*?)(?=(?:\n\s*(?:Answer|Ans|उत्तर|सही उत्तर|Explanation|व्याख्या)|\Z))', block, re.IGNORECASE)
+            
+            if opt_a_m and opt_b_m:
+                q_text = block[:opt_a_m.start()].strip()
+                ans_m = re.search(r'(?:^|\n)\s*(?:Answer|Ans|उत्तर|सही उत्तर)[\s\:\-\=]+([A-Da-d1-4अ-दक-घ])', block, re.IGNORECASE)
+                ans_val = "A"
+                if ans_m:
+                    ans_val = ans_m.group(1)
+
+                exp_m = re.search(r'(?:Explanation|व्याख्या)[\s\:\-]*([\s\S]*?)$', block, re.IGNORECASE)
+                exp_val = exp_m.group(1).strip() if exp_m else ""
+
+                if q_text:
+                    raw_items.append({
+                        "q": q_text,
+                        "o": [
+                            opt_a_m.group(1).strip(),
+                            opt_b_m.group(1).strip(),
+                            opt_c_m.group(1).strip() if opt_c_m else "",
+                            opt_d_m.group(1).strip() if opt_d_m else ""
+                        ],
+                        "ans": ans_val,
+                        "explanation": exp_val
+                    })
+
+    # 4. Standardize into QuizQuestion dictionaries
+    correct_map = ["A", "B", "C", "D"]
+    for idx, item in enumerate(raw_items, start=1):
+        if not isinstance(item, dict):
+            continue
+        q_text = (item.get("q") or item.get("question") or item.get("question_text") or item.get("title") or "").strip()
+        opts = item.get("o") or item.get("options") or []
+        if not isinstance(opts, list):
+            opts = []
+        
+        # Check if individual option keys exist (a, b, c, d or option_a, opt_a, etc.)
+        opt_a = opts[0] if len(opts) > 0 else (item.get("option_a") or item.get("opt_a") or item.get("opt1") or item.get("option1") or item.get("A") or (item.get("a") if isinstance(item.get("a"), str) and len(str(item.get("a"))) > 1 else "") or "")
+        opt_b = opts[1] if len(opts) > 1 else (item.get("option_b") or item.get("opt_b") or item.get("opt2") or item.get("option2") or item.get("B") or item.get("b") or "")
+        opt_c = opts[2] if len(opts) > 2 else (item.get("option_c") or item.get("opt_c") or item.get("opt3") or item.get("option3") or item.get("C") or item.get("c") or "")
+        opt_d = opts[3] if len(opts) > 3 else (item.get("option_d") or item.get("opt_d") or item.get("opt4") or item.get("option4") or item.get("D") or item.get("d") or "")
+        
+        # Determine Answer
+        ans_raw = item.get("ans") or item.get("answer") or item.get("correct") or item.get("correct_option") or item.get("right_answer")
+        if ans_raw is None:
+            ans_raw = item.get("a", 0)
+
+        correct_opt = "A"
+        if isinstance(ans_raw, int) and 0 <= ans_raw < 4:
+            correct_opt = correct_map[ans_raw]
+        elif isinstance(ans_raw, str):
+            ans_clean = ans_raw.strip().upper()
+            if ans_clean in ['A', '1', 'क', 'अ']:
+                correct_opt = 'A'
+            elif ans_clean in ['B', '2', 'ख', 'ब']:
+                correct_opt = 'B'
+            elif ans_clean in ['C', '3', 'ग', 'स']:
+                correct_opt = 'C'
+            elif ans_clean in ['D', '4', 'घ', 'द']:
+                correct_opt = 'D'
+            elif ans_clean in ['0']:
+                correct_opt = 'A'
+            else:
+                # Match against options text
+                if str(opt_a).strip().upper() == ans_clean:
+                    correct_opt = 'A'
+                elif str(opt_b).strip().upper() == ans_clean:
+                    correct_opt = 'B'
+                elif str(opt_c).strip().upper() == ans_clean:
+                    correct_opt = 'C'
+                elif str(opt_d).strip().upper() == ans_clean:
+                    correct_opt = 'D'
+
+        exp = item.get("explanation") or item.get("exp") or item.get("solution") or item.get("व्याख्या") or ""
+
+        if q_text and (opt_a or opt_b):
+            questions.append({
+                "question_text": q_text,
+                "option_a": str(opt_a).strip(),
+                "option_b": str(opt_b).strip(),
+                "option_c": str(opt_c).strip(),
+                "option_d": str(opt_d).strip(),
+                "correct_option": correct_opt,
+                "explanation": str(exp).strip(),
+                "order": idx
+            })
+
     return title, category, questions
 
 
@@ -2372,6 +2545,7 @@ def submit_test_view(request, test_id):
     })
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_add_test_view(request):
     """
@@ -2387,6 +2561,14 @@ def admin_add_test_view(request):
         subtitle = request.POST.get("subtitle", "").strip()
         description = request.POST.get("description", "").strip()
         
+        # Clean potential JS artifact leak in inputs
+        if any(bad in category for bad in ['x.q', '+', '{', '}', '<', '>']):
+            category = "Mixed General Studies"
+        if any(bad in title for bad in ['x.q', '{', '}']):
+            title = "TeachMANTRA Practice Mock Test"
+        if subtitle and any(bad in subtitle for bad in ['x.q', '{', '}']):
+            subtitle = ""
+        
         parsed_questions = []
         
         # 1. Check if an HTML quiz file was uploaded
@@ -2399,7 +2581,7 @@ def admin_add_test_view(request):
                     parsed_questions = f_questions
                 if f_title and not title:
                     title = f_title
-                if f_cat and category == "Mixed General Studies":
+                if f_cat and (not category or category == "Mixed General Studies"):
                     category = f_cat
             except Exception:
                 pass
@@ -2413,7 +2595,7 @@ def admin_add_test_view(request):
                     parsed_questions = f_questions
                 if f_title and not title:
                     title = f_title
-                if f_cat and category == "Mixed General Studies":
+                if f_cat and (not category or category == "Mixed General Studies"):
                     category = f_cat
             except Exception:
                 pass
@@ -2470,6 +2652,7 @@ def admin_add_test_view(request):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_update_test_view(request, test_id):
     """
@@ -2528,35 +2711,41 @@ def admin_update_test_view(request, test_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_delete_test_view(request, test_id):
     """
     Deletes an online test and all its questions.
     """
-    if not request.user.is_staff:
+    if not (request.user.is_staff or request.user.is_superuser):
         return JsonResponse({"status": "error", "message": "Access denied."})
 
-    if request.method == "POST":
+    if request.method in ["POST", "GET"]:
         try:
             test = OnlineTest.objects.get(id=test_id)
             title = test.title
             test.delete()
-            return JsonResponse({"status": "success", "message": f"Test '{title}' deleted successfully!"})
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true' or request.GET.get('ajax') == 'true':
+                return JsonResponse({"status": "success", "message": f"Test '{title}' deleted successfully!"})
+            return redirect('/admin-dashboard/')
         except OnlineTest.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Test not found."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error deleting test: {str(e)}"})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_toggle_test_status_view(request, test_id):
     """
     Quickly toggles Active/Inactive status of a test.
     """
-    if not request.user.is_staff:
+    if not (request.user.is_staff or request.user.is_superuser):
         return JsonResponse({"status": "error", "message": "Access denied."})
 
-    if request.method == "POST":
+    if request.method in ["POST", "GET"]:
         try:
             test = OnlineTest.objects.get(id=test_id)
             test.is_active = not test.is_active
@@ -2568,16 +2757,19 @@ def admin_toggle_test_status_view(request, test_id):
             })
         except OnlineTest.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Test not found."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_add_question_view(request, test_id):
     """
     Adds a new MCQ question to an existing test.
     """
-    if not request.user.is_staff:
+    if not (request.user.is_staff or request.user.is_superuser):
         return JsonResponse({"status": "error", "message": "Access denied."})
 
     test = get_object_or_404(OnlineTest, id=test_id)
@@ -2609,6 +2801,10 @@ def admin_add_question_view(request, test_id):
             explanation=explanation,
             order=order
         )
+        
+        # Also update total_questions count on the test
+        test.total_questions = test.questions.count()
+        test.save(update_fields=['total_questions'])
 
         return JsonResponse({
             "status": "success",
@@ -2620,31 +2816,39 @@ def admin_add_question_view(request, test_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_delete_question_view(request, question_id):
     """
     Deletes an individual question from a test.
     """
-    if not request.user.is_staff:
+    if not (request.user.is_staff or request.user.is_superuser):
         return JsonResponse({"status": "error", "message": "Access denied."})
 
-    if request.method == "POST":
+    if request.method in ["POST", "GET"]:
         try:
             q = QuizQuestion.objects.get(id=question_id)
-            test_id = q.test_id
+            test = q.test
             q.delete()
-            total = QuizQuestion.objects.filter(test_id=test_id).count()
-            return JsonResponse({
-                "status": "success", 
-                "message": "Question deleted successfully!",
-                "total_questions": total
-            })
+            total = test.questions.count()
+            test.total_questions = total
+            test.save(update_fields=['total_questions'])
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true' or request.GET.get('ajax') == 'true':
+                return JsonResponse({
+                    "status": "success", 
+                    "message": "Question deleted successfully!",
+                    "total_questions": total
+                })
+            return redirect('/admin-dashboard/')
         except QuizQuestion.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Question not found."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_get_test_questions_view(request, test_id):
     """
@@ -2856,6 +3060,7 @@ def download_syllabus_pdf_view(request, doc_id):
     return redirect('syllabus_list')
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_add_syllabus_view(request):
     """
@@ -2901,6 +3106,7 @@ def admin_add_syllabus_view(request):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_update_syllabus_view(request, doc_id):
     """
@@ -2945,6 +3151,7 @@ def admin_update_syllabus_view(request, doc_id):
     return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
+@csrf_exempt
 @login_required(login_url='login')
 def admin_delete_syllabus_view(request, doc_id):
     """
