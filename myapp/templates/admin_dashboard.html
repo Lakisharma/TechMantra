@@ -1755,46 +1755,160 @@
              ========================================== -->
         <div class="panel" id="panel-courses">
           <div class="glass-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-              <div class="glass-card-title" style="margin-bottom: 0;">
-                <i class="fa-solid fa-book-bookmark"></i> Active Course Prospectus
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+              <div>
+                <div class="glass-card-title" style="margin-bottom: 0.25rem;">
+                  <i class="fa-solid fa-book-bookmark"></i> Active Course & Plans Prospectus
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                  Manage Competitive Courses, Monthly Batches & Combo Packages. Changes update in real-time across admissions, fees table, and student dashboard.
+                </p>
               </div>
               <button class="btn-quick-add" onclick="openModal('addCourseModal')">
-                <i class="fa-solid fa-plus"></i> Add New Course
+                <i class="fa-solid fa-plus"></i> Add New Course / Plan
               </button>
             </div>
 
-            <div class="item-grid" id="coursesGrid">
-              {% for course in courses %}
-                <div class="item-card" id="card-course-{{ course.id }}">
-                  <div class="item-card-image" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
-                    <span class="item-card-badge status-badge badge-primary">{{ course.get_category_display }}</span>
-                  </div>
-                  <div class="item-card-content">
-                    <h4>{{ course.title }}</h4>
-                    <p>{{ course.description|truncatechars:100 }}</p>
-                    <div class="item-card-meta">
-                      <span class="item-card-price">₹ {{ course.fee }}</span>
-                      <span class="item-card-duration"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+            <!-- Subsection 1: Competitive Exam & Certificate Courses -->
+            <div style="margin-bottom: 3rem;">
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                <i class="fa-solid fa-graduation-cap" style="color: var(--primary);"></i> Competitive Exam & Certificate Courses
+                <span class="status-badge badge-primary" style="font-size: 0.75rem;">{{ competitive_courses|length }}</span>
+              </h3>
+              <div class="item-grid">
+                {% for course in competitive_courses %}
+                  <div class="item-card" id="card-course-{{ course.id }}">
+                    <div class="item-card-image" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                      <span class="item-card-badge status-badge badge-primary">{{ course.get_category_display }}</span>
+                    </div>
+                    <div class="item-card-content">
+                      <h4>{{ course.title }}</h4>
+                      <p>{{ course.description|truncatechars:100 }}</p>
+                      <div class="item-card-meta">
+                        <span class="item-card-price">₹ {{ course.fee }}</span>
+                        <span class="item-card-duration"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                      </div>
+                    </div>
+                    <div class="item-card-actions" style="display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-color);">
+                      <button class="btn-item-edit" onclick="openEditCourseModal('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.duration|escapejs }}', '{{ course.fee }}', '{{ course.description|escapejs }}', '{{ course.category }}', '{% if course.image %}{{ course.image.url }}{% endif %}')" style="background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none; border-right: 1px solid var(--border-color); padding: 0.65rem 0.5rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: var(--transition-normal);">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                      </button>
+                      <button class="btn-item-delete" onclick="deleteCourse('{{ course.id }}')" style="border-radius: 0; padding: 0.65rem 0.5rem; border: none; background: rgba(239, 68, 68, 0.1);">
+                        <i class="fa-solid fa-trash"></i> Delete
+                      </button>
                     </div>
                   </div>
-                  <div class="item-card-actions" style="display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-color);">
-                    <button class="btn-item-edit" onclick="openEditCourseModal('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.duration|escapejs }}', '{{ course.fee }}', '{{ course.description|escapejs }}', '{{ course.category }}', '{% if course.image %}{{ course.image.url }}{% endif %}')" style="background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none; border-right: 1px solid var(--border-color); padding: 0.65rem 0.5rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: var(--transition-normal);">
-                      <i class="fa-solid fa-pen-to-square"></i> Edit
-                    </button>
-                    <button class="btn-item-delete" onclick="deleteCourse('{{ course.id }}')" style="border-radius: 0; padding: 0.65rem 0.5rem; border: none; background: rgba(239, 68, 68, 0.1);">
-                      <i class="fa-solid fa-trash"></i> Delete
-                    </button>
-                  </div>
-                </div>
-              {% empty %}
-                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1.5rem; color: var(--text-muted);" class="glass-card">
-                  <i class="fa-solid fa-graduation-cap" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
-                  <h3>No Courses in Database</h3>
-                  <p style="margin-top: 0.5rem;">Create a course using the "Add Course" trigger above to list them dynamically in the frontend page.</p>
-                </div>
-              {% endfor %}
+                {% empty %}
+                  <p style="grid-column: 1 / -1; color: var(--text-muted); font-size: 0.9rem;">No competitive exam courses added yet.</p>
+                {% endfor %}
+              </div>
             </div>
+
+            <!-- Subsection 2: Monthly Plans -->
+            <div style="margin-bottom: 3rem;">
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                <i class="fa-solid fa-calendar-days" style="color: #f59e0b;"></i> Monthly Plans (मासिक योजनाएँ)
+                <span class="status-badge" style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">{{ monthly_courses|length }}</span>
+              </h3>
+              <div class="item-grid">
+                {% for course in monthly_courses %}
+                  <div class="item-card" id="card-course-{{ course.id }}" style="border-top: 3px solid #f59e0b;">
+                    <div class="item-card-image" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                      <span class="item-card-badge status-badge" style="background: rgba(245, 158, 11, 0.9); color: #fff;">{{ course.get_category_display }}</span>
+                    </div>
+                    <div class="item-card-content">
+                      <h4>{{ course.title }}</h4>
+                      <p>{{ course.description|truncatechars:100 }}</p>
+                      <div class="item-card-meta">
+                        <span class="item-card-price" style="color: #f59e0b;">₹ {{ course.fee }}</span>
+                        <span class="item-card-duration"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                      </div>
+                    </div>
+                    <div class="item-card-actions" style="display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-color);">
+                      <button class="btn-item-edit" onclick="openEditCourseModal('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.duration|escapejs }}', '{{ course.fee }}', '{{ course.description|escapejs }}', '{{ course.category }}', '{% if course.image %}{{ course.image.url }}{% endif %}')" style="background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none; border-right: 1px solid var(--border-color); padding: 0.65rem 0.5rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: var(--transition-normal);">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                      </button>
+                      <button class="btn-item-delete" onclick="deleteCourse('{{ course.id }}')" style="border-radius: 0; padding: 0.65rem 0.5rem; border: none; background: rgba(239, 68, 68, 0.1);">
+                        <i class="fa-solid fa-trash"></i> Delete
+                      </button>
+                    </div>
+                  </div>
+                {% empty %}
+                  <p style="grid-column: 1 / -1; color: var(--text-muted); font-size: 0.9rem;">No monthly plans added yet.</p>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Subsection 3: Special Monthly Packages -->
+            <div style="margin-bottom: 2rem;">
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                <i class="fa-solid fa-layer-group" style="color: #10b981;"></i> Special Monthly Packages (विशेष कॉम्बो पैकेज)
+                <span class="status-badge badge-success" style="font-size: 0.75rem;">{{ package_courses|length }}</span>
+              </h3>
+              <div class="item-grid">
+                {% for course in package_courses %}
+                  <div class="item-card" id="card-course-{{ course.id }}" style="border-top: 3px solid #10b981;">
+                    <div class="item-card-image" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                      <span class="item-card-badge status-badge badge-success">{{ course.get_category_display }}</span>
+                    </div>
+                    <div class="item-card-content">
+                      <h4>{{ course.title }}</h4>
+                      <p>{{ course.description|truncatechars:100 }}</p>
+                      <div class="item-card-meta">
+                        <span class="item-card-price" style="color: #10b981;">₹ {{ course.fee }}</span>
+                        <span class="item-card-duration"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                      </div>
+                    </div>
+                    <div class="item-card-actions" style="display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-color);">
+                      <button class="btn-item-edit" onclick="openEditCourseModal('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.duration|escapejs }}', '{{ course.fee }}', '{{ course.description|escapejs }}', '{{ course.category }}', '{% if course.image %}{{ course.image.url }}{% endif %}')" style="background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none; border-right: 1px solid var(--border-color); padding: 0.65rem 0.5rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: var(--transition-normal);">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit
+                      </button>
+                      <button class="btn-item-delete" onclick="deleteCourse('{{ course.id }}')" style="border-radius: 0; padding: 0.65rem 0.5rem; border: none; background: rgba(239, 68, 68, 0.1);">
+                        <i class="fa-solid fa-trash"></i> Delete
+                      </button>
+                    </div>
+                  </div>
+                {% empty %}
+                  <p style="grid-column: 1 / -1; color: var(--text-muted); font-size: 0.9rem;">No combo packages added yet.</p>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Subsection 4: Other Courses (if any) -->
+            {% if other_courses %}
+              <div style="margin-bottom: 2rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                  <i class="fa-solid fa-book-open" style="color: #a855f7;"></i> Other Courses & Programs
+                  <span class="status-badge" style="font-size: 0.75rem; background: rgba(168, 85, 247, 0.15); color: #a855f7;">{{ other_courses|length }}</span>
+                </h3>
+                <div class="item-grid">
+                  {% for course in other_courses %}
+                    <div class="item-card" id="card-course-{{ course.id }}">
+                      <div class="item-card-image" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                        <span class="item-card-badge status-badge badge-primary">{{ course.get_category_display }}</span>
+                      </div>
+                      <div class="item-card-content">
+                        <h4>{{ course.title }}</h4>
+                        <p>{{ course.description|truncatechars:100 }}</p>
+                        <div class="item-card-meta">
+                          <span class="item-card-price">₹ {{ course.fee }}</span>
+                          <span class="item-card-duration"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                        </div>
+                      </div>
+                      <div class="item-card-actions" style="display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-color);">
+                        <button class="btn-item-edit" onclick="openEditCourseModal('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.duration|escapejs }}', '{{ course.fee }}', '{{ course.description|escapejs }}', '{{ course.category }}', '{% if course.image %}{{ course.image.url }}{% endif %}')" style="background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none; border-right: 1px solid var(--border-color); padding: 0.65rem 0.5rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: var(--transition-normal);">
+                          <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </button>
+                        <button class="btn-item-delete" onclick="deleteCourse('{{ course.id }}')" style="border-radius: 0; padding: 0.65rem 0.5rem; border: none; background: rgba(239, 68, 68, 0.1);">
+                          <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
           </div>
         </div>
 

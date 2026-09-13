@@ -44,8 +44,18 @@ def about(request):
 
 def courses(request):
     populate_default_courses()
+    competitive_courses = Course.objects.filter(category='competitive').order_by('id')
+    monthly_courses = Course.objects.filter(category='monthly').order_by('id')
+    package_courses = Course.objects.filter(category='package').order_by('id')
+    other_courses = Course.objects.filter(category='other').order_by('id')
     courses_list = Course.objects.all().order_by('id')
-    return render(request, 'courses.html', {"courses": courses_list})
+    return render(request, 'courses.html', {
+        "courses": courses_list,
+        "competitive_courses": competitive_courses,
+        "monthly_courses": monthly_courses,
+        "package_courses": package_courses,
+        "other_courses": other_courses,
+    })
 
 def faculty(request):
     founders = TeamMember.objects.filter(member_type='founder').order_by('order', 'id')
@@ -1132,6 +1142,10 @@ def admin_dashboard_view(request):
         "admissions": admissions,
         "contacts": contacts,
         "courses": courses_list,
+        "competitive_courses": Course.objects.filter(category='competitive').order_by('id'),
+        "monthly_courses": Course.objects.filter(category='monthly').order_by('id'),
+        "package_courses": Course.objects.filter(category='package').order_by('id'),
+        "other_courses": Course.objects.filter(category='other').order_by('id'),
         "gallery_images": images_list,
         "founders": founders_list,
         "team_members": team_list,

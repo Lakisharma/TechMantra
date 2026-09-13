@@ -17,52 +17,154 @@
   </section>
 
   <!-- ==========================================
-       Courses Content
+       Courses Content (Categorized)
        ========================================== -->
   <section class="section-padding">
     <div class="container">
-      <div class="text-center">
-        <h2 class="section-title">Available Courses Online & Offline</h2>
-        <p class="section-subtitle">Choose from our top-rated preparation programs meticulously drafted by industry experts.</p>
+      <div class="text-center" style="margin-bottom: 2.5rem;">
+        <h2 class="section-title">Available Courses & Flexible Plans</h2>
+        <p class="section-subtitle">Choose from our top-rated competitive preparation batches, monthly class plans, and combo packages.</p>
       </div>
 
-      <div class="courses-grid">
-        {% for course in courses %}
-        <div class="glass-card course-card">
-          <div class="course-header" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
-            {% if "ssc" in course.title.lower %}
-              <span class="course-badge">SSC</span>
-            {% elif "bank" in course.title.lower %}
-              <span class="course-badge">Banking</span>
-            {% elif "railway" in course.title.lower %}
-              <span class="course-badge">Railway</span>
-            {% elif "nda" in course.title.lower or "cds" in course.title.lower or "defence" in course.title.lower or "prep" in course.title.lower %}
-              <span class="course-badge">Defence</span>
-            {% elif "computer" in course.title.lower or "tech" in course.title.lower or "programming" in course.title.lower %}
-              <span class="course-badge">Tech</span>
-            {% elif "english" in course.title.lower or "spoken" in course.title.lower or "language" in course.title.lower %}
-              <span class="course-badge">Language</span>
-            {% else %}
-              <span class="course-badge">Academy</span>
-            {% endif %}
-          </div>
-          <div class="course-card-content">
-            <h3>{{ course.title }}</h3>
-            <p>{{ course.description }}</p>
-            <div class="course-footer">
-              <span class="course-price">₹ {{ course.fee }}</span>
-              <a href="{% url 'admissions' %}?course={{ course.title|urlencode }}" class="course-btn-enroll">Enroll Now</a>
+      <!-- SECTION 1: Competitive Exam & Certificate Courses -->
+      {% if competitive_courses %}
+        <div style="margin-bottom: 3.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid rgba(99, 102, 241, 0.2);">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(99, 102, 241, 0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">
+                Competitive Exam & Certificate Courses
+              </h3>
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Comprehensive target preparation programs with complete syllabus & mock test series</span>
             </div>
           </div>
+
+          <div class="courses-grid">
+            {% for course in competitive_courses %}
+              <div class="glass-card course-card">
+                <div class="course-header" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                  <span class="course-badge"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                </div>
+                <div class="course-card-content">
+                  <h3>{{ course.title }}</h3>
+                  <p>{{ course.description }}</p>
+                  <div class="course-footer">
+                    <span class="course-price">₹ {{ course.fee }}</span>
+                    <a href="{% url 'admissions' %}?course={{ course.title|urlencode }}" class="course-btn-enroll">Enroll Now</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
-        {% empty %}
-        <div class="glass-card text-center" style="grid-column: 1 / -1; padding: 3rem;">
-          <i class="fa-solid fa-graduation-cap" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
-          <h3>No Courses Available</h3>
-          <p>We are currently updating our prospectus. Please check back later or contact us for enquiries.</p>
+      {% endif %}
+
+      <!-- SECTION 2: Monthly Plans -->
+      {% if monthly_courses %}
+        <div style="margin-bottom: 3.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid rgba(245, 158, 11, 0.2);">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+              <i class="fa-solid fa-calendar-days"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">
+                Monthly Plans (मासिक योजनाएँ)
+              </h3>
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Flexible month-by-month access for regular classroom, computer lab, and library</span>
+            </div>
+          </div>
+
+          <div class="courses-grid">
+            {% for course in monthly_courses %}
+              <div class="glass-card course-card">
+                <div class="course-header" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                  <span class="course-badge" style="background: rgba(245, 158, 11, 0.9);"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                </div>
+                <div class="course-card-content">
+                  <h3>{{ course.title }}</h3>
+                  <p>{{ course.description }}</p>
+                  <div class="course-footer">
+                    <span class="course-price" style="color: #f59e0b;">₹ {{ course.fee }}</span>
+                    <a href="{% url 'admissions' %}?course={{ course.title|urlencode }}" class="course-btn-enroll" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">Enroll Now</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
-        {% endfor %}
-      </div>
+      {% endif %}
+
+      <!-- SECTION 3: Special Monthly Packages -->
+      {% if package_courses %}
+        <div style="margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid rgba(16, 185, 129, 0.2);">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">
+                Special Monthly Packages (विशेष मासिक कॉम्बो पैकेज)
+              </h3>
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Value bundle combos combining Classroom lectures, Computer lab, and Library facilities</span>
+            </div>
+          </div>
+
+          <div class="courses-grid">
+            {% for course in package_courses %}
+              <div class="glass-card course-card" style="border-top: 3px solid #10b981;">
+                <div class="course-header" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                  <span class="course-badge" style="background: rgba(16, 185, 129, 0.9);"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                </div>
+                <div class="course-card-content">
+                  <h3>{{ course.title }}</h3>
+                  <p>{{ course.description }}</p>
+                  <div class="course-footer">
+                    <span class="course-price" style="color: #10b981;">₹ {{ course.fee }}</span>
+                    <a href="{% url 'admissions' %}?course={{ course.title|urlencode }}" class="course-btn-enroll" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Enroll Now</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- SECTION 4: Other Courses (if any) -->
+      {% if other_courses %}
+        <div style="margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid rgba(168, 85, 247, 0.2);">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); color: #a855f7; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+              <i class="fa-solid fa-book-open"></i>
+            </div>
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">
+                Other Courses & Programs
+              </h3>
+            </div>
+          </div>
+
+          <div class="courses-grid">
+            {% for course in other_courses %}
+              <div class="glass-card course-card">
+                <div class="course-header" style="background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
+                  <span class="course-badge"><i class="fa-regular fa-clock"></i> {{ course.duration }}</span>
+                </div>
+                <div class="course-card-content">
+                  <h3>{{ course.title }}</h3>
+                  <p>{{ course.description }}</p>
+                  <div class="course-footer">
+                    <span class="course-price">₹ {{ course.fee }}</span>
+                    <a href="{% url 'admissions' %}?course={{ course.title|urlencode }}" class="course-btn-enroll">Enroll Now</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
     </div>
   </section>
 {% endblock %}
