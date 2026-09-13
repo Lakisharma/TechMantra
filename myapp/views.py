@@ -17,6 +17,7 @@ from django.utils import timezone
 from datetime import timedelta, date
 from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
+from .email_service import send_welcome_registration_email
 
 def index(request):
     populate_default_online_tests()
@@ -83,6 +84,19 @@ def admissions(request):
             course=course,
             message=message
         )
+        
+        # Send instant welcome & confirmation email to the student
+        try:
+            send_welcome_registration_email(
+                name=name,
+                email=email,
+                course=course,
+                phone=clean_phone,
+                is_portal_account=False,
+                request=request
+            )
+        except Exception:
+            pass
         
         # If student is logged in, link course to profile
         if request.user.is_authenticated:
@@ -711,6 +725,20 @@ def register_view(request):
             grade="N/A"
         )
         
+        # Send instant welcome & confirmation email to the student
+        try:
+            send_welcome_registration_email(
+                name=full_name,
+                email=email,
+                course=course,
+                phone=phone,
+                username=username,
+                is_portal_account=True,
+                request=request
+            )
+        except Exception:
+            pass
+        
         login(request, user)
         
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
@@ -1218,6 +1246,21 @@ def admin_add_student_view(request):
                 grade=grade,
                 photo=photo
             )
+            
+            # Send welcome email
+            try:
+                send_welcome_registration_email(
+                    name=full_name,
+                    email=email,
+                    course=course,
+                    phone=phone,
+                    username=username,
+                    is_portal_account=True,
+                    request=request
+                )
+            except Exception:
+                pass
+
             return JsonResponse({"status": "success", "message": "Student account created successfully!"})
         except Exception as e:
             return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
