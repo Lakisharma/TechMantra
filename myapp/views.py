@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
-from .models import (
+from myapp.models import (
     Services, Admission, ContactMessage, StudentProfile, Course, 
     GalleryImage, TeamMember, WebsiteSettings, AdminProfile, Certificate, 
     BroadcastEmail, OnlineTest, QuizQuestion, TestSubmission, TopperResult,
@@ -17,7 +17,7 @@ from django.utils import timezone
 from datetime import timedelta, date
 from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
-from .email_service import send_welcome_registration_email
+from myapp.email_service import send_welcome_registration_email
 
 def index(request):
     populate_default_online_tests()
