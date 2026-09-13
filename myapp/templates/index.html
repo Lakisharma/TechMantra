@@ -72,13 +72,13 @@
       {% if active_tests %}
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem;">
           {% for t in active_tests %}
-            <div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 1.25rem; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: all 0.3s ease; position: relative;"
+            <div style="background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 1.25rem; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--card-shadow); transition: all 0.3s ease; position: relative;"
                  onmouseover="this.style.transform='translateY(-6px)'; this.style.borderColor='var(--primary)';"
-                 onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-color, #e2e8f0)';">
+                 onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-glass)';">
               
               <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                  <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.3rem 0.8rem; border-radius: 9999px; text-transform: uppercase;">
+                  <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); background: rgba(99, 102, 241, 0.12); padding: 0.3rem 0.8rem; border-radius: 9999px; text-transform: uppercase;">
                     {{ t.category }}
                   </span>
                   <span style="font-size: 0.8rem; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.35rem;">
@@ -94,7 +94,7 @@
                   {{ t.description|default:t.subtitle|truncatewords:18 }}
                 </p>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem; padding: 0.75rem; border-radius: 0.75rem; background: rgba(148, 163, 184, 0.08);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem; padding: 0.75rem; border-radius: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border-glass);">
                   <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Questions</span>
                     <strong style="font-size: 0.95rem; color: var(--text-main);"><i class="fa-solid fa-list-check" style="color: var(--primary);"></i> {{ t.questions_count }} Questions</strong>
