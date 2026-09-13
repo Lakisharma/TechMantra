@@ -56,6 +56,7 @@ def faculty(request):
     })
 
 def admissions(request):
+    populate_default_courses()
     success_msg = None
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
@@ -113,7 +114,20 @@ def admissions(request):
             return JsonResponse({"status": "success", "message": f"Admission registration submitted successfully for {course}!"})
         success_msg = f"Admission registration submitted successfully for {course}!"
             
-    return render(request, 'admissions.html', {"success_msg": success_msg})
+    competitive_courses = Course.objects.filter(category='competitive').order_by('id')
+    monthly_courses = Course.objects.filter(category='monthly').order_by('id')
+    package_courses = Course.objects.filter(category='package').order_by('id')
+    other_courses = Course.objects.filter(category='other').order_by('id')
+    all_courses = Course.objects.all().order_by('id')
+
+    return render(request, 'admissions.html', {
+        "success_msg": success_msg,
+        "competitive_courses": competitive_courses,
+        "monthly_courses": monthly_courses,
+        "package_courses": package_courses,
+        "other_courses": other_courses,
+        "all_courses": all_courses,
+    })
 
 def gallery(request):
     images_list = GalleryImage.objects.all().order_by('-uploaded_at')
@@ -466,89 +480,123 @@ def populate_default_online_tests():
 
 
 def populate_default_courses():
-    official_courses = [
-        {
-            "title": "SSC GD",
-            "duration": "6 Months",
-            "fee": 3100,
-            "description": "Comprehensive coaching for SSC GD Constable Exam covering Reasoning, General Knowledge, Elementary Mathematics, and Hindi/English."
-        },
-        {
-            "title": "AIRFORCE / NAVY (X & Y GROUP)",
-            "duration": "6 Months",
-            "fee": 3100,
-            "description": "Dedicated coaching for Indian Air Force & Navy X & Y Group entrance examinations with written test & physical test guidance."
-        },
-        {
-            "title": "ARMY GD",
-            "duration": "6 Months",
-            "fee": 3100,
-            "description": "Targeted training for Indian Army General Duty written exam, regular practice tests, and physical training guidance."
-        },
-        {
-            "title": "UP POLICE / DELHI POLICE",
-            "duration": "6 Months",
-            "fee": 2999,
-            "description": "Special batch for UP Police Constable & Delhi Police SI/Constable recruitment exams with complete syllabus coverage and test series."
-        },
-        {
-            "title": "UPSSSC / LEKHPAL / VDO / PET",
-            "duration": "6 Months",
-            "fee": 2999,
-            "description": "All-in-one preparation for UPSSSC PET, Lekhpal, VDO, and Junior Assistant state government competitive examinations."
-        },
-        {
-            "title": "TEACHERS PACK ( SUPER TET / CTET / TET )",
-            "duration": "6 Months",
-            "fee": 2999,
-            "description": "Master teaching competitive exams with Super TET, CTET Paper 1 & 2, and UPTET focused pedagogy & subject preparation."
-        },
-        {
-            "title": "RAILWAY NTPC / ALP / GROUP D",
-            "duration": "6 Months",
-            "fee": 3100,
-            "description": "Complete coaching for RRB NTPC, Assistant Loco Pilot (ALP), and Railway Group D exams with mock test practice."
-        },
-        {
-            "title": "NDA / CDS (Defence)",
-            "duration": "1 Year",
-            "fee": 6100,
-            "description": "1-Year comprehensive foundation & advanced program for UPSC NDA & CDS examinations with SSB interview guidance."
-        },
-        {
-            "title": "COMPUTER PACK",
-            "duration": "3 Months",
-            "fee": 6500,
-            "description": "Practical computer skills covering CCC, MS Office, Internet, Graphic basics, and typing skills with certification."
-        },
-        {
-            "title": "SPOKEN ENGLISH PROGRAM",
-            "duration": "2 Months",
-            "fee": 2500,
-            "description": "Intensive 2-Month English communication, vocabulary, grammar, and public speaking confidence-building course."
-        }
-    ]
-
-    # Clean up any old mock courses
-    official_titles = {c["title"].strip().upper() for c in official_courses}
-    old_names = [
-        "javascript", "css", "html", "python", "python developer",
-        "ssc preparation", "banking exam prep", "railway exams",
-        "nda / cds prep", "computer courses", "spoken english"
-    ]
-    for c in Course.objects.all():
-        if c.title.strip().lower() in old_names or (c.title.strip().upper() not in official_titles and c.fee in [5000, 6000, 12000, 8000, 4000, 25000]):
-            c.delete()
-
-    existing_titles = set(Course.objects.values_list('title', flat=True))
-    for c in official_courses:
-        if c["title"] not in existing_titles:
-            Course.objects.create(
-                title=c["title"],
-                duration=c["duration"],
-                fee=c["fee"],
-                description=c["description"]
-            )
+    if not Course.objects.exists():
+        official_courses = [
+            {
+                "title": "SSC GD",
+                "category": "competitive",
+                "duration": "6 Months",
+                "fee": 3100,
+                "description": "Comprehensive coaching for SSC GD Constable Exam covering Reasoning, General Knowledge, Elementary Mathematics, and Hindi/English."
+            },
+            {
+                "title": "AIRFORCE / NAVY (X & Y GROUP)",
+                "category": "competitive",
+                "duration": "6 Months",
+                "fee": 3100,
+                "description": "Dedicated coaching for Indian Air Force & Navy X & Y Group entrance examinations with written test & physical test guidance."
+            },
+            {
+                "title": "ARMY GD",
+                "category": "competitive",
+                "duration": "6 Months",
+                "fee": 3100,
+                "description": "Targeted training for Indian Army General Duty written exam, regular practice tests, and physical training guidance."
+            },
+            {
+                "title": "UP POLICE / DELHI POLICE",
+                "category": "competitive",
+                "duration": "6 Months",
+                "fee": 2999,
+                "description": "Special batch for UP Police Constable & Delhi Police SI/Constable recruitment exams with complete syllabus coverage and test series."
+            },
+            {
+                "title": "UPSSSC / LEKHPAL / VDO / PET",
+                "category": "competitive",
+                "duration": "6 Months",
+                "fee": 2999,
+                "description": "All-in-one preparation for UPSSSC PET, Lekhpal, VDO, and Junior Assistant state government competitive examinations."
+            },
+            {
+                "title": "TEACHERS PACK ( SUPER TET / CTET / TET )",
+                "category": "competitive",
+                "duration": "6 Months",
+                "fee": 2999,
+                "description": "Master teaching competitive exams with Super TET, CTET Paper 1 & 2, and UPTET focused pedagogy & subject preparation."
+            },
+            {
+                "title": "RAILWAY NTPC / ALP / GROUP D",
+                "category": "competitive",
+                "duration": "6 Months",
+                "fee": 3100,
+                "description": "Complete coaching for RRB NTPC, Assistant Loco Pilot (ALP), and Railway Group D exams with mock test practice."
+            },
+            {
+                "title": "NDA / CDS (Defence)",
+                "category": "competitive",
+                "duration": "1 Year",
+                "fee": 6100,
+                "description": "1-Year comprehensive foundation & advanced program for UPSC NDA & CDS examinations with SSB interview guidance."
+            },
+            {
+                "title": "COMPUTER PACK",
+                "category": "competitive",
+                "duration": "3 Months",
+                "fee": 6500,
+                "description": "Practical computer skills covering CCC, MS Office, Internet, Graphic basics, and typing skills with certification."
+            },
+            {
+                "title": "SPOKEN ENGLISH PROGRAM",
+                "category": "competitive",
+                "duration": "2 Months",
+                "fee": 2500,
+                "description": "Intensive 2-Month English communication, vocabulary, grammar, and public speaking confidence-building course."
+            },
+            {
+                "title": "Monthly Class",
+                "category": "monthly",
+                "duration": "Monthly (1 Month)",
+                "fee": 700,
+                "description": "Monthly classroom batch access for all regular classes and doubt clearing sessions."
+            },
+            {
+                "title": "Monthly Computer",
+                "category": "monthly",
+                "duration": "Monthly (1 Month)",
+                "fee": 500,
+                "description": "1 Month dedicated access to high-speed computer lab & software training practice."
+            },
+            {
+                "title": "Monthly Library",
+                "category": "monthly",
+                "duration": "Monthly (1 Month)",
+                "fee": 500,
+                "description": "1 Month quiet study library seat with Wi-Fi, air-conditioned environment, and books."
+            },
+            {
+                "title": "Package: All (Class + Computer + Library)",
+                "category": "package",
+                "duration": "Monthly (1 Month)",
+                "fee": 1200,
+                "description": "All-in-one special monthly package covering Classrooms, Computer Lab, and Library access."
+            },
+            {
+                "title": "Only Class + Library",
+                "category": "package",
+                "duration": "Monthly (1 Month)",
+                "fee": 800,
+                "description": "Special combo monthly package for daily coaching classes + 24/7 library facility."
+            },
+            {
+                "title": "Only Computer + Library",
+                "category": "package",
+                "duration": "Monthly (1 Month)",
+                "fee": 700,
+                "description": "Special combo monthly package for computer lab access + quiet library seat."
+            },
+        ]
+        for c in official_courses:
+            Course.objects.create(**c)
 
 
 def populate_default_toppers():
@@ -644,24 +692,28 @@ def register_view(request):
     if request.user.is_authenticated:
         return redirect(next_url)
         
-    courses_list = [
-        "SSC GD (₹ 3100)",
-        "AIRFORCE / NAVY (X & Y GROUP) (₹ 3100)",
-        "ARMY GD (₹ 3100)",
-        "UP POLICE / DELHI POLICE (₹ 2999)",
-        "UPSSSC / LEKHPAL / VDO / PET (₹ 2999)",
-        "TEACHERS PACK ( SUPER TET / CTET / TET ) (₹ 2999)",
-        "RAILWAY NTPC / ALP / GROUP D (₹ 3100)",
-        "NDA / CDS (Defence) (₹ 6100)",
-        "COMPUTER PACK (₹ 6500)",
-        "SPOKEN ENGLISH PROGRAM (₹ 2500)",
-        "Monthly Class (₹ 700)",
-        "Monthly Computer (₹ 500)",
-        "Monthly Library (₹ 500)",
-        "Package: All (Class + Computer + Library) (₹ 1200)",
-        "Only Class + Library (₹ 800)",
-        "Only Computer + Library (₹ 700)",
-    ]
+    populate_default_courses()
+    courses_qs = Course.objects.all().order_by('id')
+    courses_list = [f"{c.title} (₹ {c.fee})" for c in courses_qs]
+    if not courses_list:
+        courses_list = [
+            "SSC GD (₹ 3100)",
+            "AIRFORCE / NAVY (X & Y GROUP) (₹ 3100)",
+            "ARMY GD (₹ 3100)",
+            "UP POLICE / DELHI POLICE (₹ 2999)",
+            "UPSSSC / LEKHPAL / VDO / PET (₹ 2999)",
+            "TEACHERS PACK ( SUPER TET / CTET / TET ) (₹ 2999)",
+            "RAILWAY NTPC / ALP / GROUP D (₹ 3100)",
+            "NDA / CDS (Defence) (₹ 6100)",
+            "COMPUTER PACK (₹ 6500)",
+            "SPOKEN ENGLISH PROGRAM (₹ 2500)",
+            "Monthly Class (₹ 700)",
+            "Monthly Computer (₹ 500)",
+            "Monthly Library (₹ 500)",
+            "Package: All (Class + Computer + Library) (₹ 1200)",
+            "Only Class + Library (₹ 800)",
+            "Only Computer + Library (₹ 700)",
+        ]
     
     if request.method == "POST":
         next_url = request.POST.get('next') or request.GET.get('next') or '/profile/'
@@ -822,7 +874,7 @@ def temp_create_admin(request):
 
 
 def parse_course_info(raw_course_str):
-    """Parse course name, fee and enrollment details from course string."""
+    """Parse course name, fee and enrollment details dynamically from database."""
     if not raw_course_str or raw_course_str.strip() in ["N/A", "", "None"]:
         return {
             "title": "General Student",
@@ -836,53 +888,35 @@ def parse_course_info(raw_course_str):
     raw = raw_course_str.strip()
     title = raw
     fee = None
+    duration = "6 Months Classroom + Online Tests"
+    
+    # Check if raw course matches any DB Course directly
+    c_obj = Course.objects.filter(models.Q(title__iexact=raw) | models.Q(title__icontains=raw)).first()
     
     fee_match = re.search(r'\((?:₹|Rs\.?|INR)?\s*([0-9,]+)\)', raw, re.IGNORECASE)
     if fee_match:
         fee_digits = fee_match.group(1).replace(',', '')
-        fee = f"₹ {int(fee_digits):,}"
-        title = re.sub(r'\s*\((?:₹|Rs\.?|INR)?\s*[0-9,]+\)', '', raw).strip()
-    else:
-        c_obj = Course.objects.filter(models.Q(title__iexact=raw) | models.Q(title__icontains=raw)).first()
-        if c_obj:
-            title = c_obj.title
-            fee = f"₹ {c_obj.fee:,}"
+        title_only = re.sub(r'\s*\((?:₹|Rs\.?|INR)?\s*[0-9,]+\)', '', raw).strip()
+        db_course = Course.objects.filter(title__iexact=title_only).first()
+        if db_course:
+            title = db_course.title
+            fee = f"₹ {db_course.fee:,}"
+            duration = db_course.duration
         else:
-            known_fees = {
-                "SSC GD": "₹ 3,100",
-                "AIRFORCE": "₹ 3,100",
-                "NAVY": "₹ 3,100",
-                "ARMY GD": "₹ 3,100",
-                "UP POLICE": "₹ 2,999",
-                "DELHI POLICE": "₹ 2,999",
-                "UPSSSC": "₹ 2,999",
-                "LEKHPAL": "₹ 2,999",
-                "VDO": "₹ 2,999",
-                "PET": "₹ 2,999",
-                "TEACHERS PACK": "₹ 2,999",
-                "SUPER TET": "₹ 2,999",
-                "CTET": "₹ 2,999",
-                "TET": "₹ 2,999",
-                "RAILWAY NTPC": "₹ 3,100",
-                "ALP": "₹ 3,100",
-                "GROUP D": "₹ 3,100",
-                "NDA": "₹ 6,100",
-                "CDS": "₹ 6,100",
-                "COMPUTER PACK": "₹ 6,500",
-                "SPOKEN ENGLISH": "₹ 2,500",
-            }
-            for k, v in known_fees.items():
-                if k.lower() in raw.lower():
-                    fee = v
-                    break
-            if not fee:
-                fee = "₹ 2,999"
+            title = title_only
+            fee = f"₹ {int(fee_digits):,}"
+    elif c_obj:
+        title = c_obj.title
+        fee = f"₹ {c_obj.fee:,}"
+        duration = c_obj.duration
+    else:
+        fee = "₹ 2,999"
                 
     return {
         "title": title,
         "raw": raw,
         "fee": fee,
-        "duration": "6 Months Classroom + Online Tests",
+        "duration": duration,
         "is_enrolled": True
     }
 
@@ -1482,10 +1516,11 @@ def admin_add_course_view(request):
         return JsonResponse({"status": "error", "message": "Access denied."})
 
     if request.method == "POST":
-        title = request.POST.get("title")
-        duration = request.POST.get("duration")
-        fee = request.POST.get("fee")
-        description = request.POST.get("description")
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "competitive").strip()
+        duration = request.POST.get("duration", "").strip()
+        fee = request.POST.get("fee", "").strip()
+        description = request.POST.get("description", "").strip()
         image = request.FILES.get("image")
 
         if not title or not duration or not fee or not description:
@@ -1497,14 +1532,19 @@ def admin_add_course_view(request):
             return JsonResponse({"status": "error", "message": "Fee must be a valid number."})
 
         try:
-            Course.objects.create(
+            course = Course.objects.create(
                 title=title,
+                category=category,
                 duration=duration,
                 fee=fee_val,
                 description=description,
                 image=image
             )
-            return JsonResponse({"status": "success", "message": "Course added successfully!"})
+            return JsonResponse({
+                "status": "success", 
+                "message": f"Course '{course.title}' added successfully!",
+                "course_id": course.id
+            })
         except Exception as e:
             return JsonResponse({"status": "error", "message": f"Error: {str(e)}"})
 
@@ -1519,6 +1559,7 @@ def admin_update_course_view(request, course_id):
 
     if request.method == "POST":
         title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "competitive").strip()
         duration = request.POST.get("duration", "").strip()
         fee = request.POST.get("fee", "").strip()
         description = request.POST.get("description", "").strip()
@@ -1535,6 +1576,7 @@ def admin_update_course_view(request, course_id):
         try:
             course = Course.objects.get(id=course_id)
             course.title = title
+            course.category = category
             course.duration = duration
             course.fee = fee_val
             course.description = description
@@ -1543,9 +1585,10 @@ def admin_update_course_view(request, course_id):
             course.save()
             return JsonResponse({
                 "status": "success", 
-                "message": "Course updated successfully!",
+                "message": f"Course '{course.title}' updated successfully!",
                 "course_id": course.id,
                 "title": course.title,
+                "category": course.category,
                 "duration": course.duration,
                 "fee": course.fee,
                 "description": course.description,

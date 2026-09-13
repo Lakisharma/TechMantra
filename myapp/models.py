@@ -47,15 +47,25 @@ class StudentProfile(models.Model):
 
 
 class Course(models.Model):
+    CATEGORY_CHOICES = (
+        ('competitive', 'Competitive Exam & Certificate Courses'),
+        ('monthly', 'Monthly Plans'),
+        ('package', 'Special Monthly Packages'),
+        ('other', 'Other Courses'),
+    )
     title = models.CharField(max_length=150)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='competitive')
     duration = models.CharField(max_length=50)
     fee = models.IntegerField()
-    description = models.TextField()
+    description = models.TextField(blank=True, default="")
     image = models.ImageField(upload_to='course_images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
-        return self.title
+        return f"{self.title} (₹ {self.fee})"
 
 
 class GalleryImage(models.Model):

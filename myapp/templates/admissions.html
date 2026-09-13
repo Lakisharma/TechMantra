@@ -97,28 +97,37 @@
               <label for="adm-course" class="form-label">Select Course / Plan *</label>
               <select id="adm-course" name="course" class="form-control" required>
                 <option value="" disabled selected>Choose a course or plan</option>
-                <optgroup label="Competitive Exam Courses">
-                  <option value="SSC GD (₹ 3100)">SSC GD (₹ 3100)</option>
-                  <option value="AIRFORCE / NAVY (X & Y GROUP) (₹ 3100)">AIRFORCE / NAVY (X & Y GROUP) (₹ 3100)</option>
-                  <option value="ARMY GD (₹ 3100)">ARMY GD (₹ 3100)</option>
-                  <option value="UP POLICE / DELHI POLICE (₹ 2999)">UP POLICE / DELHI POLICE (₹ 2999)</option>
-                  <option value="UPSSSC / LEKHPAL / VDO / PET (₹ 2999)">UPSSSC / LEKHPAL / VDO / PET (₹ 2999)</option>
-                  <option value="TEACHERS PACK ( SUPER TET / CTET / TET ) (₹ 2999)">TEACHERS PACK ( SUPER TET / CTET / TET ) (₹ 2999)</option>
-                  <option value="RAILWAY NTPC / ALP / GROUP D (₹ 3100)">RAILWAY NTPC / ALP / GROUP D (₹ 3100)</option>
-                  <option value="NDA / CDS (Defence) (₹ 6100)">NDA / CDS (Defence) (₹ 6100)</option>
-                  <option value="COMPUTER PACK (₹ 6500)">COMPUTER PACK (₹ 6500)</option>
-                  <option value="SPOKEN ENGLISH PROGRAM (₹ 2500)">SPOKEN ENGLISH PROGRAM (₹ 2500)</option>
-                </optgroup>
-                <optgroup label="Monthly Plans">
-                  <option value="Monthly Class (₹ 700)">Monthly Class (₹ 700)</option>
-                  <option value="Monthly Computer (₹ 500)">Monthly Computer (₹ 500)</option>
-                  <option value="Monthly Library (₹ 500)">Monthly Library (₹ 500)</option>
-                </optgroup>
-                <optgroup label="Special Packages">
-                  <option value="Package: All (Class + Computer + Library) (₹ 1200)">Package: All (Class + Computer + Library) (₹ 1200)</option>
-                  <option value="Only Class + Library (₹ 800)">Only Class + Library (₹ 800)</option>
-                  <option value="Only Computer + Library (₹ 700)">Only Computer + Library (₹ 700)</option>
-                </optgroup>
+                {% if competitive_courses %}
+                  <optgroup label="Competitive Exam & Certificate Courses">
+                    {% for c in competitive_courses %}
+                      <option value="{{ c.title }} (₹ {{ c.fee }})">{{ c.title }} (₹ {{ c.fee }})</option>
+                    {% endfor %}
+                  </optgroup>
+                {% endif %}
+
+                {% if monthly_courses %}
+                  <optgroup label="Monthly Plans">
+                    {% for c in monthly_courses %}
+                      <option value="{{ c.title }} (₹ {{ c.fee }})">{{ c.title }} (₹ {{ c.fee }})</option>
+                    {% endfor %}
+                  </optgroup>
+                {% endif %}
+
+                {% if package_courses %}
+                  <optgroup label="Special Monthly Packages">
+                    {% for c in package_courses %}
+                      <option value="{{ c.title }} (₹ {{ c.fee }})">{{ c.title }} (₹ {{ c.fee }})</option>
+                    {% endfor %}
+                  </optgroup>
+                {% endif %}
+
+                {% if other_courses %}
+                  <optgroup label="Other Courses">
+                    {% for c in other_courses %}
+                      <option value="{{ c.title }} (₹ {{ c.fee }})">{{ c.title }} (₹ {{ c.fee }})</option>
+                    {% endfor %}
+                  </optgroup>
+                {% endif %}
               </select>
             </div>
 
@@ -148,105 +157,68 @@
             </thead>
             <tbody>
               <!-- Competitive Courses -->
-              <tr style="background: rgba(99, 102, 241, 0.08);">
-                <td colspan="3" style="font-weight: 700; color: var(--accent); padding: 0.8rem 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">
-                  <i class="fa-solid fa-graduation-cap"></i> Competitive Exam & Certificate Courses
-                </td>
-              </tr>
-              <tr>
-                <td>SSC GD</td>
-                <td>6 Months</td>
-                <td class="highlight-price">₹ 3100</td>
-              </tr>
-              <tr>
-                <td>AIRFORCE / NAVY (X & Y GROUP)</td>
-                <td>6 Months</td>
-                <td class="highlight-price">₹ 3100</td>
-              </tr>
-              <tr>
-                <td>ARMY GD</td>
-                <td>6 Months</td>
-                <td class="highlight-price">₹ 3100</td>
-              </tr>
-              <tr>
-                <td>UP POLICE / DELHI POLICE</td>
-                <td>6 Months</td>
-                <td class="highlight-price">₹ 2999</td>
-              </tr>
-              <tr>
-                <td>UPSSSC / LEKHPAL / VDO / PET</td>
-                <td>6 Months</td>
-                <td class="highlight-price">₹ 2999</td>
-              </tr>
-              <tr>
-                <td>TEACHERS PACK ( SUPER TET / CTET / TET )</td>
-                <td>6 Months</td>
-                <td class="highlight-price">₹ 2999</td>
-              </tr>
-              <tr>
-                <td>RAILWAY NTPC / ALP / GROUP D</td>
-                <td>6 Months</td>
-                <td class="highlight-price">₹ 3100</td>
-              </tr>
-              <tr>
-                <td>NDA / CDS (Defence)</td>
-                <td>1 Year</td>
-                <td class="highlight-price">₹ 6100</td>
-              </tr>
-              <tr>
-                <td>COMPUTER PACK</td>
-                <td>3 Months</td>
-                <td class="highlight-price">₹ 6500</td>
-              </tr>
-              <tr>
-                <td>SPOKEN ENGLISH PROGRAM</td>
-                <td>2 Months</td>
-                <td class="highlight-price">₹ 2500</td>
-              </tr>
+              {% if competitive_courses %}
+                <tr style="background: rgba(99, 102, 241, 0.08);">
+                  <td colspan="3" style="font-weight: 700; color: var(--accent); padding: 0.8rem 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-graduation-cap"></i> Competitive Exam & Certificate Courses
+                  </td>
+                </tr>
+                {% for c in competitive_courses %}
+                  <tr>
+                    <td>{{ c.title }}</td>
+                    <td>{{ c.duration }}</td>
+                    <td class="highlight-price">₹ {{ c.fee }}</td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
 
               <!-- Monthly Plans -->
-              <tr style="background: rgba(99, 102, 241, 0.08);">
-                <td colspan="3" style="font-weight: 700; color: var(--accent); padding: 0.8rem 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">
-                  <i class="fa-solid fa-calendar-days"></i> Monthly Plans
-                </td>
-              </tr>
-              <tr>
-                <td>Monthly Class</td>
-                <td>Monthly (1 Month)</td>
-                <td class="highlight-price">₹ 700</td>
-              </tr>
-              <tr>
-                <td>Monthly Computer</td>
-                <td>Monthly (1 Month)</td>
-                <td class="highlight-price">₹ 500</td>
-              </tr>
-              <tr>
-                <td>Monthly Library</td>
-                <td>Monthly (1 Month)</td>
-                <td class="highlight-price">₹ 500</td>
-              </tr>
+              {% if monthly_courses %}
+                <tr style="background: rgba(99, 102, 241, 0.08);">
+                  <td colspan="3" style="font-weight: 700; color: var(--accent); padding: 0.8rem 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-calendar-days"></i> Monthly Plans
+                  </td>
+                </tr>
+                {% for c in monthly_courses %}
+                  <tr>
+                    <td>{{ c.title }}</td>
+                    <td>{{ c.duration }}</td>
+                    <td class="highlight-price">₹ {{ c.fee }}</td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
 
               <!-- Special Combo Packages -->
-              <tr style="background: rgba(99, 102, 241, 0.08);">
-                <td colspan="3" style="font-weight: 700; color: var(--accent); padding: 0.8rem 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">
-                  <i class="fa-solid fa-layer-group"></i> Special Monthly Packages
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Package: All</strong> (Class + Computer + Library)</td>
-                <td>Monthly (1 Month)</td>
-                <td class="highlight-price">₹ 1200</td>
-              </tr>
-              <tr>
-                <td>Only Class + Library</td>
-                <td>Monthly (1 Month)</td>
-                <td class="highlight-price">₹ 800</td>
-              </tr>
-              <tr>
-                <td>Only Computer + Library</td>
-                <td>Monthly (1 Month)</td>
-                <td class="highlight-price">₹ 700</td>
-              </tr>
+              {% if package_courses %}
+                <tr style="background: rgba(99, 102, 241, 0.08);">
+                  <td colspan="3" style="font-weight: 700; color: var(--accent); padding: 0.8rem 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-layer-group"></i> Special Monthly Packages
+                  </td>
+                </tr>
+                {% for c in package_courses %}
+                  <tr>
+                    <td><strong>{{ c.title }}</strong></td>
+                    <td>{{ c.duration }}</td>
+                    <td class="highlight-price">₹ {{ c.fee }}</td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
+
+              <!-- Other Courses -->
+              {% if other_courses %}
+                <tr style="background: rgba(99, 102, 241, 0.08);">
+                  <td colspan="3" style="font-weight: 700; color: var(--accent); padding: 0.8rem 1.5rem; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;">
+                    <i class="fa-solid fa-book-open"></i> Other Courses
+                  </td>
+                </tr>
+                {% for c in other_courses %}
+                  <tr>
+                    <td>{{ c.title }}</td>
+                    <td>{{ c.duration }}</td>
+                    <td class="highlight-price">₹ {{ c.fee }}</td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
             </tbody>
           </table>
         </div>

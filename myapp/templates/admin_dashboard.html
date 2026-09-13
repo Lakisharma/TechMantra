@@ -1768,7 +1768,7 @@
               {% for course in courses %}
                 <div class="item-card" id="card-course-{{ course.id }}">
                   <div class="item-card-image" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{% if course.image %}{{ course.image.url }}{% else %}https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80{% endif %}');">
-                    <span class="item-card-badge status-badge badge-primary">Course</span>
+                    <span class="item-card-badge status-badge badge-primary">{{ course.get_category_display }}</span>
                   </div>
                   <div class="item-card-content">
                     <h4>{{ course.title }}</h4>
@@ -1779,7 +1779,7 @@
                     </div>
                   </div>
                   <div class="item-card-actions" style="display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border-color);">
-                    <button class="btn-item-edit" onclick="openEditCourseModal('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.duration|escapejs }}', '{{ course.fee }}', '{{ course.description|escapejs }}', '{% if course.image %}{{ course.image.url }}{% endif %}')" style="background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none; border-right: 1px solid var(--border-color); padding: 0.65rem 0.5rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: var(--transition-normal);">
+                    <button class="btn-item-edit" onclick="openEditCourseModal('{{ course.id }}', '{{ course.title|escapejs }}', '{{ course.duration|escapejs }}', '{{ course.fee }}', '{{ course.description|escapejs }}', '{{ course.category }}', '{% if course.image %}{{ course.image.url }}{% endif %}')" style="background: rgba(59, 130, 246, 0.1); color: var(--primary); border: none; border-right: 1px solid var(--border-color); padding: 0.65rem 0.5rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: var(--transition-normal);">
                       <i class="fa-solid fa-pen-to-square"></i> Edit
                     </button>
                     <button class="btn-item-delete" onclick="deleteCourse('{{ course.id }}')" style="border-radius: 0; padding: 0.65rem 0.5rem; border: none; background: rgba(239, 68, 68, 0.1);">
@@ -3122,34 +3122,43 @@ Agli class nirdharit samay par shuru hogi.
     <div class="modal-container">
       <button class="modal-close" onclick="closeModal('addCourseModal')"><i class="fa-solid fa-xmark"></i></button>
       <div class="modal-header">
-        <h3><i class="fa-solid fa-graduation-cap"></i> Add New Academic Course</h3>
+        <h3><i class="fa-solid fa-graduation-cap"></i> Add New Academic Course / Plan</h3>
       </div>
       <form id="addCourseForm" onsubmit="submitAddCourse(event)" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-group">
-          <label class="form-label" for="courseTitle">Course Title</label>
-          <input type="text" id="courseTitle" name="title" class="form-control" required placeholder="e.g. Railway Exams Coaching">
+          <label class="form-label" for="courseTitle">Course / Plan Title *</label>
+          <input type="text" id="courseTitle" name="title" class="form-control" required placeholder="e.g. Railway NTPC / ALP / GROUP D">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="courseCategory">Category / Section *</label>
+          <select id="courseCategory" name="category" class="form-control" required>
+            <option value="competitive">Competitive Exam & Certificate Courses</option>
+            <option value="monthly">Monthly Plans</option>
+            <option value="package">Special Monthly Packages</option>
+            <option value="other">Other Courses</option>
+          </select>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label class="form-label" for="courseDuration">Duration</label>
-            <input type="text" id="courseDuration" name="duration" class="form-control" required placeholder="e.g. 6 Months">
+            <label class="form-label" for="courseDuration">Duration *</label>
+            <input type="text" id="courseDuration" name="duration" class="form-control" required placeholder="e.g. 6 Months / Monthly (1 Month)">
           </div>
           <div class="form-group">
-            <label class="form-label" for="courseFee">Fee (INR)</label>
-            <input type="number" id="courseFee" name="fee" class="form-control" required placeholder="e.g. 5000">
+            <label class="form-label" for="courseFee">Fee in INR (₹) *</label>
+            <input type="number" id="courseFee" name="fee" class="form-control" required placeholder="e.g. 3100">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="courseDescription">Description</label>
-          <textarea id="courseDescription" name="description" rows="3" class="form-control" required placeholder="Outline course syllabus, shortcuts, and targets..."></textarea>
+          <label class="form-label" for="courseDescription">Description *</label>
+          <textarea id="courseDescription" name="description" rows="3" class="form-control" required placeholder="Outline course syllabus, targets and classroom details..."></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label" for="courseImage">Course Thumbnail Cover</label>
+          <label class="form-label" for="courseImage">Course Thumbnail Cover (Optional)</label>
           <input type="file" id="courseImage" name="image" class="form-control" accept="image/*">
         </div>
         <button type="submit" class="btn-submit">
-          <i class="fa-solid fa-circle-check"></i> Add to Prospectus
+          <i class="fa-solid fa-circle-check"></i> Add to Prospectus & Website
         </button>
       </form>
     </div>
@@ -3162,14 +3171,23 @@ Agli class nirdharit samay par shuru hogi.
     <div class="modal-container">
       <button class="modal-close" onclick="closeModal('editCourseModal')"><i class="fa-solid fa-xmark"></i></button>
       <div class="modal-header">
-        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Edit Academic Course</h3>
+        <h3><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Edit Course / Plan Details</h3>
       </div>
       <form id="editCourseForm" onsubmit="submitUpdateCourse(event)" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" id="edit-course-id" name="course_id">
         <div class="form-group">
-          <label class="form-label" for="editCourseTitle">Course Title *</label>
+          <label class="form-label" for="editCourseTitle">Course / Plan Title *</label>
           <input type="text" id="editCourseTitle" name="title" class="form-control" required placeholder="e.g. SSC GD">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editCourseCategory">Category / Section *</label>
+          <select id="editCourseCategory" name="category" class="form-control" required>
+            <option value="competitive">Competitive Exam & Certificate Courses</option>
+            <option value="monthly">Monthly Plans</option>
+            <option value="package">Special Monthly Packages</option>
+            <option value="other">Other Courses</option>
+          </select>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
@@ -3177,13 +3195,13 @@ Agli class nirdharit samay par shuru hogi.
             <input type="text" id="editCourseDuration" name="duration" class="form-control" required placeholder="e.g. 6 Months">
           </div>
           <div class="form-group">
-            <label class="form-label" for="editCourseFee">Fee (INR) *</label>
+            <label class="form-label" for="editCourseFee">Fee in INR (₹) *</label>
             <input type="number" id="editCourseFee" name="fee" class="form-control" required placeholder="e.g. 3100">
           </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="editCourseDescription">Description *</label>
-          <textarea id="editCourseDescription" name="description" rows="3" class="form-control" required placeholder="Outline course syllabus, shortcuts, and targets..."></textarea>
+          <textarea id="editCourseDescription" name="description" rows="3" class="form-control" required placeholder="Outline course syllabus, targets and classroom details..."></textarea>
         </div>
         <div class="form-group" id="edit-course-current-wrap" style="display: none;">
           <label class="form-label">Current Thumbnail</label>
@@ -3196,7 +3214,7 @@ Agli class nirdharit samay par shuru hogi.
           <input type="file" id="editCourseImage" name="image" class="form-control" accept="image/*">
         </div>
         <button type="submit" class="btn-submit" style="background: var(--primary); box-shadow: 0 4px 15px var(--primary-glow);">
-          <i class="fa-solid fa-floppy-disk"></i> Save Course Changes
+          <i class="fa-solid fa-floppy-disk"></i> Save & Update Everywhere
         </button>
       </form>
     </div>
@@ -4523,9 +4541,10 @@ Agli class nirdharit samay par shuru hogi.
     }
 
     // Open Edit Course Modal
-    function openEditCourseModal(id, title, duration, fee, description, imgUrl) {
+    function openEditCourseModal(id, title, duration, fee, description, category, imgUrl) {
       document.getElementById('edit-course-id').value = id;
       document.getElementById('editCourseTitle').value = title;
+      document.getElementById('editCourseCategory').value = category || 'competitive';
       document.getElementById('editCourseDuration').value = duration;
       document.getElementById('editCourseFee').value = fee;
       document.getElementById('editCourseDescription').value = description;
