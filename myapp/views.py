@@ -230,12 +230,14 @@ def parse_quiz_html(html_content):
     """
     Universally parses quiz HTML files, JS scripts, JSON files, or pasted questions.
     Supports:
-      1. JavaScript arrays: const DATA = [{q: '...', o: ['...'], a: 0}], var questions = [...]
-      2. Single-quoted / unquoted JS object literals with template strings/backticks
-      3. Standard JSON arrays / objects
-      4. Discrete option properties (a, b, c, d, ans)
-      5. Plain text questions (1. Q statement \n A) ... \n B) ... \n Answer: A)
-      6. HTML question blocks
+      1. JavaScript 2D arrays: const qs = [ ["Question", ["A", "B", "C", "D"], 1, "Exp"], ... ]
+      2. Flat JS 2D arrays: [ ["Question", "A", "B", "C", "D", 1, "Exp"], ... ]
+      3. JavaScript object arrays: const DATA = [{q: '...', o: ['...'], a: 0, exp: '...'}]
+      4. Single-quoted / unquoted JS object literals with template strings/backticks
+      5. Standard JSON arrays / objects
+      6. Discrete option properties (option_a, opt_a, a, b, c, d, correct_option)
+      7. Plain text questions (1. Q statement \n A) ... \n B) ... \n Answer: A)
+      8. HTML question blocks (<section class="q"> or <div class="question">)
     Returns: (title, category, questions_list)
     """
     import re, json, ast, html
@@ -253,7 +255,9 @@ def parse_quiz_html(html_content):
     # 1. Extract Title
     title_match = re.search(r'<title[^>]*>(.*?)</title>', unescaped, re.IGNORECASE)
     if title_match:
-        raw_t = title_match.group(1).replace('TeachMANTRA', '').replace('|', '').replace('—', '-').strip()
+        raw_t = re.sub(r'<[^>]+>', '', title_match.group(1))
+        raw_t = re.sub(r'(?:TeachMANTRA\s*Academy|TeachMANTRA|Academy)', '', raw_t, flags=re.IGNORECASE)
+        raw_t = raw_t.replace('|', '').replace('—', '-').strip(' -|:')
         raw_t = re.sub(r'[\'\"`<>{}]', '', raw_t).strip()
         if len(raw_t) > 2 and 'x.q' not in raw_t and not raw_t.startswith('+'):
             title = raw_t
@@ -261,12 +265,14 @@ def parse_quiz_html(html_content):
     if not title:
         h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', unescaped, re.IGNORECASE)
         if h1_match:
-            raw_t = re.sub(r'<[^>]+>', '', h1_match.group(1)).replace('TeachMANTRA', '').replace('|', '').replace('—', '-').strip()
+            raw_t = re.sub(r'<[^>]+>', '', h1_match.group(1))
+            raw_t = re.sub(r'(?:TeachMANTRA\s*Academy|TeachMANTRA|Academy)', '', raw_t, flags=re.IGNORECASE)
+            raw_t = raw_t.replace('|', '').replace('—', '-').strip(' -|:')
             raw_t = re.sub(r'[\'\"`<>{}]', '', raw_t).strip()
             if len(raw_t) > 2 and 'x.q' not in raw_t and not raw_t.startswith('+'):
                 title = raw_t
 
-    # 2. Extract Category (Filter out JS code / template tags like '+x.q+')
+    # 2. Extract Category
     cat_match = re.search(r'<meta[^>]+name=["\']category["\'][^>]+content=["\']([^"\']+)["\']', unescaped, re.IGNORECASE)
     if cat_match:
         c_val = cat_match.group(1).strip()
@@ -282,23 +288,22 @@ def parse_quiz_html(html_content):
 
     # 3. Extract Questions List
     raw_items = []
-
-    # Clean comments from JS before searching for arrays
     clean_js = re.sub(r'//.*', '', unescaped)
     clean_js = re.sub(r'/\*[\s\S]*?\*/', '', clean_js)
 
-    # Method A: Look for JS arrays (DATA = [...], questions = [...], etc.)
+    # Strategy 1: JS / JSON array patterns (qs = [...], DATA = [...], etc.)
     array_patterns = [
-        r'(?:const|var|let)?\s*(?:DATA|questions|quizData|quiz_data|testData|mcqs|myQuestions|items|quiz|data|QUESTIONS)\s*=\s*(\[\s*\{[\s\S]*?\}\s*\])',
-        r'(\[\s*\{[\s\S]*?\"q(?:uestion)?\"\s*:[\s\S]*?\}\s*\])',
-        r'(\[\s*\{[\s\S]*?\'q(?:uestion)?\'\s*:[\s\S]*?\}\s*\])',
-        r'(\[\s*\{[\s\S]*?q(?:uestion)?\s*:[\s\S]*?\}\s*\])'
+        r'(?:const|var|let)\s+[a-zA-Z_$][\w$]*\s*=\s*(\[\s*(?:\[|\{)[\s\S]*?\])\s*;',
+        r'(\[\s*\[\s*["\'`][\s\S]*?\]\s*\])',
+        r'(?:const|var|let)?\s*(?:DATA|questions|quizData|quiz_data|testData|mcqs|myQuestions|items|quiz|data|QUESTIONS|qs)\s*=\s*(\[[\s\S]*?\]);?',
+        r'(\[\s*\{[\s\S]*?\}\s*\])'
     ]
 
     for pat in array_patterns:
-        matches = re.findall(pat, clean_js, re.IGNORECASE)
-        for arr_str in matches:
-            # A1: Try direct JSON parse
+        matches = re.finditer(pat, clean_js, re.IGNORECASE)
+        for m in matches:
+            arr_str = m.group(1).strip()
+            # 1a. Try JSON loads
             try:
                 parsed = json.loads(arr_str)
                 if isinstance(parsed, list) and len(parsed) > 0:
@@ -307,14 +312,11 @@ def parse_quiz_html(html_content):
             except Exception:
                 pass
 
-            # A2: Python AST literal_eval after normalizing JS syntax
+            # 1b. Try AST literal eval
             if not raw_items:
                 try:
-                    # Convert unquoted JS keys to quoted keys
                     clean = re.sub(r'([{,]\s*)([a-zA-Z_]\w*)\s*:', r'\1"\2":', arr_str)
-                    # Convert trailing commas in objects and arrays
                     clean = re.sub(r',\s*([\]}])', r'\1', clean)
-                    # Convert JS booleans & null
                     clean = re.sub(r'\btrue\b', 'True', clean, flags=re.IGNORECASE)
                     clean = re.sub(r'\bfalse\b', 'False', clean, flags=re.IGNORECASE)
                     clean = re.sub(r'\bnull\b', 'None', clean, flags=re.IGNORECASE)
@@ -327,9 +329,19 @@ def parse_quiz_html(html_content):
         if raw_items:
             break
 
-    # Method B: Regex extraction of individual object blocks {...}
+    # Strategy 2: Individual row matching for 2D array [ "Q", ["A","B","C","D"], 1, "Exp" ]
     if not raw_items:
-        # Find every object block that has a question property
+        row_pat = r'\[\s*["\'`]([\s\S]*?)["\'`]\s*,\s*\[([\s\S]*?)\]\s*,\s*([0-3]|["\'`][A-Da-d0-4]["\'`])(?:\s*,\s*["\'`]([\s\S]*?)["\'`])?\s*\]'
+        for rm in re.finditer(row_pat, clean_js):
+            q_text = rm.group(1).strip()
+            raw_opts = re.findall(r'["\'`]([\s\S]*?)["\'`]', rm.group(2))
+            ans_val = rm.group(3).strip().strip('"\'`')
+            exp_val = rm.group(4).strip() if rm.group(4) else ""
+            if q_text and len(raw_opts) >= 2:
+                raw_items.append([q_text, raw_opts, ans_val, exp_val])
+
+    # Strategy 3: Individual object matching { q: "...", o: [...] }
+    if not raw_items:
         obj_matches = re.findall(r'\{[^{}]*?(?:["\']?q(?:uestion)?(?:_text)?["\']?\s*:)[^{}]*?\}', clean_js)
         for obj_str in obj_matches:
             q_m = re.search(r'["\']?q(?:uestion)?(?:_text)?["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]\s*[,}]', obj_str)
@@ -337,7 +349,6 @@ def parse_quiz_html(html_content):
             a_m = re.search(r'["\']?(?:ans(?:wer)?|correct(?:_option)?|a)["\']?\s*:\s*([0-3]|["\'`][^"\'`]+["\'`])', obj_str)
             exp_m = re.search(r'["\']?(?:exp(?:lanation)?|solution|व्याख्या)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
             
-            # Check for discrete options a, b, c, d
             opt_a_m = re.search(r'["\']?(?:option_a|opt_a|opt1|option1|a)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
             opt_b_m = re.search(r'["\']?(?:option_b|opt_b|opt2|option2|b)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
             opt_c_m = re.search(r'["\']?(?:option_c|opt_c|opt3|option3|c)["\']?\s*:\s*["\'`]([\s\S]*?)["\'`]', obj_str)
@@ -370,7 +381,7 @@ def parse_quiz_html(html_content):
                         "explanation": exp_val
                     })
 
-    # Method C: Text questions parser (e.g. 1. Question \n A) ... \n B) ... \n Answer: A)
+    # Strategy 4: Text format (1. Question \n A) ... \n B) ... \n Answer: A)
     if not raw_items:
         text_blocks = re.split(r'(?:^|\n)(?:\d+[\.\)]|\(?\d+\)?)\s*', unescaped)
         for block in text_blocks:
@@ -407,24 +418,55 @@ def parse_quiz_html(html_content):
     # 4. Standardize into QuizQuestion dictionaries
     correct_map = ["A", "B", "C", "D"]
     for idx, item in enumerate(raw_items, start=1):
-        if not isinstance(item, dict):
-            continue
-        q_text = (item.get("q") or item.get("question") or item.get("question_text") or item.get("title") or "").strip()
-        opts = item.get("o") or item.get("options") or []
-        if not isinstance(opts, list):
-            opts = []
-        
-        # Check if individual option keys exist (a, b, c, d or option_a, opt_a, etc.)
-        opt_a = opts[0] if len(opts) > 0 else (item.get("option_a") or item.get("opt_a") or item.get("opt1") or item.get("option1") or item.get("A") or (item.get("a") if isinstance(item.get("a"), str) and len(str(item.get("a"))) > 1 else "") or "")
-        opt_b = opts[1] if len(opts) > 1 else (item.get("option_b") or item.get("opt_b") or item.get("opt2") or item.get("option2") or item.get("B") or item.get("b") or "")
-        opt_c = opts[2] if len(opts) > 2 else (item.get("option_c") or item.get("opt_c") or item.get("opt3") or item.get("option3") or item.get("C") or item.get("c") or "")
-        opt_d = opts[3] if len(opts) > 3 else (item.get("option_d") or item.get("opt_d") or item.get("opt4") or item.get("option4") or item.get("D") or item.get("d") or "")
-        
-        # Determine Answer
-        ans_raw = item.get("ans") or item.get("answer") or item.get("correct") or item.get("correct_option") or item.get("right_answer")
-        if ans_raw is None:
-            ans_raw = item.get("a", 0)
+        q_text = ""
+        opts = []
+        ans_raw = 0
+        exp = ""
 
+        # Handle list/tuple representation (e.g. [ "Question", ["A", "B", "C", "D"], 1, "Exp" ])
+        if isinstance(item, (list, tuple)):
+            if len(item) >= 2:
+                q_text = str(item[0]).strip()
+                if isinstance(item[1], (list, tuple)):
+                    opts = [str(o).strip() for o in item[1]]
+                    if len(item) > 2:
+                        ans_raw = item[2]
+                    if len(item) > 3:
+                        exp = str(item[3]).strip()
+                elif len(item) >= 5 and all(isinstance(item[i], str) for i in range(1, 5)):
+                    opts = [str(item[1]).strip(), str(item[2]).strip(), str(item[3]).strip(), str(item[4]).strip()]
+                    if len(item) > 5:
+                        ans_raw = item[5]
+                    if len(item) > 6:
+                        exp = str(item[6]).strip()
+        # Handle dict representation
+        elif isinstance(item, dict):
+            q_text = (item.get("q") or item.get("question") or item.get("question_text") or item.get("title") or "").strip()
+            raw_opts = item.get("o") or item.get("options") or []
+            if isinstance(raw_opts, (list, tuple)):
+                opts = [str(o).strip() for o in raw_opts]
+            
+            if not opts:
+                opts = [
+                    str(item.get("option_a") or item.get("opt_a") or item.get("opt1") or item.get("option1") or item.get("A") or "").strip(),
+                    str(item.get("option_b") or item.get("opt_b") or item.get("opt2") or item.get("option2") or item.get("B") or "").strip(),
+                    str(item.get("option_c") or item.get("opt_c") or item.get("opt3") or item.get("option3") or item.get("C") or "").strip(),
+                    str(item.get("option_d") or item.get("opt_d") or item.get("opt4") or item.get("option4") or item.get("D") or "").strip(),
+                ]
+            
+            ans_raw = item.get("ans") or item.get("answer") or item.get("correct") or item.get("correct_option") or item.get("right_answer")
+            if ans_raw is None:
+                ans_raw = item.get("a", 0)
+            exp = item.get("explanation") or item.get("exp") or item.get("solution") or item.get("व्याख्या") or ""
+        else:
+            continue
+
+        opt_a = opts[0] if len(opts) > 0 else ""
+        opt_b = opts[1] if len(opts) > 1 else ""
+        opt_c = opts[2] if len(opts) > 2 else ""
+        opt_d = opts[3] if len(opts) > 3 else ""
+
+        # Determine Answer
         correct_opt = "A"
         if isinstance(ans_raw, int) and 0 <= ans_raw < 4:
             correct_opt = correct_map[ans_raw]
@@ -441,7 +483,6 @@ def parse_quiz_html(html_content):
             elif ans_clean in ['0']:
                 correct_opt = 'A'
             else:
-                # Match against options text
                 if str(opt_a).strip().upper() == ans_clean:
                     correct_opt = 'A'
                 elif str(opt_b).strip().upper() == ans_clean:
@@ -451,11 +492,14 @@ def parse_quiz_html(html_content):
                 elif str(opt_d).strip().upper() == ans_clean:
                     correct_opt = 'D'
 
-        exp = item.get("explanation") or item.get("exp") or item.get("solution") or item.get("व्याख्या") or ""
+        # Clean Q numbering prefix like "Q1. " or "1. " from question_text
+        clean_q = re.sub(r'^(?:Q\s*\.?\s*\d+[\.\:\-]?|\d+[\.\:\-])\s*', '', q_text).strip()
+        if not clean_q:
+            clean_q = q_text
 
-        if q_text and (opt_a or opt_b):
+        if clean_q and (opt_a or opt_b):
             questions.append({
-                "question_text": q_text,
+                "question_text": clean_q,
                 "option_a": str(opt_a).strip(),
                 "option_b": str(opt_b).strip(),
                 "option_c": str(opt_c).strip(),
@@ -487,6 +531,76 @@ def populate_default_online_tests():
             )
             for q in q_list:
                 QuizQuestion.objects.create(test=test, **q)
+
+    if not OnlineTest.objects.filter(title__icontains="DAY 16").exists():
+        day16_html = """
+        const qs = [
+        ["निम्नलिखित में से किस पुरातात्त्विक स्थल से प्राचीन जल-प्रबंधन व्यवस्था के महत्वपूर्ण प्रमाण मिले हैं?",["लोथल","धोलावीरा","कालीबंगा","रोपड़"],1,"धोलावीरा में जल-संग्रह, जलाशयों और जल-प्रबंधन की अत्यंत विकसित व्यवस्था के प्रमाण मिले हैं।"],
+        ["निम्नलिखित में से किस शासक ने नालंदा विश्वविद्यालय को संरक्षण देने के लिए विशेष रूप से प्रसिद्धि प्राप्त की?",["कुमारगुप्त प्रथम","समुद्रगुप्त","स्कंदगुप्त","हर्षवर्धन"],0,"कुमारगुप्त प्रथम को नालंदा महाविहार की स्थापना/संरक्षण से विशेष रूप से जोड़ा जाता है।"],
+        ["चोल प्रशासन की सबसे उल्लेखनीय विशेषता निम्न में से क्या थी?",["ग्राम स्वशासन","केंद्रीकृत सैन्य शासन","केवल धार्मिक प्रशासन","सामंती गणराज्य"],0,"चोल काल में स्थानीय स्वशासन की विकसित व्यवस्था थी। उत्तरमेरूर अभिलेख ग्राम प्रशासन की जानकारी देते हैं।"],
+        ["‘अमुक्तमाल्यदा’ नामक ग्रंथ के रचयिता कौन थे?",["कृष्णदेव राय","हरिहर","बुक्का","अल्लासानी पेद्दन"],0,"अमुक्तमाल्यदा तेलुगु भाषा का प्रसिद्ध ग्रंथ है, जिसके रचयिता विजयनगर शासक कृष्णदेव राय थे।"],
+        ["भारत के निम्नलिखित राज्यों में से किस राज्य से कर्क रेखा नहीं गुजरती है?",["झारखंड","छत्तीसगढ़","ओडिशा","त्रिपुरा"],2,"कर्क रेखा भारत के आठ राज्यों से गुजरती है; ओडिशा उनमें शामिल नहीं है।"],
+        ["निम्नलिखित में से कौन-सा कारक भारत में दक्षिण-पश्चिम मानसून की उत्पत्ति और दिशा को प्रभावित करता है?",["स्थल और समुद्र के असमान तापीय व्यवहार","केवल ज्वारीय तरंगें","केवल हिमालयी हिमपात","केवल समुद्री लवणता"],0,"स्थल और समुद्र के असमान तापीय व्यवहार से दाब-अंतर बनता है, जो मानसूनी पवनों को प्रभावित करता है।"],
+        ["‘एल-नीनो’ की घटना मुख्यतः किस महासागर के उष्णकटिबंधीय क्षेत्र से संबंधित है?",["हिंद महासागर","प्रशांत महासागर","अटलांटिक महासागर","आर्कटिक महासागर"],1,"एल-नीनो भूमध्यरेखीय प्रशांत महासागर के मध्य और पूर्वी भाग के समुद्री जल के असामान्य ऊष्मीकरण से संबंधित है।"],
+        ["निम्नलिखित में से किस नदी पर सरदार सरोवर परियोजना स्थित है?",["गोदावरी","नर्मदा","कृष्णा","महानदी"],1,"सरदार सरोवर बाँध नर्मदा नदी पर गुजरात में स्थित है।"],
+        ["निम्नलिखित में से कौन-सा जैव विविधता हॉटस्पॉट भारत के क्षेत्र में आता है?",["पश्चिमी घाट","थार मरुस्थल","गंगा का मैदान","दक्कन का पठार"],0,"पश्चिमी घाट विश्व के प्रमुख जैव विविधता हॉटस्पॉट में शामिल है।"],
+        ["निम्नलिखित में से कौन-सा युग्म ग्रंथि — हार्मोन के रूप में सही है?",["थायरॉयड — इंसुलिन","अग्न्याशय — ग्लूकागॉन","अधिवृक्क — थायरॉक्सिन","पीयूष — पित्त"],1,"अग्न्याशय की अल्फा कोशिकाएँ ग्लूकागॉन का स्राव करती हैं।"],
+        ["निम्नलिखित में से किस विटामिन का निर्माण मानव शरीर में सूर्य के प्रकाश की सहायता से त्वचा में होता है?",["विटामिन A","विटामिन B₁₂","विटामिन C","विटामिन D"],3,"सूर्य के पराबैंगनी-B विकिरण की सहायता से त्वचा में विटामिन D का निर्माण होता है।"],
+        ["यदि किसी वस्तु की गति दोगुनी कर दी जाए, तो समान द्रव्यमान वाली वस्तु की गतिज ऊर्जा कितनी हो जाएगी?",["दोगुनी","तीन गुनी","चार गुनी","आधी"],2,"गतिज ऊर्जा = ½mv²। इसलिए गति दोगुनी होने पर ऊर्जा चार गुनी हो जाती है।"],
+        ["निम्नलिखित में से कौन-सी गैस वायुमंडल में ग्रीनहाउस प्रभाव में महत्वपूर्ण योगदान देती है?",["कार्बन डाइऑक्साइड","हीलियम","निऑन","हाइड्रोजन"],0,"कार्बन डाइऑक्साइड एक प्रमुख ग्रीनहाउस गैस है।"],
+        ["यदि किसी बैंक के पास जमा राशि का एक निश्चित भाग केंद्रीय बैंक के पास रखना अनिवार्य हो, तो वह किस मौद्रिक नीति उपकरण से संबंधित है?",["बैंक दर","नकद आरक्षित अनुपात","खुला बाजार परिचालन","रेपो दर"],1,"नकद आरक्षित अनुपात में बैंकों को अपनी कुछ जमा राशि RBI के पास आरक्षित रखनी होती है।"],
+        ["निम्नलिखित में से कौन-सा राष्ट्रीय आय की गणना से संबंधित सही अवधारणा है?",["केवल घरेलू कंपनियों का लाभ","देश के सामान्य निवासियों द्वारा अर्जित अंतिम आय","केवल सरकार की कर आय","केवल कृषि क्षेत्र की आय"],1,"राष्ट्रीय आय देश के सामान्य निवासियों द्वारा एक अवधि में अर्जित अंतिम आय का व्यापक माप है।"],
+        ["भारतीय संविधान में नियंत्रक एवं महालेखा परीक्षक का प्रमुख कार्य किससे संबंधित है?",["चुनाव कराना","सरकारी खातों का लेखा-परीक्षण","कानून बनाना","न्यायिक नियुक्ति करना"],1,"CAG संघ और राज्यों के खातों से संबंधित लेखा-परीक्षण करता है।"],
+        ["भारत के राष्ट्रपति को पद से हटाने की प्रक्रिया को क्या कहा जाता है?",["अविश्वास प्रस्ताव","महाभियोग","न्यायिक पुनरावलोकन","विशेषाधिकार प्रस्ताव"],1,"संविधान के अनुसार राष्ट्रपति को संविधान के उल्लंघन के लिए महाभियोग द्वारा हटाया जा सकता है।"],
+        ["राज्यसभा के संबंध में कौन-सा कथन सही है?",["इसे प्रत्येक पाँच वर्ष में भंग किया जाता है","यह स्थायी सदन है","इसके सभी सदस्य सीधे जनता द्वारा चुने जाते हैं","इसका कार्यकाल दो वर्ष है"],1,"राज्यसभा स्थायी सदन है; इसके लगभग एक-तिहाई सदस्य हर दो वर्ष में सेवानिवृत्त होते हैं।"],
+        ["भारत में पंचायती राज संस्थाओं को संवैधानिक दर्जा किस संशोधन द्वारा मिला?",["42वाँ","44वाँ","73वाँ","86वाँ"],2,"73वें संविधान संशोधन अधिनियम, 1992 ने पंचायती राज संस्थाओं को संवैधानिक दर्जा दिया।"],
+        ["निम्न में से कौन-सा मौलिक कर्तव्य है?",["संपत्ति का अधिकार","वैज्ञानिक दृष्टिकोण विकसित करना","समानता का अधिकार","संवैधानिक उपचार का अधिकार"],1,"वैज्ञानिक दृष्टिकोण, मानवतावाद तथा जिज्ञासा और सुधार की भावना विकसित करना मौलिक कर्तव्य है।"],
+        ["अजंता—महाराष्ट्र, एलोरा—महाराष्ट्र, सांची—मध्य प्रदेश, महाबलीपुरम—केरल में से सही युग्म कौन-से हैं?",["केवल 1 और 2","केवल 1, 2 और 3","केवल 2, 3 और 4","1, 2, 3 और 4"],1,"अजंता और एलोरा महाराष्ट्र तथा सांची मध्य प्रदेश में हैं। महाबलीपुरम तमिलनाडु में है।"],
+        ["भक्ति आंदोलन के संदर्भ में कौन-सा कथन सबसे उपयुक्त है?",["इसने केवल राजदरबारों में धार्मिक विचारों को बढ़ावा दिया","इसने व्यक्तिगत भक्ति और ईश्वर से प्रत्यक्ष संबंध पर जोर दिया","इसका प्रभाव केवल दक्षिण भारत तक सीमित रहा","इसका मुख्य उद्देश्य सैन्य विस्तार था"],1,"भक्ति परंपरा ने व्यक्तिगत ईश्वर-भक्ति और सरल साधना पर जोर दिया।"],
+        ["1857 के विद्रोह के संदर्भ में निम्नलिखित युग्मों में कौन-सा सही है?",["कानपुर — नाना साहेब","झाँसी — बहादुर शाह जफर","दिल्ली — तात्या टोपे","लखनऊ — कुंवर सिंह"],0,"कानपुर में नाना साहेब 1857 के विद्रोह के प्रमुख नेताओं में थे।"],
+        ["भारत में स्थायी बंदोबस्त मुख्यतः किससे संबंधित था?",["भूमि राजस्व व्यवस्था","सैनिक भर्ती","व्यापारिक कर","न्यायिक सुधार"],0,"स्थायी बंदोबस्त 1793 में लॉर्ड कॉर्नवालिस के समय भूमि राजस्व व्यवस्था से संबंधित था।"],
+        ["निम्नलिखित में से कौन-सा कथन रेपो दर के बारे में सही है?",["यह वह दर है जिस पर RBI वाणिज्यिक बैंकों को अल्पकालिक धन उपलब्ध कराता है","यह आयकर की दर है","यह निर्यात शुल्क की दर है","यह बचत खाते पर अनिवार्य ब्याज दर है"],0,"रेपो दर वह नीतिगत दर है जिस पर RBI पात्र प्रतिभूतियों के बदले बैंकों को अल्पकालिक धन उपलब्ध कराता है।"],
+        ["यदि वास्तविक सकल घरेलू उत्पाद बढ़ रहा हो, लेकिन कीमतों में भी लगातार वृद्धि हो रही हो, तो वास्तविक आर्थिक वृद्धि को मापने के लिए किसका उपयोग अधिक उपयुक्त होगा?",["केवल नाममात्र सकल घरेलू उत्पाद","स्थिर कीमतों पर सकल घरेलू उत्पाद","केवल प्रति व्यक्ति मुद्रा आपूर्ति","केवल थोक व्यापार की मात्रा"],1,"स्थिर कीमतों पर GDP में कीमतों के प्रभाव को हटाकर उत्पादन में वास्तविक परिवर्तन को बेहतर ढंग से मापा जाता है।"],
+        ["निम्नलिखित में से कौन-सा प्रत्यक्ष कर है?",["जीएसटी","सीमा शुल्क","आयकर","उत्पाद शुल्क"],2,"आयकर का भार सीधे करदाता पर पड़ता है, इसलिए यह प्रत्यक्ष कर है।"],
+        ["निम्नलिखित में से किस संस्था की स्थापना संवैधानिक प्रावधान के अंतर्गत हुई है?",["नीति आयोग","राष्ट्रीय विकास परिषद","संघ लोक सेवा आयोग","राष्ट्रीय मानवाधिकार आयोग"],2,"संघ लोक सेवा आयोग का संवैधानिक आधार संविधान के अनुच्छेद 315 में है।"],
+        ["यदि संसद का कोई कानून किसी मौलिक अधिकार का उल्लंघन करता है, तो उसकी संवैधानिक वैधता की समीक्षा करने का अधिकार मुख्यतः किस संस्था के पास है?",["निर्वाचन आयोग","न्यायपालिका","वित्त आयोग","नीति आयोग"],1,"न्यायपालिका न्यायिक पुनरावलोकन के माध्यम से कानूनों की संवैधानिकता की जाँच कर सकती है।"],
+        ["निम्नलिखित में से कौन-सा संघ सूची का विषय है?",["पुलिस","लोक स्वास्थ्य","रक्षा","कृषि"],2,"रक्षा संघ सूची का विषय है। पुलिस, लोक स्वास्थ्य और कृषि मुख्यतः राज्य सूची के विषय हैं।"],
+        ["गुप्त काल के संदर्भ में सही कथन चुनिए: 1. स्वर्ण मुद्राओं का व्यापक प्रचलन था। 2. कला एवं साहित्य को संरक्षण मिला। 3. आर्यभट का संबंध गुप्तकालीन वैज्ञानिक परंपरा से है।",["केवल 1","केवल 2","केवल 1 और 2","1, 2 और 3"],3,"तीनों कथन गुप्तकालीन सांस्कृतिक और वैज्ञानिक उपलब्धियों से संबंधित हैं।"],
+        ["अष्टांगिक मार्ग का संबंध किससे है?",["जैन धर्म","बौद्ध धर्म","आजीवक संप्रदाय","चार्वाक दर्शन"],1,"अष्टांगिक मार्ग बुद्ध के चार आर्य सत्यों में दुख-निरोध की ओर ले जाने वाला मार्ग है।"],
+        ["यदि किसी प्राचीन अभिलेख में राजा द्वारा भूमि दान तथा कर-संबंधी अधिकारों का उल्लेख मिलता है, तो उससे सबसे अधिक किस प्रकार की जानकारी प्राप्त हो सकती है?",["केवल धार्मिक विश्वास","प्रशासन एवं आर्थिक व्यवस्था","केवल युद्ध तकनीक","केवल स्थापत्य कला"],1,"भूमि दान और कराधिकार प्रशासन, राजस्व तथा आर्थिक-सामाजिक व्यवस्था की जानकारी देते हैं।"],
+        ["विजयनगर साम्राज्य के संदर्भ में 1. हम्पी प्रमुख केंद्र था। 2. कृष्णदेव राय प्रसिद्ध शासक थे। 3. अमरनायक व्यवस्था सैन्य-सामंती प्रकृति से संबंधित थी।",["केवल 1 और 2","केवल 2 और 3","केवल 1 और 3","1, 2 और 3"],3,"तीनों कथन विजयनगर प्रशासन और इतिहास के संदर्भ में सही हैं।"],
+        ["किस घटना ने असहयोग आंदोलन की पृष्ठभूमि तैयार करने में महत्वपूर्ण भूमिका निभाई?",["रॉलेट अधिनियम और जलियाँवाला बाग हत्याकांड","बंगाल का विभाजन 1905","इल्बर्ट बिल विवाद","वर्नाक्युलर प्रेस अधिनियम"],0,"रॉलेट अधिनियम और जलियाँवाला बाग की घटना ने व्यापक जन-असंतोष पैदा किया।"],
+        ["सविनय अवज्ञा आंदोलन और असहयोग आंदोलन में प्रमुख अंतर क्या था?",["दोनों का नेतृत्व ब्रिटिश सरकार ने किया","सविनय अवज्ञा में अन्यायपूर्ण कानूनों के उल्लंघन पर विशेष जोर था","असहयोग में विदेशी वस्तुओं का बहिष्कार नहीं था","सविनय अवज्ञा का संबंध केवल किसानों से था"],1,"सविनय अवज्ञा आंदोलन में औपनिवेशिक कानूनों का जानबूझकर उल्लंघन प्रमुख था।"],
+        ["भारत की निम्नलिखित नदियों में से कौन-सी पूर्व की ओर बहने वाली नदी है?",["ताप्ती","नर्मदा","साबरमती","कावेरी"],3,"कावेरी पूर्व की ओर बहकर बंगाल की खाड़ी में गिरती है।"],
+        ["यदि किसी क्षेत्र में वर्षा मुख्यतः पर्वत की एक ओर होती है और दूसरी ओर कम, तो इसका प्रमुख कारण क्या होगा?",["समुद्री ज्वार","वर्षाछाया प्रभाव","पृथ्वी का घूर्णन","समुद्री लवणता"],1,"पर्वत की पवनाभिमुख ढाल पर वर्षा के बाद दूसरी ओर उतरती शुष्क हवा कम वर्षा करती है।"],
+        ["किस परिस्थिति में भूजल स्तर में गिरावट की संभावना सर्वाधिक होगी?",["वर्षा जल संचयन बढ़ने पर","अत्यधिक भूजल दोहन और कम पुनर्भरण होने पर","वन क्षेत्र बढ़ने पर","तालाबों की संख्या बढ़ने पर"],1,"जब भूजल का दोहन प्राकृतिक पुनर्भरण से अधिक होता है, तब जलस्तर नीचे जाता है।"],
+        ["निम्नलिखित में से कौन-सा युग्म गलत है?",["मैंग्रोव — ज्वारीय तटीय क्षेत्र","प्रवाल भित्ति — उष्ण समुद्री क्षेत्र","कांटेदार वन — अधिक वर्षा वाले क्षेत्र","अल्पाइन वनस्पति — ऊँचाई वाले पर्वतीय क्षेत्र"],2,"कांटेदार वनस्पति सामान्यतः कम वर्षा वाले शुष्क या अर्ध-शुष्क क्षेत्रों में पाई जाती है।"],
+        ["प्लेटलेट्स की प्रमुख भूमिका क्या है?",["वे ऑक्सीजन ले जाती हैं","वे रक्त के थक्के बनने में सहायता करती हैं","वे पाचन एंजाइम बनाती हैं","वे प्रतिरक्षी बनाती हैं"],1,"प्लेटलेट्स रक्तस्राव रोकने के लिए थक्का बनने की प्रक्रिया में महत्वपूर्ण भूमिका निभाते हैं।"],
+        ["निम्नलिखित में से कौन-सा प्रतिरक्षा तंत्र से सबसे अधिक संबंधित है?",["श्वेत रक्त कणिकाएँ","लाल रक्त कणिकाएँ","प्लेटलेट्स","हीमोग्लोबिन"],0,"श्वेत रक्त कणिकाएँ रोगजनकों के विरुद्ध प्रतिरक्षा प्रतिक्रिया में प्रमुख भूमिका निभाती हैं।"],
+        ["यदि रक्त में हीमोग्लोबिन की मात्रा सामान्य से काफी कम हो जाए, तो सबसे संभावित प्रभाव क्या होगा?",["ऑक्सीजन वहन क्षमता में कमी","रक्त का थक्का अत्यधिक तेज बनना","दृष्टि शक्ति स्वतः बढ़ना","शरीर का तापमान स्थायी रूप से बढ़ना"],0,"हीमोग्लोबिन ऑक्सीजन वहन करता है; इसकी कमी से रक्त की ऑक्सीजन वहन क्षमता घट सकती है।"],
+        ["धातु को अम्ल में डालने पर निकलने वाली कौन-सी गैस जलती तीली के पास ‘पॉप’ ध्वनि देती है?",["ऑक्सीजन","हाइड्रोजन","नाइट्रोजन","कार्बन डाइऑक्साइड"],1,"हाइड्रोजन गैस जलती हुई तीली के पास विशिष्ट ‘पॉप’ ध्वनि के साथ जलती है।"],
+        ["चंद्रमा पर वस्तु का भार पृथ्वी की तुलना में कम क्यों होता है?",["वस्तु का द्रव्यमान कम हो जाता है","चंद्रमा का गुरुत्वीय त्वरण कम है","वस्तु का आयतन कम हो जाता है","चंद्रमा पर वायुमंडल नहीं है"],1,"भार = द्रव्यमान × गुरुत्वीय त्वरण। चंद्रमा का गुरुत्वीय त्वरण पृथ्वी का लगभग 1/6 है।"],
+        ["ध्वनि और प्रकाश के संदर्भ में सही कथन चुनिए: 1. ध्वनि निर्वात में संचरित नहीं हो सकती। 2. प्रकाश निर्वात में संचरित हो सकता है। 3. ध्वनि की चाल माध्यम के गुणों पर निर्भर करती है।",["केवल 1","केवल 1 और 2","केवल 2 और 3","1, 2 और 3"],3,"ध्वनि को माध्यम की आवश्यकता होती है, जबकि प्रकाश निर्वात में भी संचरित हो सकता है।"],
+        ["अत्यधिक मुद्रा प्रवाह को नियंत्रित करने के लिए RBI का कौन-सा कदम संकुचनकारी मौद्रिक नीति का उदाहरण होगा?",["नीतिगत दर में वृद्धि","सरकारी व्यय में वृद्धि","करों में कमी","सब्सिडी में वृद्धि"],0,"नीतिगत दर बढ़ाने से ऋण महँगा हो सकता है और मुद्रा प्रवाह को नियंत्रित करने में सहायता मिल सकती है।"],
+        ["भुगतान संतुलन के संदर्भ में चालू खाते में सामान्यतः क्या शामिल होता है?",["वस्तुओं और सेवाओं का व्यापार","केवल सरकारी उधारी","केवल शेयर बाजार निवेश","केवल विदेशी मुद्रा भंडार"],0,"चालू खाते में वस्तुओं और सेवाओं का व्यापार तथा आय और अंतरण जैसी मदें शामिल होती हैं।"],
+        ["धन विधेयक के संबंध में सही कथन चुनिए: 1. राज्यसभा इसे अस्वीकार नहीं कर सकती। 2. धन विधेयक केवल लोकसभा में प्रस्तुत होता है। 3. राज्यसभा की सिफारिशें लोकसभा पर बाध्यकारी होती हैं।",["केवल 1","केवल 1 और 2","केवल 2 और 3","1, 2 और 3"],1,"धन विधेयक लोकसभा में प्रस्तुत होता है। राज्यसभा केवल सिफारिशें दे सकती है; उसकी सिफारिशें लोकसभा के लिए बाध्यकारी नहीं हैं।"],
+        ["राष्ट्रपति शासन लगाए जाने पर राज्य की विधानमंडलीय शक्तियों का प्रयोग कौन कर सकता है?",["केवल उच्च न्यायालय","संसद","निर्वाचन आयोग","वित्त आयोग"],1,"अनुच्छेद 356 के अंतर्गत राष्ट्रपति शासन में राज्य विधानमंडल की शक्तियाँ संसद द्वारा प्रयोग की जा सकती हैं।"]
+        ];
+        """
+        _, _, q16_list = parse_quiz_html(day16_html)
+        if q16_list:
+            test16 = OnlineTest.objects.create(
+                title="DAY 16 — GS POWER ONLINE QUIZ",
+                category="General Studies / सामान्य ज्ञान",
+                subtitle="50 Questions • General Studies / सामान्य ज्ञान • GS BY VINUS SIR",
+                description="TeachMANTRA Academy GS Power Online Mock Test (UPPOLICE • SSC GD • UPSSSC PET • UPPET • SUPERTET) with live timer, instant scorecard, and detailed explanations.",
+                duration_minutes=30,
+                total_questions=len(q16_list),
+                pass_percentage=40,
+                is_active=True
+            )
+            for q in q16_list:
+                QuizQuestion.objects.create(test=test16, **q)
 
 
 def populate_default_courses():
@@ -2980,6 +3094,64 @@ def admin_get_test_questions_view(request, test_id):
         "test_id": test.id,
         "questions": data
     })
+
+
+@csrf_exempt
+@login_required(login_url='login')
+def admin_bulk_import_questions_view(request, test_id):
+    """
+    Bulk imports questions into an existing online test via uploaded HTML/JSON file or raw code.
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        return JsonResponse({"status": "error", "message": "Access denied."})
+
+    test = get_object_or_404(OnlineTest, id=test_id)
+
+    if request.method == "POST":
+        parsed_questions = []
+        if 'quiz_file' in request.FILES:
+            try:
+                file_obj = request.FILES['quiz_file']
+                file_content = file_obj.read().decode('utf-8', errors='ignore')
+                _, _, parsed_questions = parse_quiz_html(file_content)
+            except Exception as e:
+                return JsonResponse({"status": "error", "message": f"File read error: {str(e)}"})
+        
+        if not parsed_questions:
+            raw_code = request.POST.get("raw_quiz_code", "").strip()
+            if raw_code:
+                try:
+                    _, _, parsed_questions = parse_quiz_html(raw_code)
+                except Exception as e:
+                    return JsonResponse({"status": "error", "message": f"Code parse error: {str(e)}"})
+
+        if not parsed_questions:
+            return JsonResponse({"status": "error", "message": "No questions could be extracted from the provided file or code. Please check file format."})
+
+        mode = request.POST.get("mode", "append")
+        if mode == "replace":
+            test.questions.all().delete()
+            start_order = 1
+        else:
+            start_order = test.questions.count() + 1
+
+        created_count = 0
+        for idx, q_data in enumerate(parsed_questions, start=start_order):
+            q_data_copy = dict(q_data)
+            q_data_copy['order'] = idx
+            QuizQuestion.objects.create(test=test, **q_data_copy)
+            created_count += 1
+
+        test.total_questions = test.questions.count()
+        test.save(update_fields=['total_questions'])
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Successfully imported {created_count} questions into '{test.title}'!",
+            "total_questions": test.total_questions
+        })
+
+    return JsonResponse({"status": "error", "message": "Invalid method."})
 
 
 # ============================================================

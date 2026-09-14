@@ -80,6 +80,7 @@ urlpatterns = [
     path('admin-dashboard/tests/toggle-status/<int:test_id>/', views.admin_toggle_test_status_view, name='admin_toggle_test_status'),
     path('admin-dashboard/tests/<int:test_id>/questions/', views.admin_get_test_questions_view, name='admin_get_test_questions'),
     path('admin-dashboard/tests/<int:test_id>/questions/add/', views.admin_add_question_view, name='admin_add_question'),
+    path('admin-dashboard/tests/<int:test_id>/questions/import/', views.admin_bulk_import_questions_view, name='admin_bulk_import_questions'),
     path('admin-dashboard/tests/questions/delete/<int:question_id>/', views.admin_delete_question_view, name='admin_delete_question'),
     # Syllabus & Daily Study Material PDF Portal Routes
     path('syllabus/', views.syllabus_list_view, name='syllabus_list'),

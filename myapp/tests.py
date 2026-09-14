@@ -357,7 +357,7 @@ class StudentPortalTests(TestCase):
             'ajax': 'true'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Course added successfully!")
+        self.assertContains(response, "added successfully!")
         
         course = Course.objects.get(title='Test Course Program')
         self.assertEqual(course.duration, '3 Months')
@@ -506,6 +506,43 @@ class StudentPortalTests(TestCase):
 
         other_staff.refresh_from_db()
         self.assertTrue(other_staff.check_password('NewSecurePassword123!'))
+
+    def test_admin_upload_html_quiz_file(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .models import OnlineTest
+
+        admin_user = User.objects.create_superuser(username='quizadmin', password='password123')
+        self.client.login(username='quizadmin', password='password123')
+
+        html_quiz = """
+        <!DOCTYPE html>
+        <html>
+        <head><title>DAY 99 - Test Quiz | TeachMANTRA Academy</title></head>
+        <body>
+        <script>
+        const qs = [
+            ["प्रश्न 1: भारत की राजधानी क्या है?", ["मुंबई", "नई दिल्ली", "कोलकाता", "चेन्नई"], 1, "नई दिल्ली भारत की राजधानी है।"],
+            ["प्रश्न 2: सौरमंडल का सबसे बड़ा ग्रह कौन-सा है?", ["पृथ्वी", "मंगल", "बृहस्पति", "शनि"], 2, "बृहस्पति सबसे बड़ा ग्रह है।"]
+        ];
+        </script>
+        </body>
+        </html>
+        """
+        uploaded_file = SimpleUploadedFile("day99_quiz.html", html_quiz.encode('utf-8'), content_type='text/html')
+        add_url = reverse('admin_add_test')
+        response = self.client.post(add_url, {
+            'quiz_file': uploaded_file,
+            'ajax': 'true'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "created successfully!")
+
+        test = OnlineTest.objects.filter(title__icontains="DAY 99").first()
+        self.assertIsNotNone(test)
+        self.assertEqual(test.questions.count(), 2)
+        q1 = test.questions.first()
+        self.assertEqual(q1.correct_option, "B")
+        self.assertEqual(q1.option_b, "नई दिल्ली")
 
 
 

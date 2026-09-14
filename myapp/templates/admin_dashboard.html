@@ -4193,62 +4193,100 @@ Agli class nirdharit samay par shuru hogi.
       <div style="overflow-y: auto; flex-grow: 1; padding-right: 0.5rem; margin-bottom: 1rem;">
         
         <!-- Add Question Subform Accordion -->
-        <div style="background: rgba(99, 102, 241, 0.06); border: 1.5px dashed var(--primary); border-radius: 0.85rem; padding: 1.25rem; margin-bottom: 1.5rem;">
-          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fa-solid fa-circle-plus" style="color: var(--primary);"></i> Add New MCQ Question
-          </h4>
-
-          <form id="addQuestionForm" onsubmit="submitAddQuestion(event)">
-            {% csrf_token %}
-            <input type="hidden" id="question-test-id" name="test_id">
-
-            <div class="form-group">
-              <label class="form-label" for="q-text">Question Statement * (Supports Hindi & English)</label>
-              <textarea id="q-text" name="question_text" rows="2" class="form-control" required placeholder="e.g. भारत में हरित क्रांति के जनक के रूप में किसे जाना जाता है?"></textarea>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <!-- Bulk Import Box -->
+          <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%); border: 1px dashed rgba(56, 189, 248, 0.4); border-radius: 0.85rem; padding: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+              <h4 style="font-size: 0.92rem; font-weight: 700; color: #38bdf8; margin: 0; display: flex; align-items: center; gap: 0.45rem;">
+                <i class="fa-solid fa-file-import"></i> Bulk Import Questions from HTML / JSON File
+              </h4>
             </div>
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0 0 0.6rem 0;">
+              Upload your quiz HTML file or paste code (e.g. <code>const qs = [...]</code>). All MCQs, options, and explanations will be appended or replaced automatically.
+            </p>
+            <form id="bulkImportQuestionsForm" onsubmit="submitBulkImportQuestions(event)" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.6rem;">
+                <div>
+                  <label class="form-label" style="font-size: 0.76rem; margin-bottom: 0.2rem;">Choose HTML / JSON File:</label>
+                  <input type="file" id="bulk-import-file" name="quiz_file" accept=".html,.htm,.json,.txt" class="form-control" style="padding: 0.35rem 0.55rem; font-size: 0.8rem; background: rgba(0,0,0,0.2);">
+                </div>
+                <div>
+                  <label class="form-label" style="font-size: 0.76rem; margin-bottom: 0.2rem;">Import Mode:</label>
+                  <select name="mode" class="form-control" style="padding: 0.35rem 0.55rem; font-size: 0.8rem; background: rgba(0,0,0,0.2);">
+                    <option value="append">Append (Add to existing questions)</option>
+                    <option value="replace">Replace (Clear current & replace)</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-bottom: 0.6rem;">
+                <label class="form-label" style="font-size: 0.76rem; margin-bottom: 0.2rem;">Or Paste Questions Code / HTML:</label>
+                <textarea name="raw_quiz_code" rows="2" class="form-control" placeholder="Paste quiz HTML file content or const qs = [...] array here..." style="font-size: 0.76rem; font-family: monospace; padding: 0.35rem 0.55rem; background: rgba(0,0,0,0.2);"></textarea>
+              </div>
+              <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); padding: 0.45rem 1rem; font-size: 0.82rem; width: auto; border-radius: 8px;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Start Bulk Import
+              </button>
+            </form>
+          </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-              <div class="form-group">
-                <label class="form-label" for="q-opt-a">Option A *</label>
-                <input type="text" id="q-opt-a" name="option_a" class="form-control" required placeholder="e.g. एम. एस. स्वामीनाथन">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="q-opt-b">Option B *</label>
-                <input type="text" id="q-opt-b" name="option_b" class="form-control" required placeholder="e.g. नॉर्मन बोरलॉग">
-              </div>
-            </div>
+          <!-- Single Question Subform Accordion -->
+          <div style="background: rgba(99, 102, 241, 0.06); border: 1.5px dashed var(--primary); border-radius: 0.85rem; padding: 1.25rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-circle-plus" style="color: var(--primary);"></i> Add Single MCQ Question
+            </h4>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-              <div class="form-group">
-                <label class="form-label" for="q-opt-c">Option C *</label>
-                <input type="text" id="q-opt-c" name="option_c" class="form-control" required placeholder="e.g. वर्गीज कुरियन">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="q-opt-d">Option D *</label>
-                <input type="text" id="q-opt-d" name="option_d" class="form-control" required placeholder="e.g. होमी भाभा">
-              </div>
-            </div>
+            <form id="addQuestionForm" onsubmit="submitAddQuestion(event)">
+              {% csrf_token %}
+              <input type="hidden" id="question-test-id" name="test_id">
 
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
               <div class="form-group">
-                <label class="form-label" for="q-correct">Correct Option *</label>
-                <select id="q-correct" name="correct_option" class="form-control" required style="font-weight: 700; color: #10b981;">
-                  <option value="A">Option A</option>
-                  <option value="B">Option B</option>
-                  <option value="C">Option C</option>
-                  <option value="D">Option D</option>
-                </select>
+                <label class="form-label" for="q-text">Question Statement * (Supports Hindi & English)</label>
+                <textarea id="q-text" name="question_text" rows="2" class="form-control" required placeholder="e.g. भारत में हरित क्रांति के जनक के रूप में किसे जाना जाता है?"></textarea>
               </div>
-              <div class="form-group">
-                <label class="form-label" for="q-explanation">Explanation / Solution (Optional)</label>
-                <input type="text" id="q-explanation" name="explanation" class="form-control" placeholder="e.g. एम. एस. स्वामीनाथन ने भारतीय कृषि में उच्च उपज वाली किस्मों की शुरुआत की।">
-              </div>
-            </div>
 
-            <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 0.65rem 1.5rem; width: auto;">
-              <i class="fa-solid fa-plus"></i> Add Question to Test
-            </button>
-          </form>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label" for="q-opt-a">Option A *</label>
+                  <input type="text" id="q-opt-a" name="option_a" class="form-control" required placeholder="e.g. एम. एस. स्वामीनाथन">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="q-opt-b">Option B *</label>
+                  <input type="text" id="q-opt-b" name="option_b" class="form-control" required placeholder="e.g. नॉर्मन बोरलॉग">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label class="form-label" for="q-opt-c">Option C *</label>
+                  <input type="text" id="q-opt-c" name="option_c" class="form-control" required placeholder="e.g. वर्गीज कुरियन">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="q-opt-d">Option D *</label>
+                  <input type="text" id="q-opt-d" name="option_d" class="form-control" required placeholder="e.g. होमी भाभा">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="q-correct">Correct Option *</label>
+                  <select id="q-correct" name="correct_option" class="form-control" required style="font-weight: 700; color: #10b981;">
+                    <option value="A">Option A</option>
+                    <option value="B">Option B</option>
+                    <option value="C">Option C</option>
+                    <option value="D">Option D</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="q-explanation">Explanation / Solution (Optional)</label>
+                  <input type="text" id="q-explanation" name="explanation" class="form-control" placeholder="e.g. एम. एस. स्वामीनाथन ने भारतीय कृषि में उच्च उपज वाली किस्मों की शुरुआत की।">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 0.55rem 1.25rem; font-size: 0.88rem; width: auto; border-radius: 8px;">
+                <i class="fa-solid fa-plus"></i> Add Question to Test
+              </button>
+            </form>
+          </div>
         </div>
 
         <!-- Existing Questions List Table -->
@@ -5695,37 +5733,45 @@ Agli class nirdharit samay par shuru hogi.
       // 1. Extract Title
       const titleMatch = text.match(/<title[^>]*>(.*?)<\/title>/i) || text.match(/<h1[^>]*>(.*?)<\/h1>/i);
       if (titleMatch && titleMatch[1]) {
-        let cleanT = titleMatch[1].replace(/— TeachMANTRA.*/i, '').replace(/TeachMANTRA.*/i, '').replace(/—/g, '-').trim();
-        cleanT = cleanT.replace(/['"`<>{}]/g, '').trim();
+        let cleanT = titleMatch[1].replace(/— TeachMANTRA.*/i, '').replace(/TeachMANTRA.*/i, '').replace(/Academy/gi, '').replace(/—/g, '-').trim();
+        cleanT = cleanT.replace(/['"`<>{}]/g, '').replace(/^[-|:\s]+|[-|:\s]+$/g, '').trim();
         if (cleanT.length > 2 && !cleanT.includes('x.q') && !cleanT.startsWith('+')) {
           foundTitle = cleanT;
         }
       }
 
       // 2. Extract Questions Count from various array patterns
-      // Method A: Match JSON/JS array
-      const dataMatch = text.match(/(?:const|var|let)?\s*(?:DATA|questions|quizData|quiz_data|testData|mcqs|items|quiz|data)\s*=\s*(\[[\s\S]*?\]);?/i) || text.match(/(\[\s*\{\s*["']?q(?:uestion)?["']?\s*:[\s\S]*\}\s*\])/i);
-      if (dataMatch) {
-        try {
-          // Normalize unquoted keys for JSON.parse
-          let cleanStr = dataMatch[1].replace(/([{,]\s*)([a-zA-Z_]\w*)\s*:/g, '$1"$2":');
-          cleanStr = cleanStr.replace(/,\s*([\]}])/g, '$1');
-          const arr = JSON.parse(cleanStr);
-          if (Array.isArray(arr) && arr.length > 0) {
-            qCount = arr.length;
+      // Method A: Match 2D array rows like [ "Question", ["A","B","C","D"], 1, "Exp" ]
+      const rowMatches = text.match(/\[\s*["'`][\s\S]*?["'`]\s*,\s*\[[\s\S]*?\](?:\s*,\s*[^\]]+)?\]/g);
+      if (rowMatches && rowMatches.length > 0) {
+        qCount = rowMatches.length;
+      }
+
+      // Method B: Match JSON/JS array
+      if (qCount === 0) {
+        const dataMatch = text.match(/(?:const|var|let)?\s*(?:DATA|questions|quizData|quiz_data|testData|mcqs|items|quiz|data|qs|QUESTIONS)\s*=\s*(\[[\s\S]*?\]);?/i) || text.match(/(\[\s*\{\s*["']?q(?:uestion)?["']?\s*:[\s\S]*\}\s*\])/i);
+        if (dataMatch) {
+          try {
+            let cleanStr = dataMatch[1].replace(/([{,]\s*)([a-zA-Z_]\w*)\s*:/g, '$1"$2":');
+            cleanStr = cleanStr.replace(/,\s*([\]}])/g, '$1');
+            const arr = JSON.parse(cleanStr);
+            if (Array.isArray(arr) && arr.length > 0) {
+              qCount = arr.length;
+            }
+          } catch(e) {
+            const matches = text.match(/["']?q(?:uestion)?(?:_text)?["']?\s*:/gi);
+            if (matches) qCount = matches.length;
           }
-        } catch(e) {
-          // Fallback regex count
-          const matches = text.match(/["']?q(?:uestion)?(?:_text)?["']?\s*:/gi);
-          if (matches) qCount = matches.length;
         }
-      } else {
-        // Method B: Regex count of { q: "..." }
+      }
+
+      // Method C: Regex count of { q: "..." }
+      if (qCount === 0) {
         const objMatches = text.match(/\{[^{}]*?["']?q(?:uestion)?(?:_text)?["']?\s*:[^{}]*?\}/gi);
         if (objMatches && objMatches.length > 0) {
           qCount = objMatches.length;
         } else {
-          // Method C: Text questions count
+          // Method D: Text questions count
           const textMatches = text.match(/(?:^|\n)\s*(?:\d+[\.\)]|\(?\d+\)?)\s+.*?\n\s*[A-Da-d1-4अ-घ]/g);
           if (textMatches && textMatches.length > 0) {
             qCount = textMatches.length;
@@ -6063,6 +6109,48 @@ Agli class nirdharit samay par shuru hogi.
         }
       } catch (e) {
         showToast('Server connection failed', 'error');
+      }
+    }
+
+    // Bulk Import Questions into Existing Test
+    async function submitBulkImportQuestions(event) {
+      event.preventDefault();
+      const form = event.target;
+      const testId = currentTestIdForQuestions;
+      if (!testId) {
+        showToast('Test ID not found.', 'error');
+        return;
+      }
+      const formData = new FormData(form);
+      formData.append('ajax', 'true');
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Importing...`;
+
+      try {
+        const res = await fetch(`/admin-dashboard/tests/${testId}/questions/import/`, {
+          method: 'POST',
+          body: formData,
+          headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          }
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          showToast(data.message, 'success');
+          form.reset();
+          await loadTestQuestions(testId);
+        } else {
+          showToast(data.message || 'Error importing questions', 'error');
+        }
+      } catch (e) {
+        showToast('Server connection failed', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
       }
     }
 
