@@ -77,27 +77,64 @@ class StudentPortalTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'forgot_password.html')
 
-    def test_forgot_password_post_success(self):
+    def test_forgot_password_otp_workflow_success(self):
         user = User.objects.create_user(username='teststudent', email='test@student.com', password='password123')
         StudentProfile.objects.create(user=user, phone='1234567890', course='SSC CGL Coaching Program')
         
         forgot_url = reverse('forgot_password')
-        response = self.client.post(forgot_url, {
-            'identity': 'teststudent'
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Password reset successfully!")
         
+        # Step 1: Send OTP to registered email
+        response1 = self.client.post(forgot_url, {
+            'action': 'send_otp',
+            'email': 'test@student.com'
+        })
+        self.assertEqual(response1.status_code, 200)
+        self.assertContains(response1, "6-digit OTP code has been sent")
+        
+        # Get generated OTP from session
+        session = self.client.session
+        otp = session.get('reset_otp')
+        self.assertIsNotNone(otp)
+        self.assertEqual(len(otp), 6)
+        
+        # Step 2: Verify correct OTP
+        response2 = self.client.post(forgot_url, {
+            'action': 'verify_otp',
+            'otp': otp
+        })
+        self.assertEqual(response2.status_code, 200)
+        self.assertContains(response2, "OTP verified successfully")
+        
+        # Step 3: Set new password and auto login
+        response3 = self.client.post(forgot_url, {
+            'action': 'set_password',
+            'new_password': 'MyNewPassword123!',
+            'confirm_password': 'MyNewPassword123!'
+        })
+        self.assertEqual(response3.status_code, 302)
+        self.assertRedirects(response3, reverse('profile'))
+        
+        # Verify password changed in DB
         user.refresh_from_db()
-        self.assertTrue(user.check_password('TM-Reset123'))
+        self.assertTrue(user.check_password('MyNewPassword123!'))
 
-    def test_forgot_password_post_invalid(self):
+    def test_forgot_password_invalid_email(self):
         forgot_url = reverse('forgot_password')
         response = self.client.post(forgot_url, {
-            'identity': 'nonexistentuser'
+            'action': 'send_otp',
+            'email': 'nonexistent@student.com'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No account found")
+        self.assertContains(response, "No registered account found")
+
+    def test_forgot_password_invalid_otp(self):
+        user = User.objects.create_user(username='teststudent', email='test@student.com', password='password123')
+        forgot_url = reverse('forgot_password')
+        self.client.post(forgot_url, {'action': 'send_otp', 'email': 'test@student.com'})
+        
+        response = self.client.post(forgot_url, {'action': 'verify_otp', 'otp': '000000'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid OTP code")
 
     def test_profile_photo_upload_success(self):
         user = User.objects.create_user(username='teststudent', password='password123')

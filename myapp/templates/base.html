@@ -90,16 +90,9 @@
           </div>
           <span class="prem-sep-bold">|</span>
           {% if user.is_authenticated %}
-          {% if user.is_staff %}
-          <a href="{% url 'admin_dashboard' %}" class="prem-pill-verify"
-            style="background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.25); color: var(--primary) !important;">
-            <i class="fa-solid fa-shield-halved"></i> Admin Console
-          </a>
-          {% endif %}
           <a href="{% url 'verify_certificate' %}" class="prem-pill-verify">
             <i class="fa-solid fa-certificate"></i> Verify Certificate
           </a>
-
           <a href="{% url 'logout' %}" class="prem-pill-register">
             <i class="fa-solid fa-right-from-bracket"></i> Logout
           </a>
@@ -127,24 +120,20 @@
         <li><a href="{% url 'home' %}" class="nav-link">Home</a></li>
         <li><a href="{% url 'about' %}" class="nav-link">About Us</a></li>
         <li><a href="{% url 'courses' %}" class="nav-link">Courses</a></li>
-        <li><a href="{% url 'syllabus_list' %}" class="nav-link"><i class="fa-solid fa-file-pdf"
-              style="color: #38bdf8;"></i> Syllabus PDF</a></li>
-        <li><a href="{% url 'tests_list' %}" class="nav-link"><i class="fa-solid fa-laptop-file"
-              style="color: var(--primary);"></i> Online Tests</a></li>
+        <li><a href="{% url 'syllabus_list' %}" class="nav-link">Syllabus PDF</a></li>
+        <li><a href="{% url 'tests_list' %}" class="nav-link">Online Tests</a></li>
         <li><a href="{% url 'faculty' %}" class="nav-link">Faculty</a></li>
         <li><a href="{% url 'admissions' %}" class="nav-link">Admissions</a></li>
         <li><a href="{% url 'gallery' %}" class="nav-link">Gallery</a></li>
         <li><a href="{% url 'results' %}" class="nav-link">Results</a></li>
         <li><a href="{% url 'contact' %}" class="nav-link">Contact Us</a></li>
-        {% if user.is_authenticated and user.is_staff %}
-        <li><a href="{% url 'admin_dashboard' %}" class="nav-link nav-link-admin"><i
-              class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
-        {% endif %}
         <li class="mobile-only"><a href="{% url 'verify_certificate' %}" class="nav-link"><i
               class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
         {% if user.is_authenticated %}
-        <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link"><i class="fa-solid fa-user-gear"></i>
-            Student Dashboard</a></li>
+        {% if user.is_staff %}
+        <li class="mobile-only"><a href="{% url 'admin_dashboard' %}" class="nav-link" style="color: #a78bfa; font-weight: 700;"><i class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
+        {% endif %}
+        <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link"><i class="fa-solid fa-user-gear"></i> Dashboard</a></li>
         <li class="mobile-only"><a href="{% url 'logout' %}"
             style="display: inline-block; margin-top: 1rem; color: #f87171;"><i
               class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
@@ -171,7 +160,13 @@
         </button>
 
         {% if user.is_authenticated %}
-        <a href="{% url 'profile' %}" class="btn-login btn-login-dashboard" title="Student Dashboard">
+        {% if user.is_staff %}
+        <a href="{% url 'admin_dashboard' %}" class="btn-login btn-login-admin" title="Admin Panel">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span class="btn-login-text">Admin Panel</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'profile' %}" class="btn-login btn-login-dashboard" title="Dashboard">
           {% if user.profile.photo %}
           <img src="{{ user.profile.photo.url }}" class="btn-login-avatar" alt="Avatar" />
           {% else %}

@@ -241,14 +241,24 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonErr) {
+          if (!response.ok) {
+            throw new Error(`Server returned error ${response.status}`);
+          }
+          // If response was a full HTML redirect
+          window.location.reload();
+          return;
+        }
 
         if (data.status === 'success') {
           showToast(data.message, 'success');
           if (data.redirect_url) {
             setTimeout(() => {
               window.location.href = data.redirect_url;
-            }, 1200);
+            }, 1000);
           } else {
             form.reset();
           }
@@ -257,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (error) {
         console.error('Error submitting form:', error);
-        showToast('Connection error. Please check your internet.', 'error');
+        showToast(error.message || 'Request could not be processed. Please try again.', 'error');
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;

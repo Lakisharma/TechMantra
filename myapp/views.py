@@ -1,9 +1,12 @@
 import json
 import csv
+import random
+import time
 from django.db import models
 from django.db.models import Q, Avg, Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
+from django.urls import reverse
 from myapp.models import (
     Services, Admission, ContactMessage, StudentProfile, Course, 
     GalleryImage, TeamMember, WebsiteSettings, AdminProfile, Certificate, 
@@ -17,7 +20,7 @@ from django.utils import timezone
 from datetime import timedelta, date
 from django.utils.html import strip_tags
 from django.views.decorators.csrf import csrf_exempt
-from myapp.email_service import send_welcome_registration_email
+from myapp.email_service import send_welcome_registration_email, send_password_reset_otp_email
 
 def index(request):
     populate_default_online_tests()
@@ -927,8 +930,6 @@ def register_view(request):
 def login_view(request):
     next_url = request.GET.get('next') or request.POST.get('next') or '/profile/'
     if request.user.is_authenticated:
-        if request.user.is_staff and next_url == '/profile/':
-            return redirect('admin_dashboard')
         return redirect(next_url)
         
     if request.method == "POST":
@@ -950,8 +951,6 @@ def login_view(request):
         if user is not None:
             login(request, user)
             target_url = next_url
-            if user.is_staff and (not next_url or next_url == '/profile/'):
-                target_url = '/admin-dashboard/'
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
                 return JsonResponse({"status": "success", "message": "Login successful!", "redirect_url": target_url})
             return redirect(target_url)
@@ -1148,31 +1147,207 @@ def profile_view(request):
 def forgot_password_view(request):
     if request.user.is_authenticated:
         return redirect('profile')
-        
+
+    # Allow clearing state to start over
+    if request.GET.get('reset') == '1':
+        for k in ['reset_user_id', 'reset_email', 'reset_otp', 'reset_otp_time', 'reset_step', 'reset_otp_verified']:
+            request.session.pop(k, None)
+        request.session.modified = True
+        return redirect('forgot_password')
+
+    current_step = request.session.get('reset_step', 'enter_email')
+    reset_email = request.session.get('reset_email', '')
+    error_msg = None
+    success_msg = None
+
     if request.method == "POST":
-        identity = request.POST.get("identity")
-        
-        if not identity:
-            msg = "Please enter your username or email."
+        action = request.POST.get("action", "").strip()
+
+        # Fallback to action based on current step or inputs if action is omitted
+        if not action:
+            if "new_password" in request.POST:
+                action = "set_password"
+            elif "otp" in request.POST:
+                action = "verify_otp"
+            else:
+                action = "send_otp"
+
+        if action == "send_otp":
+            email_input = request.POST.get("email", "").strip() or request.POST.get("identity", "").strip()
+            if not email_input:
+                msg = "Please enter your registered email address."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "enter_email"})
+
+            user = User.objects.filter(email__iexact=email_input).first()
+            if not user:
+                user = User.objects.filter(username__iexact=email_input).first()
+
+            if not user or not user.email:
+                msg = "No registered account found with this email address. Please make sure you enter your registered email."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "enter_email"})
+
+            # Generate secure 6-digit OTP
+            otp = f"{random.randint(100000, 999999)}"
+            request.session['reset_user_id'] = user.id
+            request.session['reset_email'] = user.email
+            request.session['reset_otp'] = str(otp)
+            request.session['reset_otp_time'] = time.time()
+            request.session['reset_step'] = 'verify_otp'
+            request.session['reset_otp_verified'] = False
+            request.session.modified = True
+
+            # Send OTP email in background
+            try:
+                full_name = f"{user.first_name} {user.last_name}".strip() or user.username
+                send_password_reset_otp_email(name=full_name, email=user.email, otp_code=otp, request=request)
+            except Exception:
+                pass
+
+            msg = f"A 6-digit OTP code has been sent to {user.email}. Please check your inbox."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                return JsonResponse({"status": "success", "message": msg, "redirect_url": reverse('forgot_password')})
+            return render(request, 'forgot_password.html', {
+                "success_msg": msg,
+                "step": "verify_otp",
+                "email": user.email
+            })
+
+        elif action == "resend_otp":
+            user_id = request.session.get('reset_user_id')
+            user_email = request.session.get('reset_email')
+            if not user_id or not user_email:
+                msg = "Session expired. Please enter your email again."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg, "redirect_url": "/forgot-password/?reset=1"})
+                return redirect('/forgot-password/?reset=1')
+
+            user = User.objects.filter(id=user_id).first()
+            if not user:
+                msg = "Account not found. Please start over."
                 return JsonResponse({"status": "error", "message": msg})
-            return render(request, 'forgot_password.html', {"error_msg": msg})
-            
-        user = User.objects.filter(username=identity).first() or User.objects.filter(email=identity).first()
-        if user:
-            user.set_password("TM-Reset123")
+
+            otp = f"{random.randint(100000, 999999)}"
+            request.session['reset_otp'] = str(otp)
+            request.session['reset_otp_time'] = time.time()
+            request.session.modified = True
+
+            try:
+                full_name = f"{user.first_name} {user.last_name}".strip() or user.username
+                send_password_reset_otp_email(name=full_name, email=user.email, otp_code=otp, request=request)
+            except Exception:
+                pass
+
+            msg = f"A fresh OTP code has been sent to {user.email}."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                return JsonResponse({"status": "success", "message": msg})
+            return render(request, 'forgot_password.html', {
+                "success_msg": msg,
+                "step": "verify_otp",
+                "email": user.email
+            })
+
+        elif action == "verify_otp":
+            otp_entered = request.POST.get("otp", "").strip()
+            stored_otp = request.session.get('reset_otp')
+            otp_time = request.session.get('reset_otp_time', 0)
+
+            if not otp_entered:
+                msg = "Please enter the 6-digit OTP code."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "verify_otp", "email": reset_email})
+
+            # Check 10-minute validity
+            if time.time() - otp_time > 600:
+                msg = "OTP has expired. Please request a new OTP code."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "verify_otp", "email": reset_email})
+
+            if otp_entered != str(stored_otp):
+                msg = "Invalid OTP code. Please enter the correct 6-digit OTP sent to your email."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "verify_otp", "email": reset_email})
+
+            # OTP verified
+            request.session['reset_otp_verified'] = True
+            request.session['reset_step'] = 'set_password'
+            request.session.modified = True
+
+            msg = "OTP verified successfully! Now please create your new password."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                return JsonResponse({"status": "success", "message": msg, "redirect_url": reverse('forgot_password')})
+            return render(request, 'forgot_password.html', {
+                "success_msg": msg,
+                "step": "set_password",
+                "email": reset_email
+            })
+
+        elif action == "set_password":
+            if not request.session.get('reset_otp_verified') or not request.session.get('reset_user_id'):
+                msg = "Session expired or unverified. Please start again."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg, "redirect_url": "/forgot-password/?reset=1"})
+                return redirect('/forgot-password/?reset=1')
+
+            new_password = request.POST.get("new_password", "").strip()
+            confirm_password = request.POST.get("confirm_password", "").strip()
+
+            if not new_password or not confirm_password:
+                msg = "Please enter and confirm your new password."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "set_password", "email": reset_email})
+
+            if len(new_password) < 6:
+                msg = "Password must be at least 6 characters long."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "set_password", "email": reset_email})
+
+            if new_password != confirm_password:
+                msg = "Passwords do not match. Please re-enter both correctly."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "set_password", "email": reset_email})
+
+            user_id = request.session.get('reset_user_id')
+            user = User.objects.filter(id=user_id).first()
+            if not user:
+                msg = "User account not found."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+                    return JsonResponse({"status": "error", "message": msg})
+                return render(request, 'forgot_password.html', {"error_msg": msg, "step": "enter_email"})
+
+            # Set the new password
+            user.set_password(new_password)
             user.save()
-            msg = "Password reset successfully! (Demo password: TM-Reset123)"
+
+            # Automatically authenticate and log in the user
+            from django.contrib.auth import login
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+            # Clean up reset session data
+            for k in ['reset_user_id', 'reset_email', 'reset_otp', 'reset_otp_time', 'reset_step', 'reset_otp_verified']:
+                request.session.pop(k, None)
+            request.session.modified = True
+
+            msg = "New password created successfully! Redirecting to your dashboard..."
             if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "success", "message": msg, "redirect_url": "/login/"})
-            return render(request, 'forgot_password.html', {"success_msg": msg})
-        else:
-            msg = "No account found with that username or email."
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-                return JsonResponse({"status": "error", "message": msg})
-            return render(request, 'forgot_password.html', {"error_msg": msg})
-            
-    return render(request, 'forgot_password.html')
+                return JsonResponse({"status": "success", "message": msg, "redirect_url": reverse('profile')})
+            return redirect('profile')
+
+    return render(request, 'forgot_password.html', {
+        "step": current_step,
+        "email": reset_email,
+        "error_msg": error_msg,
+        "success_msg": success_msg
+    })
 
 
 def logout_view(request):

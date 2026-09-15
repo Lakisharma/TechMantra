@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Student Dashboard & Mock Tests | TeachMANTRA{% endblock %}
+{% block title %}{% if user.is_staff %}Admin Dashboard | TeachMANTRA{% else %}Student Dashboard & Mock Tests | TeachMANTRA{% endif %}{% endblock %}
 
 {% block content %}
   <!-- ==========================================
@@ -9,9 +9,9 @@
        ========================================== -->
   <section class="breadcrumb-banner">
     <div class="container">
-      <h1>Student Learning Dashboard</h1>
+      <h1>{% if user.is_staff %}Admin Dashboard{% else %}Student Learning Dashboard{% endif %}</h1>
       <div class="breadcrumb-path">
-        <a href="{% url 'home' %}">Home</a> <span>/ Student Dashboard</span>
+        <a href="{% url 'home' %}">Home</a> <span>/ {% if user.is_staff %}Admin Dashboard{% else %}Student Dashboard{% endif %}</span>
       </div>
     </div>
   </section>
@@ -22,6 +22,24 @@
   <section class="section-padding">
     <div class="container">
       
+      {% if user.is_staff %}
+      <!-- Admin Access Banner -->
+      <div class="glass-card" style="padding: 1.1rem 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #8b5cf6; background: rgba(99, 102, 241, 0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-radius: var(--border-radius-md);">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(99, 102, 241, 0.2); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.1rem; flex-shrink: 0;">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-main); font-weight: 700;">Academy Administrator Portal</h4>
+            <p style="margin: 0.2rem 0 0 0; font-size: 0.82rem; color: var(--text-muted);">Manage student admissions, courses prospectus, mock exams CMS, and institute operations.</p>
+          </div>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="btn-primary" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border: none; padding: 0.55rem 1.25rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); text-decoration: none;">
+          <i class="fa-solid fa-gauge-high"></i> Open Admin Panel &rarr;
+        </a>
+      </div>
+      {% endif %}
+
       <!-- Welcome Header -->
       <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; border-left: 4px solid var(--primary);">
         <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
@@ -48,7 +66,11 @@
           <div>
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
               <h2 style="font-size: 1.85rem; margin: 0;">Welcome, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}!</h2>
-              {% if course_info.is_enrolled %}
+              {% if user.is_staff %}
+                <span class="badge" style="background: rgba(99, 102, 241, 0.18); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.35); font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 9999px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+                  <i class="fa-solid fa-shield-halved"></i> Academy Administrator
+                </span>
+              {% elif course_info.is_enrolled %}
                 <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 9999px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
                   <i class="fa-solid fa-graduation-cap"></i> {{ course_info.title }} • {{ course_info.fee }}
                 </span>
@@ -58,7 +80,11 @@
                 </span>
               {% endif %}
             </div>
-            <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0.3rem 0 0 0;">Practice online mock tests, track real-time exam scores, and view certified academy records.</p>
+            {% if user.is_staff %}
+              <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0.3rem 0 0 0;">Manage student admissions, mock exams, faculty, and institute operations.</p>
+            {% else %}
+              <p style="color: var(--text-muted); font-size: 0.92rem; margin: 0.3rem 0 0 0;">Practice online mock tests, track real-time exam scores, and view certified academy records.</p>
+            {% endif %}
             <label for="id_photo_input" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--primary); cursor: pointer; margin-top: 0.4rem; font-weight: 600; text-decoration: underline;">
               <i class="fa-solid fa-image"></i> Change Profile Photo
             </label>
@@ -66,6 +92,11 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          {% if user.is_staff %}
+            <a href="{% url 'admin_dashboard' %}" class="btn-primary" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border: none; padding: 0.6rem 1.25rem; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);">
+              <i class="fa-solid fa-shield-halved"></i> Open Admin Panel
+            </a>
+          {% endif %}
           <a href="{% url 'tests_list' %}" class="btn-primary" style="padding: 0.6rem 1.25rem; font-size: 0.88rem;">
             <i class="fa-solid fa-laptop-file"></i> All Mock Tests
           </a>
@@ -75,6 +106,7 @@
         </div>
       </div>
 
+      {% if not user.is_staff %}
       <!-- Quick Metrics Analytics Grid -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
         <!-- Metric 1: Tests Attempted -->
@@ -504,6 +536,7 @@
           </div>
         {% endif %}
       </div>
+      {% endif %}
 
     </div>
   </section>

@@ -348,3 +348,149 @@ One Vision, Many Paths to Excellence
         daemon=True
     )
     t.start()
+
+
+def send_password_reset_otp_email(name, email, otp_code, request=None):
+    """
+    Sends a secure 6-digit OTP verification email for account password reset.
+    """
+    if not email or not otp_code:
+        return
+
+    # Fetch website settings if available
+    try:
+        site_settings = WebsiteSettings.objects.first()
+        site_name = site_settings.site_name if site_settings and site_settings.site_name else "TeachMANTRA"
+        site_phone = site_settings.contact_phone if site_settings and site_settings.contact_phone else "+91 98765 43210"
+        site_email = site_settings.contact_email if site_settings and site_settings.contact_email else "theteachmantra@gmail.com"
+        site_address = site_settings.contact_address if site_settings and site_settings.contact_address else "TeachMANTRA Academy, India"
+    except Exception:
+        site_name = "TeachMANTRA"
+        site_phone = "+91 98765 43210"
+        site_email = "theteachmantra@gmail.com"
+        site_address = "TeachMANTRA Academy, India"
+
+    subject = f"{otp_code} is your {site_name} Password Reset OTP"
+    
+    text_content = f"""
+=====================================================
+PASSWORD RESET OTP - {site_name.upper()} ACADEMY
+=====================================================
+
+Dear {name},
+
+We received a request to reset your password for your {site_name} Academy account.
+
+Your 6-Digit One-Time Password (OTP) is:
+----------------------------------------
+>>> {otp_code} <<<
+----------------------------------------
+
+This OTP is valid for 10 minutes. Please enter this code on the password reset page to create your new password.
+
+If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+
+Best regards,
+{site_name} Academy Support Team
+Helpline: {site_phone} | Email: {site_email}
+"""
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Reset OTP - {site_name}</title>
+  <style>
+    body {{
+      margin: 0;
+      padding: 0;
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+    }}
+    .email-wrapper {{
+      max-width: 580px;
+      margin: 25px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }}
+    .email-header {{
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+      padding: 28px 24px;
+      text-align: center;
+      color: #ffffff;
+    }}
+    .email-body {{
+      padding: 28px 24px;
+    }}
+    .otp-box {{
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+      border: 2px dashed #6366f1;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin: 24px 0;
+    }}
+    .otp-digits {{
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      color: #4338ca;
+      font-family: monospace, sans-serif;
+    }}
+    .email-footer {{
+      background-color: #f8fafc;
+      padding: 18px 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+    }}
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-header">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">{site_name} Academy</h1>
+      <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.9;">Account Password Reset OTP</p>
+    </div>
+    
+    <div class="email-body">
+      <h2 style="font-size: 18px; margin-top: 0; color: #0f172a;">Dear {name},</h2>
+      <p style="font-size: 14px; line-height: 1.6; color: #475569;">
+        We received a request to reset your password for your <strong>{site_name}</strong> student account. Enter the 6-digit OTP code below to verify your email and create a new password:
+      </p>
+
+      <div class="otp-box">
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #6366f1; margin-bottom: 8px;">
+          Your 6-Digit OTP Code
+        </div>
+        <div class="otp-digits">{otp_code}</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
+          ⏰ Valid for 10 minutes
+        </div>
+      </div>
+
+      <p style="font-size: 13px; line-height: 1.5; color: #64748b; margin-bottom: 0;">
+        If you did not request this, please disregard this email. Your password will remain unchanged.
+      </p>
+    </div>
+
+    <div class="email-footer">
+      <p style="margin: 4px 0;"><strong>{site_name} Academy</strong> &bull; {site_address}</p>
+      <p style="margin: 4px 0;">Helpline: {site_phone} | Email: {site_email}</p>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    t = threading.Thread(
+        target=_send_email_thread,
+        args=(subject, text_content, html_content, email),
+        daemon=True
+    )
+    t.start()
