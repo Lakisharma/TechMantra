@@ -617,6 +617,10 @@ textarea {
 }
 
 @media (max-width: 1260px) {
+  .desktop-only-admin-btn {
+    display: none !important;
+  }
+
   .menu-toggle {
     display: flex;
   }

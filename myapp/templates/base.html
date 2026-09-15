@@ -131,7 +131,11 @@
               class="fa-solid fa-certificate"></i> Verify Certificate</a></li>
         {% if user.is_authenticated %}
         {% if user.is_staff %}
-        <li class="mobile-only"><a href="{% url 'admin_dashboard' %}" class="nav-link" style="color: #a78bfa; font-weight: 700;"><i class="fa-solid fa-shield-halved"></i> Admin Panel</a></li>
+        <li class="mobile-only" style="margin-top: 0.35rem; margin-bottom: 0.35rem;">
+          <a href="{% url 'admin_dashboard' %}" class="nav-link" style="color: #ffffff !important; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); font-weight: 700; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.6rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); text-decoration: none;">
+            <i class="fa-solid fa-shield-halved" style="font-size: 1.1rem; color: #ffffff;"></i> Admin Panel
+          </a>
+        </li>
         {% endif %}
         <li class="mobile-only"><a href="{% url 'profile' %}" class="nav-link"><i class="fa-solid fa-user-gear"></i> Dashboard</a></li>
         <li class="mobile-only"><a href="{% url 'logout' %}"
@@ -161,7 +165,7 @@
 
         {% if user.is_authenticated %}
         {% if user.is_staff %}
-        <a href="{% url 'admin_dashboard' %}" class="btn-login btn-login-admin" title="Admin Panel">
+        <a href="{% url 'admin_dashboard' %}" class="btn-login btn-login-admin desktop-only-admin-btn" title="Admin Panel">
           <i class="fa-solid fa-shield-halved"></i>
           <span class="btn-login-text">Admin Panel</span>
         </a>
